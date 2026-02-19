@@ -27,7 +27,7 @@ export class MailService {
       await this.transporter.sendMail({ from, to, subject, html });
       this.logger.log(`Email sent to ${to}: ${subject}`);
     } catch (err) {
-      this.logger.error(`Failed to send email to ${to}: ${err.message}`);
+      this.logger.error(`Failed to send email to ${to}: ${(err as Error).message}`);
     }
   }
 
