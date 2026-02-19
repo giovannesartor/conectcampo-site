@@ -123,10 +123,10 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-        run: railway up --service api --detach
+        run: railway up --service api --dockerfile Dockerfile.api --detach
 
       - name: Deploy Web
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-        run: railway up --service web --detach
+        run: railway up --service web --dockerfile Dockerfile.web --detach
