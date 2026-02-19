@@ -9,6 +9,17 @@ export const metadata: Metadata = {
   title: 'ConectCampo | Marketplace de Crédito Agro',
   description:
     'Conectamos produtores rurais e empresas do agronegócio a bancos, cooperativas, FIDCs, securitizadoras, FIAGROs e o mercado de capitais.',
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png' }],
+    other: [
+      { rel: 'manifest', url: '/site.webmanifest' },
+    ],
+  },
   keywords: [
     'crédito rural',
     'agronegócio',

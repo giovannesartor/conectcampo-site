@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -28,8 +29,8 @@ export class AuthService {
     ...((process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim()).filter(Boolean)),
   ];
 
-  private resolveRole(email: string, requested: string): string {
-    return this.adminEmails.includes(email.toLowerCase()) ? 'ADMIN' : requested;
+  private resolveRole(email: string, requested: UserRole): UserRole {
+    return this.adminEmails.includes(email.toLowerCase()) ? UserRole.ADMIN : requested;
   }
 
   async register(dto: RegisterDto) {

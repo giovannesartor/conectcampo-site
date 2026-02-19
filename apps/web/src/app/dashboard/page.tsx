@@ -55,7 +55,6 @@ export default function DashboardPage() {
             <button className="btn-ghost relative">
               <Bell className="h-5 w-5" />
             </button>
-            </button>
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
