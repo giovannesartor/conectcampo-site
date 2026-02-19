@@ -3,22 +3,22 @@ import { Logo } from '@/components/Logo';
 
 const footerLinks = {
   Plataforma: [
-    { name: 'Como Funciona', href: '#como-funciona' },
-    { name: 'Planos', href: '#planos' },
-    { name: 'Parceiros', href: '#' },
-    { name: 'API', href: '#' },
+    { name: 'Como Funciona', href: '/como-funciona' },
+    { name: 'Planos', href: '/planos' },
+    { name: 'Parceiros', href: '/parceiros' },
+    { name: 'API', href: '/api-docs' },
   ],
   Legal: [
-    { name: 'Termos de Uso', href: '#' },
-    { name: 'Política de Privacidade', href: '#' },
-    { name: 'LGPD', href: '#' },
-    { name: 'Compliance', href: '#' },
+    { name: 'Termos de Uso', href: '/legal/termos-de-uso' },
+    { name: 'Política de Privacidade', href: '/legal/privacidade' },
+    { name: 'LGPD', href: '/legal/lgpd' },
+    { name: 'Compliance', href: '/legal/compliance' },
   ],
   Empresa: [
-    { name: 'Sobre Nós', href: '#' },
-    { name: 'Blog', href: '#' },
-    { name: 'Carreiras', href: '#' },
-    { name: 'Contato', href: '#' },
+    { name: 'Sobre Nós', href: '/sobre' },
+    { name: 'Blog', href: '/blog' },
+    { name: 'Carreiras', href: '/carreiras' },
+    { name: 'Contato', href: '/contato' },
   ],
 };
 
