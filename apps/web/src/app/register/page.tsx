@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Sprout, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { Logo } from '@/components/Logo';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const roles = [
   { value: 'PRODUCER', label: 'Produtor Rural', description: 'Buscar crédito para minha operação' },
@@ -48,16 +50,18 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-screen">
+      {/* Theme toggle floating - desktop */}
+      <div className="hidden lg:block fixed top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
       {/* Left panel */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 items-center justify-center p-12">
         <div className="max-w-md text-center">
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20">
-              <Sprout className="h-8 w-8 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-white">
-              Conect<span className="text-brand-200">Campo</span>
-            </span>
+          <div className="flex items-center justify-center mb-8">
+            <Logo size="lg" showText={false} href="/" />
+          </div>
+          <div className="text-3xl font-bold text-white mb-4">
+            Conect<span className="text-brand-300">Campo</span>
           </div>
           <h2 className="text-2xl font-bold text-white">
             Crie sua conta e comece a buscar crédito em minutos
@@ -71,13 +75,10 @@ export default function RegisterPage() {
       {/* Right panel */}
       <div className="flex w-full lg:w-1/2 items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600">
-              <Sprout className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">
-              Conect<span className="text-brand-600">Campo</span>
-            </span>
+          {/* Mobile logo + theme toggle */}
+          <div className="lg:hidden flex items-center justify-between mb-8">
+            <Logo size="sm" href="/" />
+            <ThemeToggle />
           </div>
 
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Sprout } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 
 const footerLinks = {
   Plataforma: [
@@ -29,14 +29,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600">
-                <Sprout className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-lg font-bold text-gray-900 dark:text-white">
-                Conect<span className="text-brand-600">Campo</span>
-              </span>
-            </Link>
+            <Logo size="md" href="/" />
             <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
               Marketplace de crédito agro que conecta produtores rurais
               às melhores oportunidades de financiamento.

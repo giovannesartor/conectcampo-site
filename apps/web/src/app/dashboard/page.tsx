@@ -4,7 +4,6 @@ import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import {
-  Sprout,
   BarChart3,
   FileText,
   CreditCard,
@@ -14,6 +13,8 @@ import {
   Plus,
 } from 'lucide-react';
 import Link from 'next/link';
+import { Logo } from '@/components/Logo';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function DashboardPage() {
   const { user, isLoading, logout } = useAuth();
@@ -47,18 +48,13 @@ export default function DashboardPage() {
       {/* Sidebar-like top bar */}
       <header className="border-b border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card">
         <div className="mx-auto max-w-7xl flex items-center justify-between px-6 py-4">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600">
-              <Sprout className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-lg font-bold text-gray-900 dark:text-white">
-              Conect<span className="text-brand-600">Campo</span>
-            </span>
-          </Link>
+          <Logo size="sm" href="/dashboard" />
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
             <button className="btn-ghost relative">
               <Bell className="h-5 w-5" />
+            </button>
             </button>
             <div className="flex items-center gap-3">
               <div className="text-right">

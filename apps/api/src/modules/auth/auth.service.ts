@@ -22,6 +22,16 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
+  // Emails that always receive ADMIN role
+  private readonly adminEmails: string[] = [
+    'giovannesartor@gmail.com',
+    ...((process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim()).filter(Boolean)),
+  ];
+
+  private resolveRole(email: string, requested: string): string {
+    return this.adminEmails.includes(email.toLowerCase()) ? 'ADMIN' : requested;
+  }
+
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -31,13 +41,14 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
+    const role = this.resolveRole(dto.email, dto.role);
 
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         passwordHash,
         name: dto.name,
-        role: dto.role,
+        role,
         phone: dto.phone,
         cpf: dto.cpf,
         consentLgpd: true,
@@ -74,11 +85,19 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    // Update last login
+    // Update last login and upgrade role if needed
+    const shouldUpgrade = this.adminEmails.includes(user.email.toLowerCase()) && user.role !== 'ADMIN';
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { lastLoginAt: new Date() },
+      data: {
+        lastLoginAt: new Date(),
+        ...(shouldUpgrade ? { role: 'ADMIN' } : {}),
+      },
     });
+    if (shouldUpgrade) {
+      user.role = 'ADMIN' as any;
+      this.logger.log(`Upgraded ${user.email} to ADMIN`);
+    }
 
     const tokens = await this.generateTokens(user.id, user.email, user.role);
 
