@@ -12,8 +12,9 @@ export class SeedService implements OnApplicationBootstrap {
   async onApplicationBootstrap() {
     try {
       await this.seedAdminUser();
-    } catch (err) {
-      this.logger.error('Seed failed (non-fatal):', err?.message ?? err);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Seed failed (non-fatal): ${msg}`);
     }
   }
 
