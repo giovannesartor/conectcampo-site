@@ -1,7 +1,9 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+// Uses relative path so Next.js rewrites proxy to the backend.
+// Works in any environment without baking URLs at build time.
+const API_URL = '/api/v1';
 
 export const api = axios.create({
   baseURL: API_URL,

@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -9,8 +10,11 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UserRole } from '@prisma/client';
 
 @Injectable()
@@ -21,6 +25,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly mailService: MailService,
   ) {}
 
   // Emails that always receive ADMIN role
@@ -58,6 +63,11 @@ export class AuthService {
     });
 
     const tokens = await this.generateTokens(user.id, user.email, user.role);
+
+    // Enviar e-mail de boas-vindas + verificação
+    const verificationToken = await this.createEmailVerificationToken(user.id);
+    this.mailService.sendWelcome(user.email, user.name).catch(() => null);
+    this.mailService.sendEmailVerification(user.email, user.name, verificationToken).catch(() => null);
 
     this.logger.log(`User registered: ${user.email} (${user.role})`);
 
@@ -150,6 +160,118 @@ export class AuthService {
     return { message: 'Logout realizado com sucesso' };
   }
 
+  // ─── Forgot / Reset Password ─────────────────────────────────────────────────
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    // Sempre retornar mensagem genérica (security)
+    if (!user || !user.isActive || user.deletedAt) {
+      return { message: 'Se o e-mail estiver cadastrado, você receberá as instruções em breve.' };
+    }
+
+    const token = uuidv4();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+    await this.prisma.passwordResetToken.create({
+      data: { token, userId: user.id, expiresAt },
+    });
+
+    await this.mailService.sendPasswordReset(user.email, user.name, token);
+
+    this.logger.log(`Password reset requested for: ${user.email}`);
+
+    return { message: 'Se o e-mail estiver cadastrado, você receberá as instruções em breve.' };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const record = await this.prisma.passwordResetToken.findUnique({
+      where: { token: dto.token },
+      include: { user: true },
+    });
+
+    if (!record || record.usedAt || record.expiresAt < new Date()) {
+      throw new BadRequestException('Token inválido ou expirado');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 12);
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: record.userId },
+        data: { passwordHash },
+      }),
+      this.prisma.passwordResetToken.update({
+        where: { id: record.id },
+        data: { usedAt: new Date() },
+      }),
+      // Revogar todos os refresh tokens por segurança
+      this.prisma.refreshToken.updateMany({
+        where: { userId: record.userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      }),
+    ]);
+
+    this.mailService.sendPasswordChanged(record.user.email, record.user.name).catch(() => null);
+
+    this.logger.log(`Password reset for: ${record.user.email}`);
+
+    return { message: 'Senha redefinida com sucesso. Faça login com a nova senha.' };
+  }
+
+  // ─── Email Verification ───────────────────────────────────────────────────────
+
+  async verifyEmail(token: string) {
+    const record = await this.prisma.emailVerificationToken.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!record || record.usedAt || record.expiresAt < new Date()) {
+      throw new BadRequestException('Token inválido ou expirado');
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: record.userId },
+        data: { emailVerified: true },
+      }),
+      this.prisma.emailVerificationToken.update({
+        where: { id: record.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+
+    this.logger.log(`Email verified: ${record.user.email}`);
+
+    return { message: 'E-mail confirmado com sucesso!' };
+  }
+
+  async resendVerification(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) throw new BadRequestException('Usuário não encontrado');
+    if (user.emailVerified) throw new BadRequestException('E-mail já verificado');
+
+    const token = await this.createEmailVerificationToken(user.id);
+    await this.mailService.sendEmailVerification(user.email, user.name, token);
+
+    return { message: 'E-mail de verificação reenviado.' };
+  }
+
+  // ─── Private helpers ──────────────────────────────────────────────────────────
+
+  private async createEmailVerificationToken(userId: string): Promise<string> {
+    const token = uuidv4();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+    await this.prisma.emailVerificationToken.create({
+      data: { token, userId, expiresAt },
+    });
+    return token;
+  }
+
   private async generateTokens(userId: string, email: string, role: string) {
     const payload = { sub: userId, email, role };
 
@@ -179,3 +301,4 @@ export class AuthService {
     };
   }
 }
+
