@@ -77,29 +77,36 @@ export function Segments() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="card hover:shadow-lg transition-shadow duration-300 group"
+              className="card hover:shadow-lg transition-shadow duration-300 group flex flex-col"
             >
-              <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${segment.color} text-white mb-4`}>
+              {/* Icon */}
+              <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${segment.color} text-white`}>
                 <segment.icon className="h-6 w-6" />
               </div>
 
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                {segment.tier}
-              </span>
-              <h3 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">
-                {segment.title}
-              </h3>
-              <p className="mt-1 text-sm font-semibold text-brand-600 dark:text-brand-400">
-                {segment.range}
-              </p>
+              {/* Divider that creates clear separation from icon */}
+              <div className="mt-5 mb-4 border-t border-gray-100 dark:border-dark-border" />
 
-              <ul className="mt-4 space-y-2">
+              {/* Tier badge + title + range */}
+              <div>
+                <span className={`inline-block rounded-full bg-gradient-to-r ${segment.color} px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white`}>
+                  {segment.tier}
+                </span>
+                <h3 className="mt-2 text-xl font-bold text-gray-900 dark:text-white">
+                  {segment.title}
+                </h3>
+                <p className="mt-0.5 text-sm font-semibold text-brand-600 dark:text-brand-400">
+                  {segment.range}
+                </p>
+              </div>
+
+              <ul className="mt-5 space-y-2 flex-1">
                 {segment.features.map((feature) => (
                   <li
                     key={feature}
                     className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400"
                   >
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-500 flex-shrink-0" />
+                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-brand-500 flex-shrink-0" />
                     {feature}
                   </li>
                 ))}
