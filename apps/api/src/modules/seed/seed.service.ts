@@ -10,7 +10,11 @@ export class SeedService implements OnApplicationBootstrap {
   constructor(private readonly prisma: PrismaService) {}
 
   async onApplicationBootstrap() {
-    await this.seedAdminUser();
+    try {
+      await this.seedAdminUser();
+    } catch (err) {
+      this.logger.error('Seed failed (non-fatal):', err?.message ?? err);
+    }
   }
 
   private async seedAdminUser() {
