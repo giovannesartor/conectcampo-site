@@ -1,0 +1,33 @@
+{
+  "name": "conectcampo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ConectCampo - Marketplace SaaS de crédito agro",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "db:generate": "cd prisma && npx prisma generate",
+    "db:migrate": "cd prisma && npx prisma migrate dev",
+    "db:push": "cd prisma && npx prisma db push",
+    "db:seed": "cd prisma && npx ts-node seed.ts",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.4.0",
+    "@types/node": "^20.11.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "packageManager": "npm@10.2.0"
+}
