@@ -49,7 +49,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  const port = process.env.API_PORT || 3001;
+  const port = process.env.PORT || process.env.API_PORT || 3001;
   await app.listen(port);
   logger.log(`🚀 ConectCampo API running on port ${port}`);
   logger.log(`📚 Swagger docs: http://localhost:${port}/docs`);
