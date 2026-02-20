@@ -6,53 +6,54 @@ import { Check } from 'lucide-react';
 
 const plans = [
   {
-    name: 'Start',
+    name: 'Produtor Starter',
     price: 'Grátis',
-    description: 'Para quem está começando a buscar crédito.',
+    description: 'Para pequenos produtores iniciando sua jornada de crédito rural.',
     features: [
-      '1 operação ativa',
-      'Score básico',
-      'Match com parceiros',
-      'Data room simplificado',
-      'Suporte por email',
+      'Perfil básico na plataforma',
+      'Score ConectCampo',
+      'Até 2 operações simultâneas',
+      'Matching automático',
+      'Suporte por e-mail',
     ],
-    cta: 'Começar Grátis',
+    cta: 'Criar conta',
     highlighted: false,
+    href: '/register',
   },
   {
-    name: 'Pro',
-    price: 'R$ 299',
+    name: 'Produtor Pro',
+    price: 'R$ 149',
     period: '/mês',
-    description: 'Para produtores com múltiplas operações.',
+    description: 'Para produtores e empresas do agro que buscam o melhor crédito.',
     features: [
-      'Até 10 operações ativas',
-      'Score avançado',
-      'Match prioritário',
-      'Data room completo',
-      'Relatórios personalizados',
-      'Suporte prioritário',
-      'Versionamento de documentos',
-    ],
-    cta: 'Assinar Pro',
-    highlighted: true,
-  },
-  {
-    name: 'Corporate',
-    price: 'R$ 999',
-    period: '/mês',
-    description: 'Para agroindústrias e grupos.',
-    features: [
+      'Tudo do plano Starter',
       'Operações ilimitadas',
-      'Multi-CNPJ',
-      'Data room avançado',
-      'API de integração',
-      'Relatórios customizados',
-      'Gerente de conta dedicado',
-      'SLA garantido',
-      'Governança e auditoria',
+      'Score Premium com análise detalhada',
+      'Prioridade no matching',
+      'Gestão de documentos avançada',
+      'Relatórios e analytics',
+      'Suporte prioritário',
     ],
-    cta: 'Falar com Vendas',
+    cta: 'Começar agora',
+    highlighted: true,
+    href: '/register',
+  },
+  {
+    name: 'Instituição Financeira',
+    price: 'Sob consulta',
+    description: 'Para bancos, FIDCs, cooperativas e securitizadoras.',
+    features: [
+      'Acesso à base de tomadores qualificados',
+      'Filtros avançados de risco e perfil',
+      'API completa de integração',
+      'Dashboards de portfólio',
+      'Gestão de propostas',
+      'Compliance e rastreabilidade',
+      'SLA garantido + gerente dedicado',
+    ],
+    cta: 'Falar com especialista',
     highlighted: false,
+    href: '/contato',
   },
 ];
 
@@ -114,7 +115,7 @@ export function Plans() {
               </ul>
 
               <Link
-                href="/register"
+                href={plan.href}
                 className={`mt-8 block w-full text-center ${
                   plan.highlighted ? 'btn-primary' : 'btn-secondary'
                 }`}

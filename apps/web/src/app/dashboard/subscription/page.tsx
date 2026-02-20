@@ -8,63 +8,50 @@ import { api } from '@/lib/api';
 
 const PLANS = [
   {
-    key: 'FREE',
-    name: 'Gratuito',
+    key: 'START',
+    name: 'Produtor Starter',
     price: 0,
     icon: Package,
     color: 'border-gray-200 dark:border-gray-700',
     features: [
-      'Cadastro na plataforma',
-      '1 operação por mês',
-      'Score básico',
-      'Suporte por email',
-    ],
-  },
-  {
-    key: 'BASIC',
-    name: 'Básico',
-    price: 99.90,
-    icon: Star,
-    color: 'border-blue-300 dark:border-blue-800',
-    features: [
-      'Até 5 operações por mês',
-      'Score detalhado',
+      'Perfil básico na plataforma',
+      'Score ConectCampo',
+      'Até 2 operações simultâneas',
       'Matching automático',
-      'Notificações por email',
-      'Suporte prioritário',
+      'Suporte por e-mail',
     ],
   },
   {
-    key: 'PREMIUM',
-    name: 'Premium',
-    price: 249.90,
+    key: 'PRO',
+    name: 'Produtor Pro',
+    price: 149,
     icon: Zap,
     color: 'border-brand-300 dark:border-brand-800',
     popular: true,
     features: [
+      'Tudo do plano Starter',
       'Operações ilimitadas',
-      'Score premium com detalhamento',
-      'Matching prioritário',
-      'Assessoria dedicada',
-      'Dashboard avançado',
-      'Relatórios exportáveis',
-      'Suporte WhatsApp',
+      'Score Premium com análise detalhada',
+      'Prioridade no matching',
+      'Gestão de documentos avançada',
+      'Relatórios e analytics',
+      'Suporte prioritário',
     ],
   },
   {
-    key: 'ENTERPRISE',
-    name: 'Enterprise',
-    price: 599.90,
+    key: 'CORPORATE',
+    name: 'Instituição Financeira',
+    price: -1,
     icon: Crown,
     color: 'border-purple-300 dark:border-purple-800',
     features: [
-      'Tudo do Premium',
-      'Multi-propriedades',
-      'API de integração',
-      'Gestor de conta exclusivo',
-      'Treinamento personalizado',
-      'SLA garantido',
-      'Customizações',
+      'Acesso à base de tomadores qualificados',
+      'Filtros avançados de risco e perfil',
+      'API completa de integração',
+      'Dashboards de portfólio',
+      'Gestão de propostas',
+      'Compliance e rastreabilidade',
+      'SLA garantido + gerente dedicado',
     ],
   },
 ];
@@ -157,6 +144,8 @@ export default function SubscriptionPage() {
                   <div className="mt-2">
                     {plan.price === 0 ? (
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">Grátis</p>
+                    ) : plan.price === -1 ? (
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">Sob consulta</p>
                     ) : (
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {formatCurrency(plan.price)}

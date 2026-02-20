@@ -59,28 +59,28 @@ export default function AdminRevenuePage() {
             <KPICard
               title="Total Comissões"
               value={formatCurrency(totalCommissions)}
-              icon={DollarSign}
+              icon={<DollarSign className="h-6 w-6" />}
               color="green"
               subtitle="Todas as comissões"
             />
             <KPICard
               title="Comissões Pagas"
               value={formatCurrency(paidCommissions)}
-              icon={TrendingUp}
+              icon={<TrendingUp className="h-6 w-6" />}
               color="blue"
               subtitle="Status: PAID"
             />
             <KPICard
               title="Comissões Pendentes"
               value={formatCurrency(pendingCommissions)}
-              icon={CreditCard}
+              icon={<CreditCard className="h-6 w-6" />}
               color="yellow"
               subtitle="Aguardando pagamento"
             />
             <KPICard
               title="Assinaturas"
               value={String(totalSubscriptions)}
-              icon={PieChart}
+              icon={<PieChart className="h-6 w-6" />}
               color="purple"
               subtitle="Total de assinantes"
             />
@@ -135,16 +135,14 @@ export default function AdminRevenuePage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {revenue?.subscriptions?.map((s: any, i: number) => {
                 const planLabels: Record<string, string> = {
-                  FREE: 'Gratuito',
-                  BASIC: 'Básico',
-                  PREMIUM: 'Premium',
-                  ENTERPRISE: 'Enterprise',
+                  START: 'Starter',
+                  PRO: 'Pro',
+                  CORPORATE: 'Corporate',
                 };
                 const planColors: Record<string, string> = {
-                  FREE: 'border-gray-200 dark:border-gray-700',
-                  BASIC: 'border-blue-200 dark:border-blue-900',
-                  PREMIUM: 'border-brand-200 dark:border-brand-900',
-                  ENTERPRISE: 'border-purple-200 dark:border-purple-900',
+                  START: 'border-gray-200 dark:border-gray-700',
+                  PRO: 'border-brand-200 dark:border-brand-900',
+                  CORPORATE: 'border-purple-200 dark:border-purple-900',
                 };
                 return (
                   <div

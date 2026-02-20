@@ -133,6 +133,7 @@ export default function RegisterPage() {
                 onChange={(e) => updateField('name', e.target.value)}
                 className="input"
                 placeholder="Seu nome completo"
+                autoComplete="name"
                 required
               />
             </div>
@@ -146,6 +147,7 @@ export default function RegisterPage() {
                 onChange={(e) => updateField('email', e.target.value)}
                 className="input"
                 placeholder="seu@email.com"
+                autoComplete="email"
                 required
               />
             </div>
@@ -159,6 +161,7 @@ export default function RegisterPage() {
                 onChange={(e) => updateField('phone', e.target.value)}
                 className="input"
                 placeholder="(11) 99999-9999"
+                autoComplete="tel"
               />
             </div>
 
@@ -172,6 +175,7 @@ export default function RegisterPage() {
                   onChange={(e) => updateField('password', e.target.value)}
                   className="input pr-12"
                   placeholder="Mínimo 8 caracteres"
+                  autoComplete="new-password"
                   minLength={8}
                   required
                 />

@@ -153,6 +153,7 @@ export default function SettingsPage() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 className="input pr-10"
+                autoComplete="current-password"
                 required
               />
               <button
@@ -171,6 +172,7 @@ export default function SettingsPage() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="input"
+              autoComplete="new-password"
               required
               minLength={8}
             />
@@ -182,6 +184,7 @@ export default function SettingsPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="input"
+              autoComplete="new-password"
               required
             />
             {confirmPassword && newPassword !== confirmPassword && (

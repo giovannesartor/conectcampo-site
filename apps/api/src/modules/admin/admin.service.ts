@@ -44,7 +44,7 @@ export class AdminService {
         orderBy: { createdAt: 'desc' },
         take: 5,
         include: {
-          user: { select: { name: true, email: true } },
+          producerProfile: { include: { user: { select: { name: true, email: true } } } },
         },
       }),
     ]);
@@ -100,8 +100,8 @@ export class AdminService {
         status: op.status,
         requestedAmount: op.requestedAmount,
         createdAt: op.createdAt,
-        userName: op.user.name,
-        userEmail: op.user.email,
+        userName: (op as any).producerProfile?.user?.name ?? '—',
+        userEmail: (op as any).producerProfile?.user?.email ?? '—',
       })),
       userTrend,
     };
@@ -138,7 +138,7 @@ export class AdminService {
           lastLoginAt: true,
           createdAt: true,
           _count: {
-            select: { operations: true },
+            select: { documents: true },
           },
         },
       }),
@@ -193,9 +193,9 @@ export class AdminService {
         take: perPage,
         orderBy: { createdAt: 'desc' },
         include: {
-          user: { select: { name: true, email: true, role: true } },
+          producerProfile: { include: { user: { select: { name: true, email: true, role: true } } } },
           riskScore: { select: { score: true, profile: true } },
-          _count: { select: { proposals: true, matches: true } },
+          _count: { select: { proposals: true, matchResults: true } },
         },
       }),
       this.prisma.operationRequest.count({ where }),
@@ -210,11 +210,11 @@ export class AdminService {
         termMonths: op.termMonths,
         purpose: op.purpose,
         createdAt: op.createdAt,
-        user: op.user,
-        score: op.riskScore?.score ?? null,
-        riskProfile: op.riskScore?.profile ?? null,
-        proposalsCount: op._count.proposals,
-        matchesCount: op._count.matches,
+        user: (op as any).producerProfile?.user ?? null,
+        score: (op as any).riskScore?.score ?? null,
+        riskProfile: (op as any).riskScore?.profile ?? null,
+        proposalsCount: (op as any)._count?.proposals ?? 0,
+        matchesCount: (op as any)._count?.matchResults ?? 0,
       })),
       total,
       page,
@@ -229,7 +229,7 @@ export class AdminService {
     const partners = await this.prisma.partnerInstitution.findMany({
       where: { isActive: true },
       include: {
-        _count: { select: { matches: true, proposals: true, commissions: true } },
+        _count: { select: { matchResults: true, proposals: true, commissions: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -242,9 +242,9 @@ export class AdminService {
       minTicket: p.minTicket,
       maxTicket: p.maxTicket,
       minScore: p.minScore,
-      matchesCount: p._count.matches,
-      proposalsCount: p._count.proposals,
-      commissionsCount: p._count.commissions,
+      matchesCount: (p as any)._count?.matchResults ?? 0,
+      proposalsCount: (p as any)._count?.proposals ?? 0,
+      commissionsCount: (p as any)._count?.commissions ?? 0,
       createdAt: p.createdAt,
     }));
   }

@@ -41,11 +41,12 @@ export function Header() {
             onMouseEnter={() => setDropdownOpen(true)}
             onMouseLeave={() => setDropdownOpen(false)}
           >
-            <button className="flex items-center gap-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-500 transition-colors">
+            <button className="flex items-center gap-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-500 transition-colors py-2">
               Plataforma <ChevronDown className={`h-4 w-4 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             {dropdownOpen && (
-              <div className="absolute left-0 top-full mt-2 w-48 rounded-xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card shadow-lg overflow-hidden">
+              <div className="absolute left-0 top-full pt-1">
+              <div className="w-48 rounded-xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card shadow-lg overflow-hidden">
                 {plataformaLinks.map((item) => (
                   <Link
                     key={item.name}
@@ -55,6 +56,7 @@ export function Header() {
                     {item.name}
                   </Link>
                 ))}
+              </div>
               </div>
             )}
           </div>

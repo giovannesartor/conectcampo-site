@@ -91,6 +91,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="input"
                 placeholder="seu@email.com"
+                autoComplete="email"
                 required
               />
             </div>
@@ -105,6 +106,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="input pr-12"
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   required
                 />
                 <button
