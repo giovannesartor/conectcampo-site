@@ -74,7 +74,7 @@ export default function AdminRevenuePage() {
               title="Comissões Pendentes"
               value={formatCurrency(pendingCommissions)}
               icon={<CreditCard className="h-6 w-6" />}
-              color="yellow"
+              color="amber"
               subtitle="Aguardando pagamento"
             />
             <KPICard

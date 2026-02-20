@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { ArrowRight, TrendingUp, Shield, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { AnimatedCounter } from './AnimatedCounter';
+import { CreditSimulator } from './CreditSimulator';
 
 export function Hero() {
   return (
@@ -74,14 +76,19 @@ export function Hero() {
             className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8"
           >
             {[
-              { icon: TrendingUp, label: 'Volume transacionado', value: 'R$ 500M+' },
-              { icon: Shield, label: 'Parceiros financeiros', value: '50+' },
-              { icon: Zap, label: 'Tempo médio de aprovação', value: '48h' },
+              { icon: TrendingUp, label: 'Volume transacionado', prefix: 'R$ ', end: 500, suffix: 'M+' },
+              { icon: Shield, label: 'Parceiros financeiros', end: 50, suffix: '+' },
+              { icon: Zap, label: 'Tempo médio de aprovação', end: 48, suffix: 'h' },
             ].map((stat) => (
               <div key={stat.label} className="flex flex-col items-center">
                 <stat.icon className="h-8 w-8 text-brand-500 mb-2" />
                 <span className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {stat.value}
+                  <AnimatedCounter
+                    end={stat.end}
+                    prefix={stat.prefix}
+                    suffix={stat.suffix}
+                    duration={2000}
+                  />
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
                   {stat.label}
@@ -89,6 +96,9 @@ export function Hero() {
               </div>
             ))}
           </motion.div>
+
+          {/* Credit Simulator */}
+          <CreditSimulator />
         </div>
       </div>
     </section>

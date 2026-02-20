@@ -27,6 +27,8 @@ import {
 import { useAuth } from '@/lib/auth-context';
 import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { NotificationsDropdown } from './NotificationsDropdown';
+import { OnboardingTour } from './OnboardingTour';
 
 interface NavItem {
   label: string;
@@ -123,6 +125,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                   <Link
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
+                    data-tour={
+                      item.href === '/dashboard' ? 'overview' :
+                      item.href === '/dashboard/operations' ? 'operations' :
+                      item.href === '/dashboard/proposals' ? 'proposals' :
+                      item.href === '/dashboard/documents' ? 'documents' :
+                      undefined
+                    }
                     className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                       isActive(item.href)
                         ? 'bg-brand-50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-400'
@@ -215,9 +224,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <button className="btn-ghost relative p-2">
-                <Bell className="h-5 w-5" />
-              </button>
+              <div data-tour="notifications">
+                <NotificationsDropdown />
+              </div>
               <button
                 onClick={() => router.push('/dashboard/settings')}
                 className="btn-ghost p-2"
@@ -233,6 +242,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+
+      {/* Onboarding Tour */}
+      <OnboardingTour />
     </div>
   );
 }

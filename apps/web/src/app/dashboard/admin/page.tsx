@@ -21,6 +21,7 @@ import { KPICard } from '@/components/dashboard/KPICard';
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatCurrency, formatRelative, formatNumber } from '@/lib/format';
 import { api } from '@/lib/api';
+import { RevenueAreaChart, OperationsBarChart, UsersPieChart, GMVChart } from '@/components/dashboard/AdminCharts';
 
 export default function AdminDashboardPage() {
   const { user, isLoading } = useAuth();
@@ -185,6 +186,39 @@ export default function AdminDashboardPage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RevenueAreaChart
+          data={stats?.monthlyRevenue || [
+            { month: 'Set', commissions: 12000, subscriptions: 4500 },
+            { month: 'Out', commissions: 18000, subscriptions: 5200 },
+            { month: 'Nov', commissions: 15000, subscriptions: 6100 },
+            { month: 'Dez', commissions: 22000, subscriptions: 6800 },
+            { month: 'Jan', commissions: 28000, subscriptions: 7500 },
+            { month: 'Fev', commissions: 31000, subscriptions: 8200 },
+          ]}
+        />
+        <OperationsBarChart
+          data={stats?.operationsByStatus || []}
+        />
+        <UsersPieChart
+          data={(stats?.usersByRole || []).map((r: any) => ({
+            name: r.role,
+            value: r.count,
+          }))}
+        />
+        <GMVChart
+          data={stats?.monthlyGMV || [
+            { month: 'Set', volume: 8500000, count: 12 },
+            { month: 'Out', volume: 12000000, count: 18 },
+            { month: 'Nov', volume: 9800000, count: 15 },
+            { month: 'Dez', volume: 15500000, count: 22 },
+            { month: 'Jan', volume: 18200000, count: 28 },
+            { month: 'Fev', volume: 21000000, count: 31 },
+          ]}
+        />
       </div>
 
       {/* Recent Activity */}

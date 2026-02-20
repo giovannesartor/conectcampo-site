@@ -1,6 +1,17 @@
 import { PublicLayout } from '@/components/landing/PublicLayout';
 import { Building2, Shield, TrendingUp, Users, ArrowRight, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import { PartnerForm } from './PartnerForm';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Parceiros Financeiros',
+  description: 'Torne-se parceiro ConectCampo. Acesse produtores rurais pré-qualificados com scoring, dados e compliance integrados.',
+  openGraph: {
+    title: 'Parceiros Financeiros — ConectCampo',
+    description: 'Bancos, FIDCs, FIAGROs e cooperativas: acesse o melhor do crédito rural sem burocracia.',
+  },
+};
 
 const partnerTypes = [
   {
@@ -108,6 +119,19 @@ export default function ParceirosPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Partner Form */}
+      <section className="px-6 py-20 lg:px-8">
+        <div className="mx-auto max-w-2xl">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-4">
+            Cadastre sua instituição
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
+            Preencha o formulário abaixo e nosso time comercial entrará em contato em até 24h.
+          </p>
+          <PartnerForm />
         </div>
       </section>
 
