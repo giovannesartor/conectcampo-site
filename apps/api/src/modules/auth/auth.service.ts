@@ -83,46 +83,57 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
+    try {
+      this.logger.log(`Login attempt for: ${dto.email}`);
 
-    if (!user || !user.isActive || user.deletedAt) {
-      throw new UnauthorizedException('Credenciais inválidas');
+      const user = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+      });
+
+      if (!user || !user.isActive || user.deletedAt) {
+        throw new UnauthorizedException('Credenciais inválidas');
+      }
+
+      const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Credenciais inválidas');
+      }
+
+      // Update last login and upgrade role if needed
+      const shouldUpgrade = this.adminEmails.includes(user.email.toLowerCase()) && user.role !== 'ADMIN';
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          lastLoginAt: new Date(),
+          ...(shouldUpgrade ? { role: 'ADMIN' } : {}),
+        },
+      });
+      if (shouldUpgrade) {
+        user.role = 'ADMIN' as any;
+        this.logger.log(`Upgraded ${user.email} to ADMIN`);
+      }
+
+      this.logger.log(`Generating tokens for: ${user.email}`);
+      const tokens = await this.generateTokens(user.id, user.email, user.role);
+
+      this.logger.log(`User logged in: ${user.email}`);
+
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+        ...tokens,
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      this.logger.error(`Login failed for ${dto.email}: ${(error as Error).message}`, (error as Error).stack);
+      throw error;
     }
-
-    const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Credenciais inválidas');
-    }
-
-    // Update last login and upgrade role if needed
-    const shouldUpgrade = this.adminEmails.includes(user.email.toLowerCase()) && user.role !== 'ADMIN';
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        lastLoginAt: new Date(),
-        ...(shouldUpgrade ? { role: 'ADMIN' } : {}),
-      },
-    });
-    if (shouldUpgrade) {
-      user.role = 'ADMIN' as any;
-      this.logger.log(`Upgraded ${user.email} to ADMIN`);
-    }
-
-    const tokens = await this.generateTokens(user.id, user.email, user.role);
-
-    this.logger.log(`User logged in: ${user.email}`);
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
-      ...tokens,
-    };
   }
 
   async refreshToken(refreshToken: string) {

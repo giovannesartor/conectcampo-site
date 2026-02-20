@@ -52,6 +52,16 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
+  // Validate critical environment variables
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    logger.warn('⚠️  JWT_SECRET is NOT set — authentication will fail!');
+  } else {
+    logger.log(`✅ JWT_SECRET is set (${jwtSecret.length} chars)`);
+  }
+  logger.log(`✅ CORS_ORIGIN: ${process.env.CORS_ORIGIN || '(default: http://localhost:3000)'}`);
+  logger.log(`✅ DATABASE_URL: ${process.env.DATABASE_URL ? 'set' : 'NOT SET'}`);
+
   const port = process.env.PORT || process.env.API_PORT || 3001;
   await app.listen(port);
   logger.log(`🚀 ConectCampo API running on port ${port}`);
