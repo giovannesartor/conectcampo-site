@@ -131,6 +131,15 @@ export default function LoginPage() {
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
+
+          <div className="mt-6 text-center">
+            <Link
+              href="/"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+            >
+              ← Voltar ao início
+            </Link>
+          </div>
         </div>
       </div>
     </div>
