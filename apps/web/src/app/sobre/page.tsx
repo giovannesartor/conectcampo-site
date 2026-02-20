@@ -1,5 +1,5 @@
 import { PublicLayout } from '@/components/landing/PublicLayout';
-import { Target, Lightbulb, Users, Leaf, Award, Globe } from 'lucide-react';
+import { Target, Lightbulb, Users } from 'lucide-react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
@@ -25,15 +25,6 @@ const timeline = [
   { year: '2025 Q1', title: 'R$ 100M em operações', description: 'Marca de R$ 100 milhões em crédito transacionado pela plataforma.' },
   { year: '2025 Q3', title: '50+ parceiros', description: 'Expansão para mais de 50 instituições financeiras na rede de parceiros.' },
   { year: '2026', title: 'Expansão nacional', description: 'Cobertura em todos os estados do Brasil com foco no Matopiba e Centro-Oeste.' },
-];
-
-const team = [
-  { name: 'Carlos Mendes', role: 'CEO & Co-founder', bio: 'Ex-VP de Agronegócios na XP Inc. 15+ anos no mercado de crédito rural.' },
-  { name: 'Ana Ferreira', role: 'CTO & Co-founder', bio: 'Engenheira de software, ex-Google. Especialista em fintech e sistemas distribuídos.' },
-  { name: 'Ricardo Santos', role: 'CFO', bio: 'Ex-diretor de tesouraria no Banco do Brasil. Mestrado em finanças pela FGV.' },
-  { name: 'Mariana Costa', role: 'Head de Produto', bio: 'Product Lead ex-Nubank. Foco em experiência do usuário e produtos financeiros.' },
-  { name: 'Pedro Oliveira', role: 'Head Comercial', bio: '10+ anos em agribusiness. Rede em cooperativas e grandes produtores do MT e GO.' },
-  { name: 'Juliana Lima', role: 'Head Jurídico', bio: 'Advogada especialista em regulação financeira e direito do agronegócio.' },
 ];
 
 const numbers = [
@@ -159,28 +150,6 @@ export default function SobrePage() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Team */}
-      <section className="px-6 py-20 lg:px-8">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-4">Nosso time</h2>
-          <p className="text-gray-500 dark:text-gray-400 text-center mb-12 max-w-xl mx-auto">
-            Especialistas em agronegócio, tecnologia e mercado financeiro unidos por uma missão.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {team.map((member) => (
-              <div key={member.name} className="rounded-2xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 text-center">
-                <div className="mx-auto h-16 w-16 rounded-full bg-gradient-to-br from-brand-500 to-agro-gold flex items-center justify-center text-white text-xl font-bold mb-4">
-                  {member.name.split(' ').map(n => n[0]).join('')}
-                </div>
-                <h3 className="font-bold text-gray-900 dark:text-white">{member.name}</h3>
-                <p className="text-sm font-medium text-brand-600 mb-2">{member.role}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{member.bio}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>
