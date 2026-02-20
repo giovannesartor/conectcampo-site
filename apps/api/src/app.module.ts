@@ -13,6 +13,7 @@ import { PartnersModule } from './modules/partners/partners.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { HealthModule } from './modules/health/health.module';
 import { SeedModule } from './modules/seed/seed.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
@@ -35,6 +36,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
     DocumentsModule,
     SubscriptionsModule,
     AuditModule,
+    AdminModule,
     HealthModule,
     SeedModule,
   ],
