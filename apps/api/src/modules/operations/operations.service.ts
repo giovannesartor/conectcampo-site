@@ -29,6 +29,22 @@ export class OperationsService {
     });
   }
 
+  async getUserProposals(userId: string) {
+    const profile = await this.prisma.producerProfile.findUnique({ where: { userId } });
+    if (!profile) return [];
+
+    return this.prisma.proposal.findMany({
+      where: {
+        operation: { producerProfileId: profile.id },
+      },
+      include: {
+        partner: { select: { id: true, name: true, type: true } },
+        operation: { select: { id: true, type: true, requestedAmount: true, purpose: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findAll(userId: string, page = 1, perPage = 10) {
     const profile = await this.prisma.producerProfile.findUnique({
       where: { userId },

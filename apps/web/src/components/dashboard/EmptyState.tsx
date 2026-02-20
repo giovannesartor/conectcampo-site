@@ -1,4 +1,4 @@
-import { type ComponentType } from 'react';
+import { type ComponentType, isValidElement, createElement } from 'react';
 
 interface EmptyStateProps {
   icon: React.ReactNode | ComponentType<{ className?: string }>;
@@ -13,8 +13,13 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ icon: Icon, title, description, action, actionLabel, onAction }: EmptyStateProps) {
-  const renderedIcon =
-    typeof Icon === 'function' ? <Icon className="h-12 w-12" /> : Icon;
+  // Lucide icons are forwardRef objects (typeof === 'object'), not plain functions.
+  // Use isValidElement to detect already-rendered nodes; otherwise use createElement.
+  const renderedIcon = isValidElement(Icon)
+    ? Icon
+    : (typeof Icon === 'function' || (typeof Icon === 'object' && Icon !== null))
+      ? createElement(Icon as ComponentType<{ className?: string }>, { className: 'h-12 w-12' })
+      : Icon;
 
   const btn = action || (actionLabel && onAction ? { label: actionLabel, onClick: onAction } : null);
 

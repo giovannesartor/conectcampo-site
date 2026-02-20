@@ -30,7 +30,7 @@ export class OperationsController {
   }
 
   @Get()
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
   @ApiOperation({ summary: 'Listar operações do produtor' })
   async findAll(
     @CurrentUser('sub') userId: string,
@@ -38,6 +38,13 @@ export class OperationsController {
     @Query('perPage') perPage?: number,
   ) {
     return this.operationsService.findAll(userId, page, perPage);
+  }
+
+  @Get('proposals')
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Propostas recebidas pelo produtor' })
+  async getProposals(@CurrentUser('sub') userId: string) {
+    return this.operationsService.getUserProposals(userId);
   }
 
   @Get(':id')

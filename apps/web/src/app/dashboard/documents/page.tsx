@@ -41,7 +41,7 @@ export default function DocumentsPage() {
 
   async function loadDocuments() {
     try {
-      const { data } = await api.get('/documents');
+      const { data } = await api.get('/documents/me');
       setDocuments(Array.isArray(data) ? data : data?.data || []);
     } catch {
       // handle

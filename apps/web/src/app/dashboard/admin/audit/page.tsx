@@ -29,7 +29,7 @@ export default function AdminAuditPage() {
     setLoading(true);
     try {
       const { data } = await api.get('/admin/audit-logs', { params: { page, perPage } });
-      setLogs(data.data || data || []);
+      setLogs(data.logs || data.data || data || []);
       setTotal(data.total || 0);
     } catch {
       // handle
