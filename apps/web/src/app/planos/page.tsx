@@ -4,31 +4,32 @@ import Link from 'next/link';
 
 const plans = [
   {
-    name: 'Produtor Starter',
-    description: 'Para pequenos produtores iniciando sua jornada de crédito rural.',
-    price: 'Grátis',
-    period: '',
+    name: 'Plano Produtor Rural',
+    description: 'Para produtores rurais pessoa física que buscam crédito com agilidade.',
+    price: 'R$ 299',
+    period: '/mês',
     highlight: false,
-    cta: 'Criar conta',
+    cta: 'Começar agora',
     href: '/register',
     features: [
-      'Perfil básico na plataforma',
+      'Perfil completo na plataforma',
       'Score ConectCampo',
       'Até 2 operações simultâneas',
       'Matching automático',
+      'Gestão de documentos',
       'Suporte por e-mail',
     ],
   },
   {
-    name: 'Produtor Pro',
-    description: 'Para produtores e empresas do agro que buscam o melhor crédito.',
-    price: 'R$ 149',
+    name: 'Plano Empresa',
+    description: 'Para empresas do agronegócio que buscam o melhor crédito.',
+    price: 'R$ 799',
     period: '/mês',
-    highlight: true,
-    cta: 'Começar agora',
+    highlight: false,
+    cta: 'Assinar agora',
     href: '/register',
     features: [
-      'Tudo do plano Starter',
+      'Tudo do Plano Produtor Rural',
       'Operações ilimitadas',
       'Score Premium com análise detalhada',
       'Prioridade no matching',
@@ -38,13 +39,30 @@ const plans = [
     ],
   },
   {
+    name: 'Plano Cooperativa',
+    description: 'Para cooperativas agropecuárias que desejam oferecer crédito aos seus cooperados.',
+    price: 'R$ 2.890',
+    period: '/mês',
+    highlight: true,
+    cta: 'Assinar agora',
+    href: '/register',
+    features: [
+      'Tudo do Plano Empresa',
+      'Gestão multi-CNPJ de cooperados',
+      'Painel de gestão coletiva',
+      'API completa de integração',
+      'Relatórios consolidados',
+      'Suporte dedicado com gerente de conta',
+    ],
+  },
+  {
     name: 'Instituição Financeira',
-    description: 'Para bancos, FIDCs, cooperativas e securitizadoras.',
-    price: 'Sob consulta',
+    description: 'Para bancos, FIDCs, securitizadoras e FIAGROs que fornecem crédito aos produtores.',
+    price: 'Grátis',
     period: '',
     highlight: false,
-    cta: 'Falar com especialista',
-    href: '/contato',
+    cta: 'Cadastre-se grátis',
+    href: '/register',
     features: [
       'Acesso à base de tomadores qualificados',
       'Filtros avançados de risco e perfil',
@@ -69,13 +87,13 @@ export default function PlanosPage() {
           O plano certo para cada <span className="text-brand-600">etapa do seu negócio</span>
         </h1>
         <p className="mt-6 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Comece gratuitamente e escale conforme crescer. Sem contratos longos, sem surpresas.
+          Escolha o plano ideal para o seu perfil. Instituições financeiras entram grátis na plataforma.
         </p>
       </section>
 
       {/* Plans grid */}
       <section className="px-6 py-20 lg:px-8">
-        <div className="mx-auto max-w-6xl grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="mx-auto max-w-7xl grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           {plans.map((plan) => (
             <div
               key={plan.name}

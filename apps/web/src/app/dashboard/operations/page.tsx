@@ -13,25 +13,23 @@ const STATUS_OPTIONS = [
   { value: '', label: 'Todos' },
   { value: 'DRAFT', label: 'Rascunho' },
   { value: 'SUBMITTED', label: 'Enviado' },
-  { value: 'UNDER_ANALYSIS', label: 'Em Análise' },
-  { value: 'SCORING_COMPLETE', label: 'Score Completo' },
+  { value: 'SCORING', label: 'Scoring' },
   { value: 'MATCHING', label: 'Matching' },
-  { value: 'MATCHED', label: 'Matched' },
-  { value: 'PROPOSAL_RECEIVED', label: 'Proposta Recebida' },
-  { value: 'PROPOSAL_ACCEPTED', label: 'Proposta Aceita' },
-  { value: 'CONTRACT_SIGNED', label: 'Contrato Assinado' },
-  { value: 'FUNDED', label: 'Financiado' },
-  { value: 'COMPLETED', label: 'Concluído' },
-  { value: 'CANCELLED', label: 'Cancelado' },
+  { value: 'PROPOSALS_RECEIVED', label: 'Propostas Recebidas' },
+  { value: 'ACCEPTED', label: 'Aceita' },
+  { value: 'IN_ANALYSIS', label: 'Em Análise' },
+  { value: 'APPROVED', label: 'Aprovada' },
+  { value: 'REJECTED', label: 'Rejeitada' },
+  { value: 'CONTRACTED', label: 'Contratada' },
+  { value: 'COMPLETED', label: 'Concluída' },
+  { value: 'CANCELLED', label: 'Cancelada' },
 ];
 
 const TYPE_LABELS: Record<string, string> = {
-  CPR_FINANCIAL: 'CPR Financeira',
-  CPR_PHYSICAL: 'CPR Física',
-  CDCA: 'CDCA',
-  CRA: 'CRA',
-  LCA: 'LCA',
-  FIAGRO: 'FIAGRO',
+  CUSTEIO: 'Custeio',
+  INVESTIMENTO: 'Investimento',
+  GIRO: 'Capital de Giro',
+  MERCADO_CAPITAIS: 'Mercado de Capitais',
 };
 
 export default function OperationsPage() {
@@ -55,7 +53,7 @@ export default function OperationsPage() {
       if (statusFilter) params.status = statusFilter;
       const { data } = await api.get('/operations', { params });
       setOperations(data.data || data || []);
-      setTotal(data.total || 0);
+      setTotal(data.meta?.total || data.total || 0);
     } catch {
       // handle
     } finally {

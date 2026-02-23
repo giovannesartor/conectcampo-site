@@ -56,8 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(email: string, password: string) {
     const { data } = await api.post('/auth/login', { email, password });
-    Cookies.set('accessToken', data.accessToken, { expires: 1 });
-    Cookies.set('refreshToken', data.refreshToken, { expires: 7 });
+    Cookies.set('accessToken', data.accessToken, { expires: 1, sameSite: 'strict', secure: window.location.protocol === 'https:' });
+    Cookies.set('refreshToken', data.refreshToken, { expires: 7, sameSite: 'strict', secure: window.location.protocol === 'https:' });
     setUser(data.user);
   }
 
@@ -70,8 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     cpf?: string;
   }) {
     const { data } = await api.post('/auth/register', formData);
-    Cookies.set('accessToken', data.accessToken, { expires: 1 });
-    Cookies.set('refreshToken', data.refreshToken, { expires: 7 });
+    Cookies.set('accessToken', data.accessToken, { expires: 1, sameSite: 'strict', secure: window.location.protocol === 'https:' });
+    Cookies.set('refreshToken', data.refreshToken, { expires: 7, sameSite: 'strict', secure: window.location.protocol === 'https:' });
     setUser(data.user);
   }
 

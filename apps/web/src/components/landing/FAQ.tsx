@@ -18,7 +18,7 @@ const faqs = [
   {
     question: 'Preciso pagar para usar a plataforma?',
     answer:
-      'Oferecemos um plano gratuito (Start) que permite solicitar até 2 operações por mês. Para volumes maiores e funcionalidades avançadas como matching prioritário e relatórios detalhados, temos os planos Pro (R$ 149/mês) e Corporate (sob consulta).',
+      'Oferecemos quatro planos: o Plano Produtor Rural (R$ 299/mês) para produtores pessoa física, o Plano Empresa (R$ 799/mês) para empresas do agronegócio, o Plano Cooperativa (R$ 2.890/mês) para cooperativas agropecuárias, e o plano para Instituições Financeiras, que é gratuito, pois são elas que fornecem o crédito aos produtores.',
   },
   {
     question: 'Como funciona o Score ConectCampo?',

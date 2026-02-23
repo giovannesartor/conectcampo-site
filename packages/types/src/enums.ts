@@ -83,6 +83,7 @@ export enum PartnerType {
 export enum SubscriptionPlan {
   START = 'START',
   PRO = 'PRO',
+  COOPERATIVE = 'COOPERATIVE',
   CORPORATE = 'CORPORATE',
 }
 

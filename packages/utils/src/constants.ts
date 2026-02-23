@@ -4,23 +4,33 @@ import type { IPlanFeatures } from '@conectcampo/types';
 export const PLAN_FEATURES: Record<SubscriptionPlan, IPlanFeatures> = {
   [SubscriptionPlan.START]: {
     plan: SubscriptionPlan.START,
-    maxActiveOperations: 1,
+    maxActiveOperations: 2,
     multiCnpj: false,
     dataRoomFull: false,
     prioritySupport: false,
     apiAccess: false,
     customReports: false,
-    monthlyPrice: 0,
+    monthlyPrice: 299,
   },
   [SubscriptionPlan.PRO]: {
     plan: SubscriptionPlan.PRO,
-    maxActiveOperations: 10,
-    multiCnpj: false,
+    maxActiveOperations: -1, // unlimited
+    multiCnpj: true,
     dataRoomFull: true,
     prioritySupport: true,
     apiAccess: false,
     customReports: true,
-    monthlyPrice: 299,
+    monthlyPrice: 799,
+  },
+  [SubscriptionPlan.COOPERATIVE]: {
+    plan: SubscriptionPlan.COOPERATIVE,
+    maxActiveOperations: -1, // unlimited
+    multiCnpj: true,
+    dataRoomFull: true,
+    prioritySupport: true,
+    apiAccess: true,
+    customReports: true,
+    monthlyPrice: 2890,
   },
   [SubscriptionPlan.CORPORATE]: {
     plan: SubscriptionPlan.CORPORATE,
@@ -30,7 +40,7 @@ export const PLAN_FEATURES: Record<SubscriptionPlan, IPlanFeatures> = {
     prioritySupport: true,
     apiAccess: true,
     customReports: true,
-    monthlyPrice: 999,
+    monthlyPrice: 0,
   },
 };
 

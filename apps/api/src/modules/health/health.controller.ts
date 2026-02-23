@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpException, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -21,11 +21,14 @@ export class HealthController {
         version: process.env.npm_package_version || '0.1.0',
       };
     } catch {
-      return {
-        status: 'error',
-        timestamp: new Date().toISOString(),
-        database: 'disconnected',
-      };
+      throw new HttpException(
+        {
+          status: 'error',
+          timestamp: new Date().toISOString(),
+          database: 'disconnected',
+        },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
     }
   }
 }

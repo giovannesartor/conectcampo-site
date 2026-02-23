@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { OperationsService } from './operations.service';
+import { CreateOperationDto } from './dto/create-operation.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -25,7 +26,7 @@ export class OperationsController {
   @Post()
   @Roles(UserRole.PRODUCER, UserRole.COMPANY)
   @ApiOperation({ summary: 'Criar nova operação de crédito' })
-  async create(@CurrentUser('sub') userId: string, @Body() data: any) {
+  async create(@CurrentUser('sub') userId: string, @Body() data: CreateOperationDto) {
     return this.operationsService.create(userId, data);
   }
 

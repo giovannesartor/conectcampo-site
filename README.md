@@ -54,7 +54,7 @@
 ### Modelo híbrido: SaaS + Comissão
 
 ```
-Receita = Assinatura mensal (Start/Pro/Corporate) + Comissão por operação fechada
+Receita = Assinatura mensal (Produtor Rural R$299 / Empresa R$799 / Cooperativa R$2.890 / Inst. Financeira Grátis) + Comissão por operação fechada
 ```
 
 ---

@@ -79,7 +79,7 @@ export class OperationsService {
     };
   }
 
-  async findById(id: string, userId: string) {
+  async findById(id: string, userId: string, userRole?: string) {
     const operation = await this.prisma.operationRequest.findUnique({
       where: { id },
       include: {
@@ -99,7 +99,7 @@ export class OperationsService {
     });
 
     if (!operation) throw new NotFoundException('Operação não encontrada');
-    if (operation.producerProfile.user.id !== userId) {
+    if (userRole !== 'ADMIN' && operation.producerProfile.user.id !== userId) {
       throw new ForbiddenException('Acesso não autorizado');
     }
 

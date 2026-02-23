@@ -2,6 +2,7 @@ import { Controller, Post, Get, Patch, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ProducersService } from './producers.service';
 import { CreateProducerProfileDto } from './dto/create-producer-profile.dto';
+import { CreateFinancialProfileDto } from './dto/create-financial-profile.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -46,7 +47,7 @@ export class ProducersController {
   @ApiOperation({ summary: 'Criar/atualizar perfil financeiro' })
   async createFinancialProfile(
     @CurrentUser('sub') userId: string,
-    @Body() data: any,
+    @Body() data: CreateFinancialProfileDto,
   ) {
     return this.producersService.createFinancialProfile(userId, data);
   }

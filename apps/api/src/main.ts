@@ -3,6 +3,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -21,6 +22,9 @@ async function bootstrap() {
   // Global prefix
   const prefix = process.env.API_PREFIX || '/api/v1';
   app.setGlobalPrefix(prefix);
+
+  // Global exception filter
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // Validation
   app.useGlobalPipes(
@@ -55,7 +59,8 @@ async function bootstrap() {
   // Validate critical environment variables
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) {
-    logger.warn('⚠️  JWT_SECRET is NOT set — authentication will fail!');
+    logger.error('❌ JWT_SECRET is NOT set — refusing to start!');
+    process.exit(1);
   } else {
     logger.log(`✅ JWT_SECRET is set (${jwtSecret.length} chars)`);
   }

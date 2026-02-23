@@ -1,6 +1,8 @@
 import { Controller, Post, Get, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { DocumentsService } from './documents.service';
+import { S3Service } from './s3.service';
+import { CreateDocumentDto, RequestPresignedUrlDto } from './dto/document.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -11,11 +13,23 @@ import { UserRole } from '@prisma/client';
 @Controller('documents')
 @UseGuards(RolesGuard)
 export class DocumentsController {
-  constructor(private readonly documentsService: DocumentsService) {}
+  constructor(
+    private readonly documentsService: DocumentsService,
+    private readonly s3Service: S3Service,
+  ) {}
+
+  @Post('presigned-url')
+  @ApiOperation({ summary: 'Obter URL pré-assinada para upload' })
+  async getPresignedUrl(
+    @CurrentUser('sub') userId: string,
+    @Body() dto: RequestPresignedUrlDto,
+  ) {
+    return this.s3Service.getPresignedUploadUrl(userId, dto.fileName, dto.mimeType);
+  }
 
   @Post()
   @ApiOperation({ summary: 'Registrar upload de documento' })
-  async upload(@CurrentUser('sub') userId: string, @Body() data: any) {
+  async upload(@CurrentUser('sub') userId: string, @Body() data: CreateDocumentDto) {
     return this.documentsService.upload(userId, data);
   }
 

@@ -59,7 +59,7 @@ export default function DashboardPage() {
   async function loadDashboard() {
     try {
       const { data } = await api.get('/operations?page=1&perPage=5');
-      const ops = data.operations || data.data || data || [];
+      const ops = data.data || data.operations || data || [];
       setOperations(Array.isArray(ops) ? ops : []);
 
       const active = Array.isArray(ops) ? ops.filter((o: Operation) =>
@@ -70,7 +70,7 @@ export default function DashboardPage() {
       ) : 0;
 
       setStats({
-        totalOperations: data.total || (Array.isArray(ops) ? ops.length : 0),
+        totalOperations: data.meta?.total || data.total || (Array.isArray(ops) ? ops.length : 0),
         activeOperations: active,
         totalProposals: proposals,
         score: null,

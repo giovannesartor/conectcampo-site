@@ -9,27 +9,27 @@ import { api } from '@/lib/api';
 const PLANS = [
   {
     key: 'START',
-    name: 'Produtor Starter',
-    price: 0,
+    name: 'Plano Produtor Rural',
+    price: 299,
     icon: Package,
     color: 'border-gray-200 dark:border-gray-700',
     features: [
-      'Perfil básico na plataforma',
+      'Perfil completo na plataforma',
       'Score ConectCampo',
       'Até 2 operações simultâneas',
       'Matching automático',
+      'Gestão de documentos',
       'Suporte por e-mail',
     ],
   },
   {
     key: 'PRO',
-    name: 'Produtor Pro',
-    price: 149,
+    name: 'Plano Empresa',
+    price: 799,
     icon: Zap,
     color: 'border-brand-300 dark:border-brand-800',
-    popular: true,
     features: [
-      'Tudo do plano Starter',
+      'Tudo do Plano Produtor Rural',
       'Operações ilimitadas',
       'Score Premium com análise detalhada',
       'Prioridade no matching',
@@ -39,9 +39,25 @@ const PLANS = [
     ],
   },
   {
+    key: 'COOPERATIVE',
+    name: 'Plano Cooperativa',
+    price: 2890,
+    icon: Star,
+    color: 'border-amber-300 dark:border-amber-800',
+    popular: true,
+    features: [
+      'Tudo do Plano Empresa',
+      'Gestão multi-CNPJ de cooperados',
+      'Painel de gestão coletiva',
+      'API completa de integração',
+      'Relatórios consolidados',
+      'Suporte dedicado com gerente de conta',
+    ],
+  },
+  {
     key: 'CORPORATE',
     name: 'Instituição Financeira',
-    price: -1,
+    price: 0,
     icon: Crown,
     color: 'border-purple-300 dark:border-purple-800',
     features: [
@@ -144,8 +160,6 @@ export default function SubscriptionPage() {
                   <div className="mt-2">
                     {plan.price === 0 ? (
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">Grátis</p>
-                    ) : plan.price === -1 ? (
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">Sob consulta</p>
                     ) : (
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {formatCurrency(plan.price)}

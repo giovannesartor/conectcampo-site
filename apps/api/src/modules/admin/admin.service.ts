@@ -23,8 +23,8 @@ export class AdminService {
     ] = await Promise.all([
       this.prisma.user.count({ where: { deletedAt: null } }),
       this.prisma.user.count({ where: { isActive: true, deletedAt: null } }),
-      this.prisma.operationRequest.count(),
-      this.prisma.partnerInstitution.count({ where: { isActive: true } }),
+      this.prisma.operationRequest.count({ where: { deletedAt: null } }),
+      this.prisma.partnerInstitution.count({ where: { isActive: true, deletedAt: null } }),
       this.prisma.user.groupBy({
         by: ['role'],
         where: { deletedAt: null },
@@ -181,7 +181,7 @@ export class AdminService {
   // ─── Operations ──────────────────────────────────────────────────────────────
 
   async getOperations(page: number, perPage: number, status?: string) {
-    const where: any = {};
+    const where: any = { deletedAt: null };
     if (status && status !== 'ALL') {
       where.status = status as OperationStatus;
     }
@@ -227,7 +227,7 @@ export class AdminService {
 
   async getPartners() {
     const partners = await this.prisma.partnerInstitution.findMany({
-      where: { isActive: true },
+      where: { isActive: true, deletedAt: null },
       include: {
         _count: { select: { matchResults: true, proposals: true, commissions: true } },
       },

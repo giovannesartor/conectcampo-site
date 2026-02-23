@@ -1,6 +1,7 @@
 import { Controller, Post, Get, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { PartnersService } from './partners.service';
+import { CreatePartnerDto, UpdatePartnerDto } from './dto/partner.dto';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
@@ -15,7 +16,7 @@ export class PartnersController {
   @Post()
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Cadastrar parceiro financeiro' })
-  async create(@Body() data: any) {
+  async create(@Body() data: CreatePartnerDto) {
     return this.partnersService.create(data);
   }
 
@@ -34,7 +35,7 @@ export class PartnersController {
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.FINANCIAL_INSTITUTION)
   @ApiOperation({ summary: 'Atualizar parceiro' })
-  async update(@Param('id') id: string, @Body() data: any) {
+  async update(@Param('id') id: string, @Body() data: UpdatePartnerDto) {
     return this.partnersService.update(id, data);
   }
 

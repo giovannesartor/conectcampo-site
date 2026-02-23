@@ -45,10 +45,13 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/conectcampo?schema=public
       REDIS_URL: redis://redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       JWT_SECRET: dev-jwt-secret-change-in-production-32ch
       JWT_REFRESH_SECRET: dev-jwt-refresh-secret-change-prod
       API_PORT: 3001
       CORS_ORIGIN: http://localhost:3000
+      ADMIN_EMAILS: giovannesartor@gmail.com
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,9 +66,10 @@ services:
     container_name: conectcampo-web
     restart: unless-stopped
     ports:
-      - '3000:3000'
+      - '3000:8080'
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+      API_INTERNAL_URL: http://api:3001
       NEXT_PUBLIC_APP_NAME: ConectCampo
     depends_on:
       - api

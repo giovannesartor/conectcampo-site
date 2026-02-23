@@ -14,7 +14,7 @@ export class SubscriptionsService {
     });
 
     if (!subscription) {
-      // Criar plano Start gratuito
+      // Criar plano Produtor Rural padrão
       subscription = await this.prisma.subscription.create({
         data: {
           userId,

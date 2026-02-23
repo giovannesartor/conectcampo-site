@@ -132,16 +132,18 @@ export default function AdminRevenuePage() {
           {/* Subscriptions by plan */}
           <div className="card">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Assinaturas por Plano</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {revenue?.subscriptions?.map((s: any, i: number) => {
                 const planLabels: Record<string, string> = {
-                  START: 'Starter',
-                  PRO: 'Pro',
-                  CORPORATE: 'Corporate',
+                  START: 'Produtor Rural',
+                  PRO: 'Empresa',
+                  COOPERATIVE: 'Cooperativa',
+                  CORPORATE: 'Inst. Financeira',
                 };
                 const planColors: Record<string, string> = {
                   START: 'border-gray-200 dark:border-gray-700',
                   PRO: 'border-brand-200 dark:border-brand-900',
+                  COOPERATIVE: 'border-amber-200 dark:border-amber-900',
                   CORPORATE: 'border-purple-200 dark:border-purple-900',
                 };
                 return (
@@ -158,7 +160,7 @@ export default function AdminRevenuePage() {
                 );
               })}
               {(!revenue?.subscriptions || revenue.subscriptions.length === 0) && (
-                <p className="text-gray-400 text-sm text-center py-4 col-span-3">Nenhuma assinatura registrada</p>
+                <p className="text-gray-400 text-sm text-center py-4 col-span-4">Nenhuma assinatura registrada</p>
               )}
             </div>
           </div>

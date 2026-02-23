@@ -26,7 +26,7 @@ export default function SettingsPage() {
     setSaving(true);
     setSuccess('');
     try {
-      await api.patch('/users/profile', { name, phone });
+      await api.patch('/users/me', { name, phone });
       setSuccess('Perfil atualizado com sucesso!');
     } catch {
       // handle

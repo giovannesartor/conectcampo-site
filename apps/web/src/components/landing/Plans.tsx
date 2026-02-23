@@ -6,27 +6,29 @@ import { Check } from 'lucide-react';
 
 const plans = [
   {
-    name: 'Produtor Starter',
-    price: 'Grátis',
-    description: 'Para pequenos produtores iniciando sua jornada de crédito rural.',
+    name: 'Plano Produtor Rural',
+    price: 'R$ 299',
+    period: '/mês',
+    description: 'Para produtores rurais pessoa física que buscam crédito com agilidade.',
     features: [
-      'Perfil básico na plataforma',
+      'Perfil completo na plataforma',
       'Score ConectCampo',
       'Até 2 operações simultâneas',
       'Matching automático',
+      'Gestão de documentos',
       'Suporte por e-mail',
     ],
-    cta: 'Criar conta',
+    cta: 'Começar agora',
     highlighted: false,
     href: '/register',
   },
   {
-    name: 'Produtor Pro',
-    price: 'R$ 149',
+    name: 'Plano Empresa',
+    price: 'R$ 799',
     period: '/mês',
-    description: 'Para produtores e empresas do agro que buscam o melhor crédito.',
+    description: 'Para empresas do agronegócio que buscam o melhor crédito.',
     features: [
-      'Tudo do plano Starter',
+      'Tudo do Plano Produtor Rural',
       'Operações ilimitadas',
       'Score Premium com análise detalhada',
       'Prioridade no matching',
@@ -34,14 +36,31 @@ const plans = [
       'Relatórios e analytics',
       'Suporte prioritário',
     ],
-    cta: 'Começar agora',
+    cta: 'Assinar agora',
+    highlighted: false,
+    href: '/register',
+  },
+  {
+    name: 'Plano Cooperativa',
+    price: 'R$ 2.890',
+    period: '/mês',
+    description: 'Para cooperativas agropecuárias que desejam oferecer crédito aos seus cooperados.',
+    features: [
+      'Tudo do Plano Empresa',
+      'Gestão multi-CNPJ de cooperados',
+      'Painel de gestão coletiva',
+      'API completa de integração',
+      'Relatórios consolidados',
+      'Suporte dedicado com gerente de conta',
+    ],
+    cta: 'Assinar agora',
     highlighted: true,
     href: '/register',
   },
   {
     name: 'Instituição Financeira',
-    price: 'Sob consulta',
-    description: 'Para bancos, FIDCs, cooperativas e securitizadoras.',
+    price: 'Grátis',
+    description: 'Para bancos, FIDCs, securitizadoras e FIAGROs que fornecem crédito aos produtores.',
     features: [
       'Acesso à base de tomadores qualificados',
       'Filtros avançados de risco e perfil',
@@ -51,9 +70,9 @@ const plans = [
       'Compliance e rastreabilidade',
       'SLA garantido + gerente dedicado',
     ],
-    cta: 'Falar com especialista',
+    cta: 'Cadastre-se grátis',
     highlighted: false,
-    href: '/contato',
+    href: '/register',
   },
 ];
 
@@ -64,11 +83,11 @@ export function Plans() {
         <div className="text-center">
           <h2 className="section-title">Planos que cabem na sua operação</h2>
           <p className="section-subtitle">
-            Comece grátis e escale conforme sua necessidade. Além da assinatura, cobramos apenas uma comissão sobre operações fechadas.
+            Escolha o plano ideal para o seu perfil. Instituições financeiras entram grátis. Além da assinatura, cobramos apenas uma comissão sobre operações fechadas.
           </p>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-start">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}

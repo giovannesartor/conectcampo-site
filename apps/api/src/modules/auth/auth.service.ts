@@ -28,11 +28,13 @@ export class AuthService {
     private readonly mailService: MailService,
   ) {}
 
-  // Emails that always receive ADMIN role
-  private readonly adminEmails: string[] = [
-    'giovannesartor@gmail.com',
-    ...((process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim()).filter(Boolean)),
-  ];
+  // Admin emails resolved from environment
+  private readonly adminEmails: string[] = (
+    process.env.ADMIN_EMAILS ?? ''
+  )
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
 
   private resolveRole(email: string, requested: UserRole): UserRole {
     return this.adminEmails.includes(email.toLowerCase()) ? UserRole.ADMIN : requested;
@@ -274,6 +276,31 @@ export class AuthService {
 
   // ─── Private helpers ──────────────────────────────────────────────────────────
 
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new BadRequestException('Usuário não encontrado');
+
+    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isValid) throw new UnauthorizedException('Senha atual incorreta');
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+
+    // Revogar todos os refresh tokens por segurança
+    await this.prisma.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    this.logger.log(`Password changed for user: ${user.email}`);
+    return { message: 'Senha alterada com sucesso.' };
+  }
+
+  // ─── Private token helpers ────────────────────────────────────────────────────
+
   private async createEmailVerificationToken(userId: string): Promise<string> {
     const token = uuidv4();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
@@ -294,8 +321,12 @@ export class AuthService {
       '7d',
     );
 
+    // Parse duration string like '7d', '14d', '30d'
+    const match = refreshExpiresIn.match(/^(\d+)d$/);
+    const days = match ? parseInt(match[1]) : 7;
+
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + parseInt(refreshExpiresIn) || 7);
+    expiresAt.setDate(expiresAt.getDate() + days);
 
     await this.prisma.refreshToken.create({
       data: {

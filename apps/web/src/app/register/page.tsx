@@ -198,9 +198,9 @@ export default function RegisterPage() {
               />
               <label htmlFor="lgpd" className="text-xs text-gray-500 dark:text-gray-400">
                 Li e concordo com os{' '}
-                <Link href="#" className="text-brand-600 hover:underline">Termos de Uso</Link>{' '}
+                <Link href="/legal/termos-de-uso" className="text-brand-600 hover:underline">Termos de Uso</Link>{' '}
                 e{' '}
-                <Link href="#" className="text-brand-600 hover:underline">Política de Privacidade</Link>.
+                <Link href="/legal/privacidade" className="text-brand-600 hover:underline">Política de Privacidade</Link>.
                 Autorizo o tratamento dos meus dados conforme a LGPD.
               </label>
             </div>
