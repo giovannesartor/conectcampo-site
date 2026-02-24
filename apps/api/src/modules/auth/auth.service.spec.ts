@@ -4,9 +4,11 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from '../mail/mail.service';
+import { AsaasService } from '../subscriptions/asaas.service';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { UserRole } from '@prisma/client';
+import { UserRole, SubscriptionPlan } from '@prisma/client';
 
 jest.mock('bcryptjs');
 jest.mock('uuid', () => ({ v4: () => 'mock-uuid' }));
@@ -22,6 +24,7 @@ describe('AuthService', () => {
       findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
     refreshToken: {
       create: jest.fn(),
@@ -36,6 +39,19 @@ describe('AuthService', () => {
       create: jest.fn(),
       findUnique: jest.fn(),
     },
+    subscription: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+  };
+
+  const mockAsaasService = {
+    createCustomerAndSubscription: jest.fn(),
+  };
+
+  const mockSubscriptionsService = {
+    getOrCreateFreeSubscription: jest.fn().mockResolvedValue({}),
   };
 
   const mockJwtService = {
@@ -67,6 +83,8 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: MailService, useValue: mockMailService },
+        { provide: AsaasService, useValue: mockAsaasService },
+        { provide: SubscriptionsService, useValue: mockSubscriptionsService },
       ],
     }).compile();
 
@@ -79,14 +97,16 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
+    // CORPORATE = free plan, returns tokens directly without Asaas redirect
     const registerDto = {
       email: 'test@example.com',
       password: 'Senha@123',
       name: 'Test User',
       role: UserRole.PRODUCER,
+      plan: SubscriptionPlan.CORPORATE,
     };
 
-    it('should register a new user', async () => {
+    it('should register a new user with free plan', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
 
@@ -103,8 +123,11 @@ describe('AuthService', () => {
       const result = await service.register(registerDto);
 
       expect(result.user.email).toBe(registerDto.email);
-      expect(result.accessToken).toBeDefined();
-      expect(result.refreshToken).toBeDefined();
+      // Free plan returns tokens immediately
+      if (!result.requiresPayment) {
+        expect(result.accessToken).toBeDefined();
+        expect(result.refreshToken).toBeDefined();
+      }
       expect(prisma.user.create).toHaveBeenCalledTimes(1);
     });
 
