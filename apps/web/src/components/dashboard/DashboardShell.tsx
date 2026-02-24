@@ -107,7 +107,7 @@ function buildNav(role: string, plan: string): NavSection[] {
       {
         title: 'Análise',
         items: [
-          { label: 'Analytics',          href: '/dashboard/documents',         icon: <PieChart className="h-5 w-5" /> },
+          { label: 'Analytics',          href: '/dashboard/matching',           icon: <PieChart className="h-5 w-5" /> },
         ],
       },
       {

@@ -7,6 +7,7 @@ import { Shield, ChevronLeft, ChevronRight } from 'lucide-react';
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatDateTime } from '@/lib/format';
 import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 export default function AdminAuditPage() {
   const { user, isLoading } = useAuth();
@@ -32,7 +33,7 @@ export default function AdminAuditPage() {
       setLogs(data.logs || data.data || data || []);
       setTotal(data.total || 0);
     } catch {
-      // handle
+      toast.error('Ocorreu um erro. Tente novamente.');
     } finally {
       setLoading(false);
     }

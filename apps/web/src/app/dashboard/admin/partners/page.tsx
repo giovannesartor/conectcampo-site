@@ -7,6 +7,7 @@ import { Building2, BarChart3 } from 'lucide-react';
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 export default function AdminPartnersPage() {
   const { user, isLoading } = useAuth();
@@ -27,7 +28,7 @@ export default function AdminPartnersPage() {
       const { data } = await api.get('/admin/partners');
       setPartners(Array.isArray(data) ? data : []);
     } catch {
-      // handle
+      toast.error('Ocorreu um erro. Tente novamente.');
     } finally {
       setLoading(false);
     }

@@ -16,6 +16,7 @@ import {
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatDate, formatRelative } from '@/lib/format';
 import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 const ROLES = ['ALL', 'PRODUCER', 'COMPANY', 'FINANCIAL_INSTITUTION', 'CREDIT_ANALYST', 'ADMIN'];
 
@@ -48,7 +49,7 @@ export default function AdminUsersPage() {
       setTotal(data.total || 0);
       setTotalPages(data.totalPages || 1);
     } catch {
-      // handle
+      toast.error('Ocorreu um erro. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -59,7 +60,7 @@ export default function AdminUsersPage() {
       await api.patch(`/admin/users/${id}/toggle-active`);
       loadUsers();
     } catch {
-      // handle
+      toast.error('Ocorreu um erro. Tente novamente.');
     }
   }
 

@@ -2,14 +2,14 @@
 
 import { useAuth } from '@/lib/auth-context';
 import { useState } from 'react';
-import { User, Mail, Lock, Bell, Palette, Save, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Bell, Save, Eye, EyeOff } from 'lucide-react';
 import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<'profile' | 'password' | 'notifications'>('profile');
   const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState('');
 
   // Profile form
   const [name, setName] = useState(user?.name || '');
@@ -21,15 +21,23 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  // Notification preferences
+  const [notifications, setNotifications] = useState({
+    proposals: true,
+    operations: true,
+    scoring: true,
+    marketing: false,
+  });
+  const [savingNotifications, setSavingNotifications] = useState(false);
+
   async function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    setSuccess('');
     try {
       await api.patch('/users/me', { name, phone });
-      setSuccess('Perfil atualizado com sucesso!');
+      toast.success('Perfil atualizado com sucesso!');
     } catch {
-      // handle
+      toast.error('Erro ao atualizar perfil. Tente novamente.');
     } finally {
       setSaving(false);
     }
@@ -39,17 +47,31 @@ export default function SettingsPage() {
     e.preventDefault();
     if (newPassword !== confirmPassword) return;
     setSaving(true);
-    setSuccess('');
     try {
       await api.post('/auth/change-password', { currentPassword, newPassword });
-      setSuccess('Senha alterada com sucesso!');
+      toast.success('Senha alterada com sucesso!');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch {
-      // handle
+      toast.error('Erro ao alterar senha. Verifique a senha atual.');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleToggleNotification(key: keyof typeof notifications) {
+    const updated = { ...notifications, [key]: !notifications[key] };
+    setNotifications(updated);
+    setSavingNotifications(true);
+    try {
+      await api.patch('/users/me', { notificationPreferences: updated });
+    } catch {
+      // revert on error
+      setNotifications(notifications);
+      toast.error('Erro ao salvar preferência.');
+    } finally {
+      setSavingNotifications(false);
     }
   }
 
@@ -58,6 +80,13 @@ export default function SettingsPage() {
     { key: 'password', label: 'Senha', icon: Lock },
     { key: 'notifications', label: 'Notificações', icon: Bell },
   ] as const;
+
+  const NOTIFICATION_ITEMS = [
+    { label: 'Novas propostas', desc: 'Receber email quando uma proposta for recebida', key: 'proposals' as const },
+    { label: 'Atualizações de operação', desc: 'Quando o status de uma operação mudar', key: 'operations' as const },
+    { label: 'Score atualizado', desc: 'Quando seu score for recalculado', key: 'scoring' as const },
+    { label: 'Novidades da plataforma', desc: 'Newsletter e atualizações', key: 'marketing' as const },
+  ];
 
   return (
     <div className="space-y-6">
@@ -73,7 +102,7 @@ export default function SettingsPage() {
           return (
             <button
               key={t.key}
-              onClick={() => { setTab(t.key); setSuccess(''); }}
+              onClick={() => setTab(t.key)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition -mb-px ${
                 tab === t.key
                   ? 'border-brand-500 text-brand-600 dark:text-brand-400'
@@ -86,12 +115,6 @@ export default function SettingsPage() {
           );
         })}
       </div>
-
-      {success && (
-        <div className="p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-700 dark:text-green-400">
-          {success}
-        </div>
-      )}
 
       {/* Profile tab */}
       {tab === 'profile' && (
@@ -204,25 +227,33 @@ export default function SettingsPage() {
 
       {/* Notifications tab */}
       {tab === 'notifications' && (
-        <div className="card max-w-lg space-y-4">
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            Configure suas preferências de notificação.
-          </p>
-          {[
-            { label: 'Novas propostas', desc: 'Receber email quando uma proposta for recebida', key: 'proposals' },
-            { label: 'Atualizações de operação', desc: 'Quando o status de uma operação mudar', key: 'operations' },
-            { label: 'Score atualizado', desc: 'Quando seu score for recalculado', key: 'scoring' },
-            { label: 'Novidades da plataforma', desc: 'Newsletter e atualizações', key: 'marketing' },
-          ].map((item) => (
+        <div className="card max-w-lg space-y-1">
+          <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-dark-border">
+            <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Preferências de notificação por email</p>
+            {savingNotifications && (
+              <span className="text-xs text-gray-400">Salvando...</span>
+            )}
+          </div>
+          {NOTIFICATION_ITEMS.map((item) => (
             <div key={item.key} className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-dark-border last:border-0">
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{item.label}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{item.desc}</p>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" defaultChecked className="sr-only peer" />
-                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500"></div>
-              </label>
+              <button
+                type="button"
+                onClick={() => handleToggleNotification(item.key)}
+                disabled={savingNotifications}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                  notifications[item.key] ? 'bg-brand-500' : 'bg-gray-200 dark:bg-gray-700'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    notifications[item.key] ? 'translate-x-4' : 'translate-x-0.5'
+                  }`}
+                />
+              </button>
             </div>
           ))}
         </div>

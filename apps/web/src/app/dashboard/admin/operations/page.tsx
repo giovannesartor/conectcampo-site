@@ -12,6 +12,7 @@ import {
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatCurrency, formatDate, formatRelative } from '@/lib/format';
 import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 const STATUSES = [
   'ALL', 'DRAFT', 'SUBMITTED', 'SCORING', 'MATCHING', 'PROPOSALS_RECEIVED',
@@ -45,7 +46,7 @@ export default function AdminOperationsPage() {
       setTotal(data.total || 0);
       setTotalPages(data.totalPages || 1);
     } catch {
-      // handle
+      toast.error('Ocorreu um erro. Tente novamente.');
     } finally {
       setLoading(false);
     }

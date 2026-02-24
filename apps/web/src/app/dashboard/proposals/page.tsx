@@ -7,6 +7,7 @@ import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 export default function ProposalsPage() {
   const { user } = useAuth();
@@ -22,7 +23,7 @@ export default function ProposalsPage() {
       const { data } = await api.get('/operations/proposals');
       setProposals(Array.isArray(data) ? data : data?.data || []);
     } catch {
-      // handle
+      toast.error('Ocorreu um erro. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -33,7 +34,7 @@ export default function ProposalsPage() {
       await api.patch(`/operations/proposals/${proposalId}/accept`);
       loadProposals();
     } catch {
-      // handle
+      toast.error('Ocorreu um erro. Tente novamente.');
     }
   }
 
@@ -42,7 +43,7 @@ export default function ProposalsPage() {
       await api.patch(`/operations/proposals/${proposalId}/reject`);
       loadProposals();
     } catch {
-      // handle
+      toast.error('Ocorreu um erro. Tente novamente.');
     }
   }
 

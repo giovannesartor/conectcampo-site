@@ -6,6 +6,7 @@ import { FolderOpen, Upload, FileText, Download, Trash2, Eye, CheckCircle, Clock
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import { formatDate } from '@/lib/format';
 import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 const DOC_STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
   PENDING: { label: 'Pendente', color: 'text-yellow-600 bg-yellow-50', icon: Clock },
@@ -44,7 +45,7 @@ export default function DocumentsPage() {
       const { data } = await api.get('/documents/me');
       setDocuments(Array.isArray(data) ? data : data?.data || []);
     } catch {
-      // handle
+      toast.error('Ocorreu um erro. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -63,7 +64,7 @@ export default function DocumentsPage() {
       });
       loadDocuments();
     } catch {
-      // handle
+      toast.error('Ocorreu um erro. Tente novamente.');
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -76,7 +77,7 @@ export default function DocumentsPage() {
       await api.delete(`/documents/${docId}`);
       setDocuments((prev) => prev.filter((d) => d.id !== docId));
     } catch {
-      // handle
+      toast.error('Ocorreu um erro. Tente novamente.');
     }
   }
 

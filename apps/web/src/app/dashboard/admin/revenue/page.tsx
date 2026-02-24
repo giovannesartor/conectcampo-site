@@ -7,6 +7,7 @@ import { DollarSign, TrendingUp, CreditCard, PieChart } from 'lucide-react';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 export default function AdminRevenuePage() {
   const { user, isLoading } = useAuth();
@@ -27,7 +28,7 @@ export default function AdminRevenuePage() {
       const { data } = await api.get('/admin/revenue');
       setRevenue(data);
     } catch {
-      // handle
+      toast.error('Ocorreu um erro. Tente novamente.');
     } finally {
       setLoading(false);
     }

@@ -13,6 +13,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 const STEPS = [
   { label: 'Tipo', icon: FileText },
@@ -86,7 +87,7 @@ export default function NewOperationWizard() {
       router.push('/dashboard/operations');
     } catch (err) {
       console.error('Failed to create operation', err);
-      alert('Erro ao criar operação. Tente novamente.');
+      toast.error('Erro ao criar operação. Tente novamente.');
     } finally {
       setSubmitting(false);
     }

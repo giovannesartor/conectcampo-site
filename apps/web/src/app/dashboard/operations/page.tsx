@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos' },
@@ -55,7 +56,7 @@ export default function OperationsPage() {
       setOperations(data.data || data || []);
       setTotal(data.meta?.total || data.total || 0);
     } catch {
-      // handle
+      toast.error('Ocorreu um erro. Tente novamente.');
     } finally {
       setLoading(false);
     }

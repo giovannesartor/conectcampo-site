@@ -1,10 +1,9 @@
 'use client';
 
-import { useAuth } from '@/lib/auth-context';
 import { useEffect, useState } from 'react';
-import { BarChart3, TrendingUp, TrendingDown, Info, RefreshCw } from 'lucide-react';
-import { KPICard } from '@/components/dashboard/KPICard';
+import { BarChart3, Info, RefreshCw, ChevronDown } from 'lucide-react';
 import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 const SCORE_FACTORS = [
   { key: 'revenueScore', label: 'Receita e Faturamento', weight: 20, description: 'Baseado na receita anual declarada' },
@@ -45,35 +44,58 @@ function ScoreGauge({ score, label }: { score: number; label: string }) {
 }
 
 export default function ScoringPage() {
-  const { user } = useAuth();
+  const [operations, setOperations] = useState<any[]>([]);
+  const [selectedOpId, setSelectedOpId] = useState<string>('');
   const [scoring, setScoring] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [recalculating, setRecalculating] = useState(false);
+  const [loadingScore, setLoadingScore] = useState(false);
+  const [calculating, setCalculating] = useState(false);
 
   useEffect(() => {
-    loadScoring();
+    loadOperations();
   }, []);
 
-  async function loadScoring() {
+  useEffect(() => {
+    if (selectedOpId) loadScoring(selectedOpId);
+    else setScoring(null);
+  }, [selectedOpId]);
+
+  async function loadOperations() {
     try {
-      const { data } = await api.get('/scoring/my-score');
-      setScoring(data);
+      const { data } = await api.get('/operations?page=1&perPage=50');
+      const ops = data.data || data;
+      setOperations(ops);
+      if (ops.length > 0) setSelectedOpId(ops[0].id);
     } catch {
-      // Score may not exist yet
+      toast.error('Erro ao carregar operações.');
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleRecalculate() {
-    setRecalculating(true);
+  async function loadScoring(opId: string) {
+    setLoadingScore(true);
     try {
-      const { data } = await api.post('/scoring/recalculate');
+      const { data } = await api.get(`/scoring/${opId}`);
       setScoring(data);
     } catch {
-      // handle
+      setScoring(null);
     } finally {
-      setRecalculating(false);
+      setLoadingScore(false);
+    }
+  }
+
+  async function handleCalculate() {
+    if (!selectedOpId) return;
+    setCalculating(true);
+    try {
+      const { data } = await api.post(`/scoring/${selectedOpId}`);
+      setScoring(data);
+      toast.success('Score calculado com sucesso!');
+    } catch {
+      toast.error('Erro ao calcular score. Tente novamente.');
+    } finally {
+      setCalculating(false);
     }
   }
 
@@ -90,24 +112,55 @@ export default function ScoringPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Score & Rating</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Sua pontuação de crédito rural ConectCampo
+            Pontuação de crédito rural por operação
           </p>
         </div>
-        <button
-          onClick={handleRecalculate}
-          disabled={recalculating}
-          className="btn-secondary flex items-center gap-2 text-sm"
-        >
-          <RefreshCw className={`h-4 w-4 ${recalculating ? 'animate-spin' : ''}`} />
-          Recalcular
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          {operations.length > 0 && (
+            <div className="relative">
+              <select
+                value={selectedOpId}
+                onChange={(e) => setSelectedOpId(e.target.value)}
+                className="input pr-8 min-w-[220px] appearance-none"
+              >
+                {operations.map((op: any) => (
+                  <option key={op.id} value={op.id}>
+                    {op.type} — {op.crop || 'Operação'} #{op.id.slice(-6).toUpperCase()}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            </div>
+          )}
+          <button
+            onClick={handleCalculate}
+            disabled={calculating || !selectedOpId}
+            className="btn-secondary flex items-center gap-2 text-sm disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${calculating ? 'animate-spin' : ''}`} />
+            Calcular Score
+          </button>
+        </div>
       </div>
 
       {loading ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="animate-pulse h-64 bg-gray-100 dark:bg-gray-800 rounded-xl" />
+          <div className="animate-pulse h-64 bg-gray-100 dark:bg-gray-800 rounded-xl lg:col-span-2" />
+        </div>
+      ) : operations.length === 0 ? (
+        <div className="card text-center py-16">
+          <BarChart3 className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto" />
+          <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">Nenhuma operação encontrada</h3>
+          <p className="mt-2 text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+            Crie uma operação de crédito para calcular seu score.
+          </p>
+        </div>
+      ) : loadingScore ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="animate-pulse h-64 bg-gray-100 dark:bg-gray-800 rounded-xl" />
           <div className="animate-pulse h-64 bg-gray-100 dark:bg-gray-800 rounded-xl lg:col-span-2" />
@@ -117,8 +170,16 @@ export default function ScoringPage() {
           <BarChart3 className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto" />
           <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">Score não calculado</h3>
           <p className="mt-2 text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-            Crie uma operação de crédito para que seu score seja calculado automaticamente.
+            Clique em <strong>Calcular Score</strong> para gerar a pontuação desta operação.
           </p>
+          <button
+            onClick={handleCalculate}
+            disabled={calculating}
+            className="btn-primary mt-6 flex items-center gap-2 mx-auto"
+          >
+            <RefreshCw className={`h-4 w-4 ${calculating ? 'animate-spin' : ''}`} />
+            Calcular Score
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

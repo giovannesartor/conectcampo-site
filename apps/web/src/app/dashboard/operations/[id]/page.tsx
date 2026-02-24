@@ -16,6 +16,7 @@ import {
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/format';
 import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 const TYPE_LABELS: Record<string, string> = {
   CUSTEIO: 'Custeio',
@@ -117,7 +118,7 @@ export default function OperationDetailPage() {
       await api.patch(`/operations/${operation.id}/submit`);
       await loadOperation();
     } catch {
-      // handle error
+      toast.error('Ocorreu um erro. Tente novamente.');
     } finally {
       setSubmitting(false);
     }
