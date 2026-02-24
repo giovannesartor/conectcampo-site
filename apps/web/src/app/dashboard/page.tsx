@@ -30,11 +30,11 @@ import { Eye, X } from 'lucide-react';
 type PreviewView = 'ADMIN' | 'START' | 'PRO' | 'COOPERATIVE' | 'CORPORATE';
 
 const PREVIEW_OPTIONS: { key: PreviewView; label: string; color: string }[] = [
-  { key: 'ADMIN',       label: 'Admin',       color: 'bg-gray-800 text-white' },
-  { key: 'START',       label: 'START',       color: 'bg-emerald-600 text-white' },
-  { key: 'PRO',         label: 'PRO',         color: 'bg-blue-600 text-white' },
+  { key: 'ADMIN',       label: 'Admin',      color: 'bg-gray-800 text-white' },
+  { key: 'START',       label: 'Produtor',   color: 'bg-emerald-600 text-white' },
+  { key: 'PRO',         label: 'Empresa',    color: 'bg-blue-600 text-white' },
   { key: 'COOPERATIVE', label: 'Cooperativa', color: 'bg-violet-600 text-white' },
-  { key: 'CORPORATE',   label: 'Corporate',   color: 'bg-slate-600 text-white' },
+  { key: 'CORPORATE',   label: 'Financeira', color: 'bg-slate-600 text-white' },
 ];
 
 function AdminPreviewBar({ current, onChange }: { current: PreviewView; onChange: (v: PreviewView) => void }) {
