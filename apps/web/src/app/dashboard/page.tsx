@@ -1,8 +1,8 @@
 'use client';
 
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import {
   BarChart3,
   FileText,
@@ -25,6 +25,41 @@ import { DashboardStart } from '@/components/dashboard/DashboardStart';
 import { DashboardPro } from '@/components/dashboard/DashboardPro';
 import { DashboardCooperative } from '@/components/dashboard/DashboardCooperative';
 import { DashboardCorporate } from '@/components/dashboard/DashboardCorporate';
+import { Eye, X } from 'lucide-react';
+
+type PreviewView = 'ADMIN' | 'START' | 'PRO' | 'COOPERATIVE' | 'CORPORATE';
+
+const PREVIEW_OPTIONS: { key: PreviewView; label: string; color: string }[] = [
+  { key: 'ADMIN',       label: 'Admin',       color: 'bg-gray-800 text-white' },
+  { key: 'START',       label: 'START',       color: 'bg-emerald-600 text-white' },
+  { key: 'PRO',         label: 'PRO',         color: 'bg-blue-600 text-white' },
+  { key: 'COOPERATIVE', label: 'Cooperativa', color: 'bg-violet-600 text-white' },
+  { key: 'CORPORATE',   label: 'Corporate',   color: 'bg-slate-600 text-white' },
+];
+
+function AdminPreviewBar({ current, onChange }: { current: PreviewView; onChange: (v: PreviewView) => void }) {
+  return (
+    <div className="sticky top-0 z-40 flex items-center gap-2 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 px-4 py-2.5 shadow-sm mb-2">
+      <Eye className="h-4 w-4 text-amber-600 flex-shrink-0" />
+      <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 mr-1">Preview Admin</span>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {PREVIEW_OPTIONS.map((opt) => (
+          <button
+            key={opt.key}
+            onClick={() => onChange(opt.key)}
+            className={`rounded-full px-3 py-0.5 text-xs font-semibold transition-all ${
+              current === opt.key
+                ? opt.color + ' shadow'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 interface Operation {
   id: string;
@@ -43,6 +78,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [plan, setPlan] = useState<string | null>(null);
   const [planLoading, setPlanLoading] = useState(true);
+  const [previewView, setPreviewView] = useState<PreviewView>('ADMIN');
 
   // Admin-only state
   const [operations, setOperations] = useState<Operation[]>([]);
@@ -99,11 +135,30 @@ export default function DashboardPage() {
   if (user.role === 'COMPANY') return <DashboardPro />;
   if (user.role === 'PRODUCER') return <DashboardStart />;
 
+  // ── ADMIN preview mode ───────────────────────────────────────
+  if (user.role === 'ADMIN' && previewView !== 'ADMIN') {
+    const previewMap: Record<Exclude<PreviewView, 'ADMIN'>, React.ReactNode> = {
+      START:       <DashboardStart />,
+      PRO:         <DashboardPro />,
+      COOPERATIVE: <DashboardCooperative />,
+      CORPORATE:   <DashboardCorporate />,
+    };
+    return (
+      <div className="space-y-4">
+        <AdminPreviewBar current={previewView} onChange={setPreviewView} />
+        {previewMap[previewView as Exclude<PreviewView, 'ADMIN'>]}
+      </div>
+    );
+  }
+
   // ADMIN — inline view (role-specific admin panel)
   const isAdmin = user.role === 'ADMIN';
 
   return (
     <div className="space-y-6">
+      {/* Admin preview bar */}
+      {isAdmin && <AdminPreviewBar current={previewView} onChange={setPreviewView} />}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
