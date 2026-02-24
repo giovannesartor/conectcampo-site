@@ -95,6 +95,14 @@ export class AuthController {
     return this.authService.verifyEmail(token);
   }
 
+  @Public()
+  @SkipThrottle()
+  @Get('payment-status')
+  @ApiOperation({ summary: 'Verificar status de pagamento pós-registro (polling)' })
+  async paymentStatus(@Query('userId') userId: string) {
+    return this.authService.getPaymentStatus(userId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('resend-verification')
   @HttpCode(HttpStatus.OK)

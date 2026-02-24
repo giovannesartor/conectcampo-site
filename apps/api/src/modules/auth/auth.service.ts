@@ -314,6 +314,22 @@ export class AuthService {
     return { message: 'E-mail de verificação reenviado.' };
   }
 
+  // ─── Polling: payment status (public, for pending page) ──────────────────────
+
+  async getPaymentStatus(userId: string) {
+    const subscription = await this.prisma.subscription.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      select: { paymentStatus: true, isActive: true, plan: true },
+    });
+
+    if (!subscription) {
+      return { paymentStatus: 'PENDING', isActive: false, plan: null };
+    }
+
+    return subscription;
+  }
+
   // ─── Private helpers ──────────────────────────────────────────────────────────
 
   async changePassword(userId: string, currentPassword: string, newPassword: string) {

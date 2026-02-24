@@ -163,8 +163,12 @@ function RegisterForm() {
       const { data } = await api.post('/auth/register', payload);
 
       if (data.requiresPayment && data.invoiceUrl) {
-        // Redirecionar para página de pagamento do Asaas
-        window.location.href = data.invoiceUrl;
+        // Guardar URL na sessão para o usuário poder reabrir se fechar a aba
+        sessionStorage.setItem('pendingInvoiceUrl', data.invoiceUrl);
+        sessionStorage.setItem('pendingPlanName', planConfig.name);
+        // Abre pagamento em nova aba, mostra tela de espera no ConectCampo
+        window.open(data.invoiceUrl, '_blank', 'noopener,noreferrer');
+        router.push(`/register/pending?userId=${data.user.id}&plan=${selectedPlan}`);
         return;
       }
 
@@ -500,8 +504,9 @@ function RegisterForm() {
 
             {!planConfig?.free && (
               <p className="text-center text-xs text-gray-400">
-                Você será redirecionado para o pagamento seguro via{' '}
-                <span className="font-medium">Asaas · AG Digital</span> (PIX, cartão ou boleto)
+                O pagamento abre em uma nova aba via{' '}
+                <span className="font-medium">Asaas · AG Digital</span>
+                {' '}— PIX, cartão ou boleto. Você acompanha aqui.
               </p>
             )}
           </form>
