@@ -102,6 +102,13 @@ enum SubscriptionPlan {
   CORPORATE
 }
 
+enum PaymentStatus {
+  PENDING
+  ACTIVE
+  OVERDUE
+  CANCELLED
+}
+
 enum RiskProfile {
   CONSERVADOR
   MODERADO
@@ -185,6 +192,7 @@ model User {
   role           UserRole
   phone          String?
   cpf            String?   @unique
+  cnpj           String?   @unique
   avatarUrl      String?
   emailVerified  Boolean   @default(false)
   isActive       Boolean   @default(true)
@@ -607,11 +615,17 @@ model Subscription {
   id                    String           @id @default(uuid())
   userId                String
   plan                  SubscriptionPlan @default(START)
-  stripeSubscriptionId  String?          @unique
-  stripeCustomerId      String?
-  isActive              Boolean          @default(true)
+
+  // Asaas
+  asaasCustomerId       String?
+  asaasSubscriptionId   String?          @unique
+  asaasPaymentId        String?          // ID do primeiro pagamento
+  invoiceUrl            String?          // URL de pagamento Asaas
+  paymentStatus         PaymentStatus    @default(PENDING)
+
+  isActive              Boolean          @default(false)
   currentPeriodStart    DateTime         @default(now())
-  currentPeriodEnd      DateTime
+  currentPeriodEnd      DateTime         @default(dbgenerated("now() + interval '30 days'"))
   cancelledAt           DateTime?
 
   createdAt             DateTime         @default(now())
@@ -622,6 +636,7 @@ model Subscription {
 
   @@index([userId])
   @@index([plan])
+  @@index([paymentStatus])
   @@map("subscriptions")
 }
 

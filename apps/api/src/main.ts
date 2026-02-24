@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { RequestMethod } from '@nestjs/common';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
@@ -19,9 +20,11 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Global prefix
+  // Global prefix (webhooks are excluded so /webhook/asaas resolves correctly)
   const prefix = process.env.API_PREFIX || '/api/v1';
-  app.setGlobalPrefix(prefix);
+  app.setGlobalPrefix(prefix, {
+    exclude: [{ path: 'webhook/:provider', method: RequestMethod.POST }],
+  });
 
   // Global exception filter
   app.useGlobalFilters(new AllExceptionsFilter());

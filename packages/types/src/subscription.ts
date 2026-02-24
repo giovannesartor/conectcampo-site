@@ -1,10 +1,13 @@
-import { SubscriptionPlan } from './enums';
+import { SubscriptionPlan, PaymentStatus } from './enums';
 
 export interface ISubscription {
   id: string;
   userId: string;
   plan: SubscriptionPlan;
-  stripeSubscriptionId?: string;
+  asaasCustomerId?: string;
+  asaasSubscriptionId?: string;
+  invoiceUrl?: string;
+  paymentStatus: PaymentStatus;
   isActive: boolean;
   currentPeriodStart: Date;
   currentPeriodEnd: Date;

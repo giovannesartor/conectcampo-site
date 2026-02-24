@@ -81,10 +81,17 @@ export enum PartnerType {
 }
 
 export enum SubscriptionPlan {
-  START = 'START',
-  PRO = 'PRO',
-  COOPERATIVE = 'COOPERATIVE',
-  CORPORATE = 'CORPORATE',
+  START = 'START',           // Produtor Rural — R$ 299/mês
+  PRO = 'PRO',               // Empresa — R$ 799/mês
+  COOPERATIVE = 'COOPERATIVE', // Cooperativa — R$ 2.890/mês
+  CORPORATE = 'CORPORATE',  // Instituição Financeira — Grátis
+}
+
+export enum PaymentStatus {
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  OVERDUE = 'OVERDUE',
+  CANCELLED = 'CANCELLED',
 }
 
 export enum RiskProfile {

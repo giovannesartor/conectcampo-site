@@ -11,11 +11,13 @@ import * as bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { AsaasService } from '../subscriptions/asaas.service';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { UserRole } from '@prisma/client';
+import { UserRole, SubscriptionPlan } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +28,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly mailService: MailService,
+    private readonly asaasService: AsaasService,
+    private readonly subscriptionsService: SubscriptionsService,
   ) {}
 
   // Admin emails resolved from environment
@@ -50,7 +54,9 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const role = this.resolveRole(dto.email, dto.role);
+    const isFree = dto.plan === SubscriptionPlan.CORPORATE;
 
+    // Conta inativa até pagamento (planos pagos) ou ativa direto (plano grátis)
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
@@ -59,28 +65,62 @@ export class AuthService {
         role,
         phone: dto.phone,
         cpf: dto.cpf,
+        cnpj: dto.cnpj,
+        isActive: isFree, // free = ativo, paid = aguarda pagamento
         consentLgpd: true,
         consentLgpdAt: new Date(),
       },
     });
 
-    const tokens = await this.generateTokens(user.id, user.email, user.role);
+    // ── Plano gratuito (Instituição Financeira) ──────────────────────────────
+    if (isFree) {
+      await this.subscriptionsService.getOrCreateFreeSubscription(user.id);
+      const verificationToken = await this.createEmailVerificationToken(user.id);
+      this.mailService.sendWelcome(user.email, user.name).catch(() => null);
+      this.mailService
+        .sendEmailVerification(user.email, user.name, verificationToken)
+        .catch(() => null);
 
-    // Enviar e-mail de boas-vindas + verificação
-    const verificationToken = await this.createEmailVerificationToken(user.id);
-    this.mailService.sendWelcome(user.email, user.name).catch(() => null);
-    this.mailService.sendEmailVerification(user.email, user.name, verificationToken).catch(() => null);
+      const tokens = await this.generateTokens(user.id, user.email, user.role);
 
-    this.logger.log(`User registered: ${user.email} (${user.role})`);
+      this.logger.log(`Free user registered: ${user.email}`);
+
+      return {
+        requiresPayment: false,
+        user: { id: user.id, email: user.email, name: user.name, role: user.role },
+        ...tokens,
+      };
+    }
+
+    // ── Planos pagos — criar customer + assinatura no Asaas ──────────────────
+    const cpfCnpj = (dto.cpf ?? dto.cnpj)!;
+
+    let invoiceUrl: string | null = null;
+    try {
+      const result = await this.asaasService.createCustomerAndSubscription({
+        userId: user.id,
+        name: user.name,
+        email: user.email,
+        cpfCnpj,
+        phone: dto.phone,
+        plan: dto.plan,
+      });
+      invoiceUrl = result.invoiceUrl;
+    } catch (err: any) {
+      // Se Asaas falhar, remover usuário criado para não deixar registro órfão
+      await this.prisma.user.delete({ where: { id: user.id } }).catch(() => null);
+      this.logger.error(`Asaas error during register: ${err.message}`);
+      throw new BadRequestException(
+        'Erro ao processar pagamento. Verifique seus dados e tente novamente.',
+      );
+    }
+
+    this.logger.log(`Paid user registered (pending payment): ${user.email}`);
 
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
-      ...tokens,
+      requiresPayment: true,
+      invoiceUrl,
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
     };
   }
 

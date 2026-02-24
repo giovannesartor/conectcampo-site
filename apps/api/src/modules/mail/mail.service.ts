@@ -119,6 +119,30 @@ export class MailService {
     await this.send(to, subject, html);
   }
 
+  async sendPaymentConfirmation(to: string, name: string): Promise<void> {
+    const subject = 'Pagamento confirmado — ConectCampo ✅';
+    const html = this.layout(`
+      <h1 style="font-size:22px;color:#166534;margin:0 0 12px">Pagamento confirmado! 🎉</h1>
+      <p style="margin:0 0 16px;color:#374151">Olá, <strong>${name}</strong>!</p>
+      <p style="margin:0 0 16px;color:#374151">
+        Recebemos a confirmação do seu pagamento. Sua assinatura na <strong>ConectCampo</strong> está ativa!
+      </p>
+      <p style="margin:0 0 24px;color:#374151">
+        Para acessar a plataforma, verifique seu e-mail clicando no link que também
+        enviamos hoje. Após confirmar seu e-mail, faça login e aproveite tudo que
+        a ConectCampo tem para oferecer.
+      </p>
+      ${this.button('Fazer login', `${this.appUrl()}/login`)}
+      <p style="margin:20px 0 0;font-size:13px;color:#6b7280">
+        Dúvidas ou problemas? <a href="${this.appUrl()}/contato" style="color:#16a34a">Fale com nosso suporte</a>.
+      </p>
+      <p style="margin:12px 0 0;font-size:11px;color:#d1d5db">
+        Pagamentos processados por AG Digital · AG PARTICIPACOES SOCIETARIAS LTDA · CNPJ 54.079.299/0001-40
+      </p>
+    `);
+    await this.send(to, subject, html);
+  }
+
   // ─── Layout helpers ─────────────────────────────────────────────────────────
 
   private appUrl(): string {

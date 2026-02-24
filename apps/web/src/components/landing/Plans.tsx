@@ -20,7 +20,7 @@ const plans = [
     ],
     cta: 'Começar agora',
     highlighted: false,
-    href: '/register',
+    href: '/register?plan=START',
   },
   {
     name: 'Plano Empresa',
@@ -38,7 +38,7 @@ const plans = [
     ],
     cta: 'Assinar agora',
     highlighted: false,
-    href: '/register',
+    href: '/register?plan=PRO',
   },
   {
     name: 'Plano Cooperativa',
@@ -55,7 +55,7 @@ const plans = [
     ],
     cta: 'Assinar agora',
     highlighted: true,
-    href: '/register',
+    href: '/register?plan=COOPERATIVE',
   },
   {
     name: 'Instituição Financeira',
@@ -72,7 +72,7 @@ const plans = [
     ],
     cta: 'Cadastre-se grátis',
     highlighted: false,
-    href: '/register',
+    href: '/register?plan=CORPORATE',
   },
 ];
 

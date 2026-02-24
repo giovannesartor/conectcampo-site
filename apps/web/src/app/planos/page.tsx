@@ -10,7 +10,7 @@ const plans = [
     period: '/mês',
     highlight: false,
     cta: 'Começar agora',
-    href: '/register',
+    href: '/register?plan=START',
     features: [
       'Perfil completo na plataforma',
       'Score ConectCampo',
@@ -27,7 +27,7 @@ const plans = [
     period: '/mês',
     highlight: false,
     cta: 'Assinar agora',
-    href: '/register',
+    href: '/register?plan=PRO',
     features: [
       'Tudo do Plano Produtor Rural',
       'Operações ilimitadas',
@@ -45,7 +45,7 @@ const plans = [
     period: '/mês',
     highlight: true,
     cta: 'Assinar agora',
-    href: '/register',
+    href: '/register?plan=COOPERATIVE',
     features: [
       'Tudo do Plano Empresa',
       'Gestão multi-CNPJ de cooperados',
@@ -62,7 +62,7 @@ const plans = [
     period: '',
     highlight: false,
     cta: 'Cadastre-se grátis',
-    href: '/register',
+    href: '/register?plan=CORPORATE',
     features: [
       'Acesso à base de tomadores qualificados',
       'Filtros avançados de risco e perfil',

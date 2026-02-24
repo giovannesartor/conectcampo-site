@@ -19,6 +19,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { HealthModule } from './modules/health/health.module';
 import { SeedModule } from './modules/seed/seed.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { WebhookModule } from './modules/webhooks/webhook.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 
 @Module({
@@ -58,6 +59,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
     HealthModule,
     SeedModule,
     NotificationsModule,
+    WebhookModule,
   ],
   providers: [
     {

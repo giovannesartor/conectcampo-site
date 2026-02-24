@@ -1,7 +1,17 @@
-import { IsEmail, IsString, MinLength, IsEnum, IsOptional, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  IsEnum,
+  IsOptional,
+  Matches,
+  ValidateIf,
+  IsNotEmpty,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
+import { UserRole, SubscriptionPlan } from '@prisma/client';
 import { IsCPF } from '../../../common/validators/is-cpf.validator';
+import { IsCNPJ } from '../../../common/validators/is-cnpj.validator';
 
 export class RegisterDto {
   @ApiProperty({ example: 'joao@agro.com' })
@@ -25,13 +35,35 @@ export class RegisterDto {
   @IsEnum(UserRole, { message: 'Role inválida' })
   role: UserRole;
 
+  @ApiProperty({ enum: SubscriptionPlan, example: SubscriptionPlan.START })
+  @IsEnum(SubscriptionPlan, { message: 'Plano inválido' })
+  plan: SubscriptionPlan;
+
   @ApiPropertyOptional({ example: '11999999999' })
   @IsOptional()
   @IsString()
   phone?: string;
 
+  /**
+   * Obrigatório para Produtor Rural (PRODUCER).
+   */
   @ApiPropertyOptional({ example: '12345678909' })
-  @IsOptional()
+  @ValidateIf((o) => o.role === UserRole.PRODUCER)
+  @IsNotEmpty({ message: 'CPF é obrigatório para Produtor Rural' })
   @IsCPF({ message: 'CPF inválido' })
   cpf?: string;
+
+  /**
+   * Obrigatório para Empresa, Cooperativa e Instituição Financeira.
+   */
+  @ApiPropertyOptional({ example: '54079299000140' })
+  @ValidateIf(
+    (o) =>
+      o.role === UserRole.COMPANY ||
+      o.role === UserRole.FINANCIAL_INSTITUTION ||
+      o.role === UserRole.CREDIT_ANALYST,
+  )
+  @IsNotEmpty({ message: 'CNPJ é obrigatório para este tipo de conta' })
+  @IsCNPJ({ message: 'CNPJ inválido' })
+  cnpj?: string;
 }

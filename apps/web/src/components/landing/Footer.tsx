@@ -66,6 +66,18 @@ export function Footer() {
             ConectCampo não é uma instituição financeira. Atuamos como marketplace conectando oferta e demanda de crédito.
           </p>
         </div>
+
+        {/* AG Digital legal notice */}
+        <div className="mt-4 border-t border-gray-100 dark:border-dark-border pt-4 text-center">
+          <p className="text-xs text-gray-400 dark:text-gray-500">
+            ConectCampo é um produto{' '}
+            <span className="font-semibold text-gray-500 dark:text-gray-400">AG Digital</span>
+            {' '}· AG PARTICIPACOES SOCIETARIAS LTDA · CNPJ 54.079.299/0001-40
+          </p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            Pagamentos processados por AG Digital via Asaas
+          </p>
+        </div>
       </div>
     </footer>
   );

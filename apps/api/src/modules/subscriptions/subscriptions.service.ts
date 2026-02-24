@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { SubscriptionPlan } from '@prisma/client';
+import { SubscriptionPlan, PaymentStatus } from '@prisma/client';
 
 @Injectable()
 export class SubscriptionsService {
@@ -8,17 +8,19 @@ export class SubscriptionsService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async getOrCreateSubscription(userId: string) {
+  async getOrCreateFreeSubscription(userId: string) {
     let subscription = await this.prisma.subscription.findFirst({
       where: { userId, isActive: true },
     });
 
     if (!subscription) {
-      // Criar plano Produtor Rural padrão
+      // Plano gratuito (Instituição Financeira)
       subscription = await this.prisma.subscription.create({
         data: {
           userId,
-          plan: SubscriptionPlan.START,
+          plan: SubscriptionPlan.CORPORATE,
+          paymentStatus: PaymentStatus.ACTIVE,
+          isActive: true,
           currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         },
       });
@@ -27,27 +29,23 @@ export class SubscriptionsService {
     return subscription;
   }
 
-  async upgradePlan(userId: string, plan: SubscriptionPlan) {
-    const current = await this.getOrCreateSubscription(userId);
-
-    return this.prisma.subscription.update({
-      where: { id: current.id },
-      data: {
-        plan,
-        currentPeriodStart: new Date(),
-        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      },
+  async getSubscription(userId: string) {
+    return this.prisma.subscription.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
   async cancel(userId: string) {
-    const current = await this.getOrCreateSubscription(userId);
+    const current = await this.getSubscription(userId);
+    if (!current) return { message: 'Nenhuma assinatura encontrada' };
 
     return this.prisma.subscription.update({
       where: { id: current.id },
       data: {
         cancelledAt: new Date(),
         isActive: false,
+        paymentStatus: PaymentStatus.CANCELLED,
       },
     });
   }

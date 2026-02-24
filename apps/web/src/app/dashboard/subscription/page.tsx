@@ -83,7 +83,7 @@ export default function SubscriptionPage() {
 
   async function loadSubscription() {
     try {
-      const { data } = await api.get('/subscriptions/my-subscription');
+      const { data } = await api.get('/subscriptions/me');
       setSubscription(data);
     } catch {
       // No subscription
@@ -112,20 +112,28 @@ export default function SubscriptionPage() {
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-1">
                 {PLANS.find((p) => p.key === currentPlan)?.name || currentPlan}
               </h3>
-              {subscription.expiresAt && (
+              {subscription.currentPeriodEnd && (
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Válido até {formatDate(subscription.expiresAt)}
+                  Válido até {formatDate(subscription.currentPeriodEnd)}
                 </p>
               )}
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-500 dark:text-gray-400">Status</p>
               <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                subscription.status === 'ACTIVE'
+                subscription.paymentStatus === 'ACTIVE'
                   ? 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400'
-                  : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400'
+                  : subscription.paymentStatus === 'PENDING'
+                  ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400'
+                  : 'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400'
               }`}>
-                {subscription.status === 'ACTIVE' ? 'Ativo' : subscription.status}
+                {subscription.paymentStatus === 'ACTIVE'
+                  ? 'Ativo'
+                  : subscription.paymentStatus === 'PENDING'
+                  ? 'Aguardando Pagamento'
+                  : subscription.paymentStatus === 'OVERDUE'
+                  ? 'Em Atraso'
+                  : 'Cancelado'}
               </span>
             </div>
           </div>

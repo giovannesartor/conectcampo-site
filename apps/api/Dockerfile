@@ -42,6 +42,7 @@ RUN adduser --system --uid 1001 nestjs
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma/schema.prisma ./prisma/schema.prisma
+COPY --from=builder /app/prisma/migrations ./prisma/migrations
 COPY --from=builder /app/apps/api/package.json ./package.json
 COPY apps/api/entrypoint.sh ./entrypoint.sh
 

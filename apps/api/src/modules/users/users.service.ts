@@ -15,6 +15,7 @@ export class UsersService {
         role: true,
         phone: true,
         cpf: true,
+        cnpj: true,
         avatarUrl: true,
         emailVerified: true,
         isActive: true,

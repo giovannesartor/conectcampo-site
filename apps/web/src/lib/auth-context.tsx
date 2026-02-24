@@ -16,14 +16,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: {
-    email: string;
-    password: string;
-    name: string;
-    role: string;
-    phone?: string;
-    cpf?: string;
-  }) => Promise<void>;
+  setUserFromData: (user: User) => void;
   logout: () => Promise<void>;
 }
 
@@ -61,18 +54,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user);
   }
 
-  async function register(formData: {
-    email: string;
-    password: string;
-    name: string;
-    role: string;
-    phone?: string;
-    cpf?: string;
-  }) {
-    const { data } = await api.post('/auth/register', formData);
-    Cookies.set('accessToken', data.accessToken, { expires: 1, sameSite: 'strict', secure: window.location.protocol === 'https:' });
-    Cookies.set('refreshToken', data.refreshToken, { expires: 7, sameSite: 'strict', secure: window.location.protocol === 'https:' });
-    setUser(data.user);
+  function setUserFromData(u: User) {
+    setUser(u);
   }
 
   async function logout() {
@@ -87,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, setUserFromData, logout }}>
       {children}
     </AuthContext.Provider>
   );
