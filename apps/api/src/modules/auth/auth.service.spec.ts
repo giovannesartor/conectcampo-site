@@ -123,8 +123,9 @@ describe('AuthService', () => {
       const result = await service.register(registerDto);
 
       expect(result.user.email).toBe(registerDto.email);
-      // Free plan returns tokens immediately
-      if (!result.requiresPayment) {
+      // Free plan returns tokens immediately (no Asaas redirect)
+      expect('accessToken' in result).toBe(true);
+      if ('accessToken' in result) {
         expect(result.accessToken).toBeDefined();
         expect(result.refreshToken).toBeDefined();
       }
