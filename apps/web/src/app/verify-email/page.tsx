@@ -50,7 +50,7 @@ function VerifyEmailContent() {
       <div className="text-center">
         <CheckCircle className="h-16 w-16 text-brand-600 mx-auto mb-4" />
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-          E-mail confirmado! 🎉
+          E-mail confirmado com sucesso
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mb-6">{message}</p>
         <Link href="/dashboard" className="btn-primary inline-block">

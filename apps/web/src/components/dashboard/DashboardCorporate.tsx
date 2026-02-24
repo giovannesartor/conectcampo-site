@@ -227,9 +227,22 @@ export function DashboardCorporate() {
                         {op.purpose ?? op.type}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5">
-                        {op.culture && <span>🌱 {op.culture}</span>}
-                        {op.region && <span>📍 {op.region}</span>}
-                        <span>📅 {formatRelative(op.createdAt)}</span>
+                        {op.culture && (
+                        <span className="flex items-center gap-1">
+                          <svg className="h-3 w-3 text-green-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22V12M12 12C12 7 7 4 2 6c4 2 6 6 10 6zM12 12C12 7 17 4 22 6c-4 2-6 6-10 6z"/></svg>
+                          {op.culture}
+                        </span>
+                      )}
+                      {op.region && (
+                        <span className="flex items-center gap-1">
+                          <svg className="h-3 w-3 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                          {op.region}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <svg className="h-3 w-3 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                        {formatRelative(op.createdAt)}
+                      </span>
                         {(op._count?.proposals ?? 0) > 0 && (
                           <span className="text-brand-600 font-medium">{op._count?.proposals} proposta(s)</span>
                         )}
