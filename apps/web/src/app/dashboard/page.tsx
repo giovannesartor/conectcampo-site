@@ -21,6 +21,10 @@ import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import { formatCurrency, formatRelative } from '@/lib/format';
 import { api } from '@/lib/api';
+import { DashboardStart } from '@/components/dashboard/DashboardStart';
+import { DashboardPro } from '@/components/dashboard/DashboardPro';
+import { DashboardCooperative } from '@/components/dashboard/DashboardCooperative';
+import { DashboardCorporate } from '@/components/dashboard/DashboardCorporate';
 
 interface Operation {
   id: string;
@@ -37,8 +41,12 @@ interface Operation {
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const [plan, setPlan] = useState<string | null>(null);
+  const [planLoading, setPlanLoading] = useState(true);
+
+  // Admin-only state
   const [operations, setOperations] = useState<Operation[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const [loadingData, setLoadingData] = useState(false);
   const [stats, setStats] = useState({
     totalOperations: 0,
     activeOperations: 0,
@@ -47,42 +55,35 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login');
-    }
+    if (!isLoading && !user) router.push('/login');
   }, [user, isLoading, router]);
 
   useEffect(() => {
-    if (user) loadDashboard();
+    if (!user) return;
+    // Fetch plan for role-routing
+    api.get('/subscriptions/me')
+      .then((r) => setPlan(r.data?.plan ?? null))
+      .catch(() => setPlan(null))
+      .finally(() => setPlanLoading(false));
+    // If ADMIN, also load dashboard data
+    if (user.role === 'ADMIN') loadAdminDashboard();
   }, [user]);
 
-  async function loadDashboard() {
+  async function loadAdminDashboard() {
+    setLoadingData(true);
     try {
       const { data } = await api.get('/operations?page=1&perPage=5');
       const ops = data.data || data.operations || data || [];
       setOperations(Array.isArray(ops) ? ops : []);
-
       const active = Array.isArray(ops) ? ops.filter((o: Operation) =>
-        !['COMPLETED', 'CANCELLED', 'REJECTED', 'DRAFT'].includes(o.status)
-      ).length : 0;
+        !['COMPLETED', 'CANCELLED', 'REJECTED', 'DRAFT'].includes(o.status)).length : 0;
       const proposals = Array.isArray(ops) ? ops.reduce(
-        (acc: number, o: Operation) => acc + (o._count?.proposals || 0), 0
-      ) : 0;
-
-      setStats({
-        totalOperations: data.meta?.total || data.total || (Array.isArray(ops) ? ops.length : 0),
-        activeOperations: active,
-        totalProposals: proposals,
-        score: null,
-      });
-    } catch {
-      // New user with no data
-    } finally {
-      setLoadingData(false);
-    }
+        (acc: number, o: Operation) => acc + (o._count?.proposals || 0), 0) : 0;
+      setStats({ totalOperations: data.meta?.total || (Array.isArray(ops) ? ops.length : 0), activeOperations: active, totalProposals: proposals, score: null });
+    } catch { /* new */ } finally { setLoadingData(false); }
   }
 
-  if (isLoading) {
+  if (isLoading || planLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
@@ -92,6 +93,13 @@ export default function DashboardPage() {
 
   if (!user) return null;
 
+  // ── Role router ──────────────────────────────────────────────
+  if (user.role === 'FINANCIAL_INSTITUTION') return <DashboardCorporate />;
+  if (user.role === 'COMPANY' && plan === 'COOPERATIVE') return <DashboardCooperative />;
+  if (user.role === 'COMPANY') return <DashboardPro />;
+  if (user.role === 'PRODUCER') return <DashboardStart />;
+
+  // ADMIN — inline view (role-specific admin panel)
   const isAdmin = user.role === 'ADMIN';
 
   return (
