@@ -1,6 +1,7 @@
 'use client';
 
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { PreviewContextProvider } from '@/lib/preview-context';
 
 export default function DashboardLayout({
   children,
@@ -8,6 +9,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <DashboardShell>{children}</DashboardShell>
+    <PreviewContextProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </PreviewContextProvider>
   );
 }

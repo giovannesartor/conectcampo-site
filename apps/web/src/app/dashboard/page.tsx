@@ -25,30 +25,36 @@ import { DashboardStart } from '@/components/dashboard/DashboardStart';
 import { DashboardPro } from '@/components/dashboard/DashboardPro';
 import { DashboardCooperative } from '@/components/dashboard/DashboardCooperative';
 import { DashboardCorporate } from '@/components/dashboard/DashboardCorporate';
-import { Eye, X } from 'lucide-react';
+import { Eye } from 'lucide-react';
+import { usePreview } from '@/lib/preview-context';
 
-type PreviewView = 'ADMIN' | 'START' | 'PRO' | 'COOPERATIVE' | 'CORPORATE';
-
-const PREVIEW_OPTIONS: { key: PreviewView; label: string; color: string }[] = [
-  { key: 'ADMIN',       label: 'Admin',      color: 'bg-gray-800 text-white' },
-  { key: 'START',       label: 'Produtor',   color: 'bg-emerald-600 text-white' },
-  { key: 'PRO',         label: 'Empresa',    color: 'bg-blue-600 text-white' },
-  { key: 'COOPERATIVE', label: 'Cooperativa', color: 'bg-violet-600 text-white' },
-  { key: 'CORPORATE',   label: 'Financeira', color: 'bg-slate-600 text-white' },
+const PREVIEW_OPTIONS = [
+  { label: 'Admin',       color: 'bg-gray-800 text-white',          role: null as string | null, plan: null as string | null },
+  { label: 'Produtor',    color: 'bg-emerald-600 text-white',        role: 'PRODUCER',            plan: 'START' },
+  { label: 'Empresa',     color: 'bg-blue-600 text-white',           role: 'COMPANY',             plan: 'PRO' },
+  { label: 'Cooperativa', color: 'bg-violet-600 text-white',         role: 'COMPANY',             plan: 'COOPERATIVE' },
+  { label: 'Financeira',  color: 'bg-slate-600 text-white',          role: 'FINANCIAL_INSTITUTION', plan: 'CORPORATE' },
 ];
 
-function AdminPreviewBar({ current, onChange }: { current: PreviewView; onChange: (v: PreviewView) => void }) {
+function AdminPreviewBar() {
+  const { previewRole, previewPlan, setPreview } = usePreview();
+  const activeLabel = !previewRole ? 'Admin'
+    : previewRole === 'PRODUCER' ? 'Produtor'
+    : previewPlan === 'COOPERATIVE' ? 'Cooperativa'
+    : previewRole === 'COMPANY' ? 'Empresa'
+    : 'Financeira';
+
   return (
-    <div className="sticky top-0 z-40 flex items-center gap-2 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 px-4 py-2.5 shadow-sm mb-2">
+    <div className="flex items-center gap-2 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 px-4 py-2.5 shadow-sm">
       <Eye className="h-4 w-4 text-amber-600 flex-shrink-0" />
       <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 mr-1">Preview Admin</span>
       <div className="flex items-center gap-1.5 flex-wrap">
         {PREVIEW_OPTIONS.map((opt) => (
           <button
-            key={opt.key}
-            onClick={() => onChange(opt.key)}
+            key={opt.label}
+            onClick={() => setPreview(opt.role, opt.plan)}
             className={`rounded-full px-3 py-0.5 text-xs font-semibold transition-all ${
-              current === opt.key
+              activeLabel === opt.label
                 ? opt.color + ' shadow'
                 : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
@@ -76,9 +82,9 @@ interface Operation {
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const { previewRole, previewPlan } = usePreview();
   const [plan, setPlan] = useState<string | null>(null);
   const [planLoading, setPlanLoading] = useState(true);
-  const [previewView, setPreviewView] = useState<PreviewView>('ADMIN');
 
   // Admin-only state
   const [operations, setOperations] = useState<Operation[]>([]);
@@ -135,29 +141,28 @@ export default function DashboardPage() {
   if (user.role === 'COMPANY') return <DashboardPro />;
   if (user.role === 'PRODUCER') return <DashboardStart />;
 
-  // ── ADMIN preview mode ───────────────────────────────────────
-  if (user.role === 'ADMIN' && previewView !== 'ADMIN') {
-    const previewMap: Record<Exclude<PreviewView, 'ADMIN'>, React.ReactNode> = {
-      START:       <DashboardStart />,
-      PRO:         <DashboardPro />,
-      COOPERATIVE: <DashboardCooperative />,
-      CORPORATE:   <DashboardCorporate />,
-    };
-    return (
-      <div className="space-y-4">
-        <AdminPreviewBar current={previewView} onChange={setPreviewView} />
-        {previewMap[previewView as Exclude<PreviewView, 'ADMIN'>]}
-      </div>
-    );
-  }
-
-  // ADMIN — inline view (role-specific admin panel)
+  // ── ADMIN: render preview or default ─────────────────────────────
   const isAdmin = user.role === 'ADMIN';
+  if (isAdmin && previewRole) {
+    const previewContent =
+      previewRole === 'FINANCIAL_INSTITUTION' ? <DashboardCorporate /> :
+      (previewRole === 'COMPANY' && previewPlan === 'COOPERATIVE') ? <DashboardCooperative /> :
+      previewRole === 'COMPANY' ? <DashboardPro /> :
+      previewRole === 'PRODUCER' ? <DashboardStart /> : null;
+    if (previewContent) {
+      return (
+        <div className="space-y-4">
+          <AdminPreviewBar />
+          {previewContent}
+        </div>
+      );
+    }
+  }
 
   return (
     <div className="space-y-6">
       {/* Admin preview bar */}
-      {isAdmin && <AdminPreviewBar current={previewView} onChange={setPreviewView} />}
+      {isAdmin && <AdminPreviewBar />}
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
