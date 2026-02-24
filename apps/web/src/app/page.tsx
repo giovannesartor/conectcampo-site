@@ -1,5 +1,6 @@
 import { Header } from '@/components/landing/Header';
 import { Hero } from '@/components/landing/Hero';
+import { AudienceSplit } from '@/components/landing/AudienceSplit';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { Segments } from '@/components/landing/Segments';
 import { Security } from '@/components/landing/Security';
@@ -13,6 +14,7 @@ export default function LandingPage() {
     <main className="min-h-screen bg-white dark:bg-dark-bg">
       <Header />
       <Hero />
+      <AudienceSplit />
       <HowItWorks />
       <Segments />
       <Security />
