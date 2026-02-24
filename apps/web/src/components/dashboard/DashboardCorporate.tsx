@@ -1,290 +1,277 @@
 'use client';
 
 /**
- * Dashboard — Instituição Financeira (Plano CORPORATE)
+ * Dashboard — Instituição Financeira / Parceira
  * Role: FINANCIAL_INSTITUTION
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import { formatCurrency, formatRelative } from '@/lib/format';
 import { KPICard } from './KPICard';
 import { StatusBadge } from './StatusBadge';
-import { EmptyState } from './EmptyState';
 import {
   FileText,
+  TrendingUp,
+  CheckCircle2,
+  Clock,
   BarChart3,
   ArrowRight,
-  Landmark,
-  TrendingUp,
+  Building2,
+  CreditCard,
   Activity,
-  Send,
-  CheckCircle2,
-  Filter,
-  Search,
-  ChevronDown,
+  RefreshCw,
 } from 'lucide-react';
-
-type FilterKey = 'all' | 'OPEN' | 'IN_ANALYSIS' | 'APPROVED';
 
 interface Operation {
   id: string;
   type: string;
   status: string;
-  requestedAmount: number;
+  amount: number;
   termMonths: number;
   purpose: string;
   createdAt: string;
-  culture?: string;
-  region?: string;
-  riskScore?: number;
-  producer?: { name?: string; businessName?: string };
-  _count?: { proposals: number };
+  producerName?: string;
+  score?: number;
 }
 
-const FILTER_CHIPS = [
-  { key: 'all' as FilterKey,         label: 'Todos' },
-  { key: 'OPEN' as FilterKey,        label: 'Em Aberto' },
-  { key: 'IN_ANALYSIS' as FilterKey, label: 'Em Análise' },
-  { key: 'APPROVED' as FilterKey,    label: 'Aprovado' },
+type FilterKey = 'all' | 'SUBMITTED' | 'UNDER_REVIEW' | 'APPROVED';
+
+const FILTER_CHIPS: { key: FilterKey; label: string }[] = [
+  { key: 'all',          label: 'Todas' },
+  { key: 'SUBMITTED',   label: 'Submetida' },
+  { key: 'UNDER_REVIEW', label: 'Em Análise' },
+  { key: 'APPROVED',    label: 'Aprovado' },
 ];
 
+function greeting(name?: string) {
+  const h = new Date().getHours();
+  const part = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+  return name ? `${part}, ${name.split(' ')[0]}!` : `${part}!`;
+}
+
 export function DashboardCorporate() {
-  const router = useRouter();
+  const { user } = useAuth();
   const [operations, setOperations] = useState<Operation[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterKey>('all');
-  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState({
-    totalOpportunities: 0,
-    proposalsSent: 0,
+    totalOps: 0,
+    pendingOps: 0,
+    approvedOps: 0,
+    rejectedOps: 0,
     conversionRate: 0,
-    activePortfolio: 0,
-    totalPortfolioVolume: 0,
+    totalVolume: 0,
+    pendingVolume: 0,
+    avgScore: 0,
   });
 
-  useEffect(() => { load(); }, []);
-
-  async function load() {
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    else setRefreshing(true);
     try {
       const opsRes = await api.get('/operations?page=1&perPage=50');
       const ops: Operation[] = opsRes.data.data ?? opsRes.data.operations ?? opsRes.data ?? [];
-      if (!Array.isArray(ops)) { setLoading(false); return; }
+      if (!Array.isArray(ops)) { setLoading(false); setRefreshing(false); return; }
       setOperations(ops);
-      const active = ops.filter((o) => o.status === 'ACTIVE' || o.status === 'APPROVED').length;
-      const approved = ops.filter((o) => o.status === 'APPROVED' || o.status === 'COMPLETED').length;
-      const proposals = ops.reduce((a, o) => a + (o._count?.proposals ?? 0), 0);
-      const volume = ops.filter((o) => o.status === 'ACTIVE').reduce((a, o) => a + (o.requestedAmount ?? 0), 0);
-      setStats({
-        totalOpportunities: ops.filter((o) => ['OPEN', 'IN_ANALYSIS', 'APPROVED'].includes(o.status)).length,
-        proposalsSent: proposals,
-        conversionRate: ops.length > 0 ? Math.round((approved / ops.length) * 100) : 0,
-        activePortfolio: active,
-        totalPortfolioVolume: volume,
-      });
-    } catch { /* new user */ } finally { setLoading(false); }
-  }
 
-  const visible = operations.filter((op) => {
-    const matchStatus = filter === 'all' || op.status === filter;
-    const matchSearch = !search || [op.purpose, op.type, op.culture, op.region, op.producer?.businessName, op.producer?.name]
-      .some((v) => v?.toLowerCase().includes(search.toLowerCase()));
-    return matchStatus && matchSearch;
-  });
+      const pending = ops.filter((o) => ['SUBMITTED', 'UNDER_REVIEW'].includes(o.status)).length;
+      const approved = ops.filter((o) => ['APPROVED', 'COMPLETED'].includes(o.status)).length;
+      const rejected = ops.filter((o) => o.status === 'REJECTED').length;
+      const volume = ops.reduce((a, o) => a + (o.amount ?? 0), 0);
+      const pendingVol = ops.filter((o) => ['SUBMITTED', 'UNDER_REVIEW'].includes(o.status)).reduce((a, o) => a + (o.amount ?? 0), 0);
+      const scored = ops.filter((o) => (o.score ?? 0) > 0);
+      const avgScore = scored.length > 0 ? scored.reduce((a, o) => a + (o.score ?? 0), 0) / scored.length : 0;
+
+      setStats({
+        totalOps: ops.length,
+        pendingOps: pending,
+        approvedOps: approved,
+        rejectedOps: rejected,
+        conversionRate: ops.length > 0 ? Math.round((approved / ops.length) * 100) : 0,
+        totalVolume: volume,
+        pendingVolume: pendingVol,
+        avgScore: Math.round(avgScore),
+      });
+    } catch { /* empty portfolio */ } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const filtered = filter === 'all'
+    ? operations
+    : operations.filter((op) => op.status === filter);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
-            <Landmark className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-950/40">
+            <Building2 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Deal-flow de Crédito Agro</h1>
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                CORPORATE
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">{greeting(user?.name)}</h1>
+              <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 dark:bg-indigo-950/40 px-2 py-0.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+                <Building2 className="h-3 w-3" /> Parceiro
               </span>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {loading ? 'Carregando...' : `${stats.totalOpportunities} oportunidades disponíveis agora`}
-            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Gestão de crédito e análise de operações</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/dashboard/matching" className="btn-secondary text-sm flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" /> Portfólio
+          <button onClick={() => load(true)} disabled={refreshing} className="btn-ghost flex items-center gap-1.5 text-sm" title="Atualizar">
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
+          <Link href="/dashboard/matching" className="btn-primary text-sm flex items-center gap-2">
+            <FileText className="h-4 w-4" /> Operações Disponíveis
           </Link>
         </div>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          title="Oportunidades"
-          value={stats.totalOpportunities}
-          subtitle="disponíveis para análise"
-          icon={<Activity className="h-6 w-6" />}
-          color="blue"
-        />
-        <KPICard
-          title="Propostas Enviadas"
-          value={stats.proposalsSent}
-          subtitle="aguardando resposta"
-          icon={<Send className="h-6 w-6" />}
-          color="green"
-        />
-        <KPICard
-          title="Taxa de Conversão"
-          value={`${stats.conversionRate}%`}
-          subtitle="aprovações / propostas"
-          icon={<CheckCircle2 className="h-6 w-6" />}
-          color="purple"
-        />
-        <KPICard
-          title="Portfólio Ativo"
-          value={formatCurrency(stats.totalPortfolioVolume)}
-          subtitle={`${stats.activePortfolio} operações`}
-          icon={<TrendingUp className="h-6 w-6" />}
-          color="amber"
-        />
+        <KPICard title="Aguardando Análise" value={stats.pendingOps} subtitle="submetidas ou em revisão" icon={<Clock className="h-6 w-6" />} color="amber" />
+        <KPICard title="Operações Aprovadas" value={stats.approvedOps} subtitle={`taxa de conversão: ${stats.conversionRate}%`} icon={<CheckCircle2 className="h-6 w-6" />} color="green" />
+        <KPICard title="Volume em Análise" value={formatCurrency(stats.pendingVolume)} subtitle="pipeline ativo" icon={<CreditCard className="h-6 w-6" />} color="blue" />
+        <KPICard title="Volume Total" value={formatCurrency(stats.totalVolume)} subtitle={`${stats.totalOps} operações`} icon={<TrendingUp className="h-6 w-6" />} color="purple" />
       </div>
 
-      {/* Filter bar */}
-      <div className="card">
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="h-4 w-4 text-gray-400 flex-shrink-0" />
-            {FILTER_CHIPS.map((c) => (
-              <button
-                key={c.key}
-                onClick={() => setFilter(c.key)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-                  filter === c.key
-                    ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-900'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                }`}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por cultura, região..."
-              className="input pl-9 py-1.5 text-sm w-full sm:w-56"
-            />
-          </div>
-        </div>
+      {/* Filter chips */}
+      <div className="flex flex-wrap gap-2">
+        {FILTER_CHIPS.map((c) => (
+          <button
+            key={c.key}
+            onClick={() => setFilter(c.key)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
+              filter === c.key
+                ? 'bg-brand-600 border-brand-600 text-white shadow-sm'
+                : 'bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-400 hover:border-brand-300'
+            }`}
+          >
+            {c.label}
+            {c.key !== 'all' && (
+              <span className="ml-1.5 text-xs opacity-70">
+                ({operations.filter((o) => c.key === 'APPROVED' ? ['APPROVED','COMPLETED'].includes(o.status) : o.status === c.key).length})
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
-      {/* Operations feed */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-            Operações Disponíveis
-            {visible.length > 0 && (
-              <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">({visible.length})</span>
-            )}
-          </h3>
-          <Link href="/dashboard/matching" className="text-sm text-brand-600 hover:text-brand-500 flex items-center gap-1">
-            Matching IA <ArrowRight className="h-4 w-4" />
-          </Link>
+      {/* Main grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 card">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+              {filter === 'all' ? 'Todas as Operações' : FILTER_CHIPS.find((c) => c.key === filter)?.label}
+              <span className="ml-2 text-sm font-normal text-gray-400">({filtered.length})</span>
+            </h3>
+            <Link href="/dashboard/matching" className="text-sm text-brand-600 hover:text-brand-500 flex items-center gap-1">
+              Ver disponíveis <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="space-y-3">{[1,2,3].map((i) => <div key={i} className="animate-pulse h-16 bg-gray-100 dark:bg-gray-800 rounded-lg" />)}</div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-10">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800">
+                <FileText className="h-6 w-6 text-gray-400" />
+              </div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Nenhuma operação{filter !== 'all' ? ' com este filtro' : ''}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                {filter === 'all' ? 'Acesse as operações disponíveis para começar a analisar.' : 'Tente outro filtro acima.'}
+              </p>
+              {filter === 'all' && (
+                <Link href="/dashboard/matching" className="mt-4 inline-flex items-center gap-1.5 text-sm text-brand-600 hover:text-brand-500 font-medium">
+                  Ver operações disponíveis <ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-dark-border">
+                    <th className="pb-3 font-medium">Operação</th>
+                    <th className="pb-3 font-medium">Produtor</th>
+                    <th className="pb-3 font-medium">Valor</th>
+                    <th className="pb-3 font-medium">Score</th>
+                    <th className="pb-3 font-medium">Status</th>
+                    <th className="pb-3 font-medium">Data</th>
+                    <th className="pb-3" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50 dark:divide-dark-border">
+                  {filtered.map((op) => (
+                    <tr key={op.id} className="group hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                      <td className="py-3 pr-4">
+                        <p className="font-medium text-gray-900 dark:text-white">{op.purpose ?? op.type}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{op.termMonths}m</p>
+                      </td>
+                      <td className="py-3 pr-4 text-gray-600 dark:text-gray-400">{op.producerName ?? '—'}</td>
+                      <td className="py-3 pr-4 font-medium text-gray-900 dark:text-white">{formatCurrency(op.amount)}</td>
+                      <td className="py-3 pr-4">
+                        {op.score != null ? (
+                          <span className={`text-xs font-semibold ${op.score >= 80 ? 'text-green-600' : op.score >= 60 ? 'text-amber-600' : 'text-red-500'}`}>
+                            {op.score}
+                          </span>
+                        ) : <span className="text-xs text-gray-400">—</span>}
+                      </td>
+                      <td className="py-3 pr-4"><StatusBadge status={op.status} /></td>
+                      <td className="py-3 pr-4 text-gray-500 dark:text-gray-400">{formatRelative(op.createdAt)}</td>
+                      <td className="py-3">
+                        <Link href={`/dashboard/operations/${op.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-brand-600 hover:text-brand-500 flex items-center gap-1">
+                          Ver <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        {loading ? (
-          <div className="space-y-3">{[1,2,3,4].map((i) => <div key={i} className="animate-pulse h-20 bg-gray-100 dark:bg-gray-800 rounded-xl" />)}</div>
-        ) : visible.length === 0 ? (
-          <EmptyState
-            icon={<Landmark className="h-14 w-14" />}
-            title="Nenhuma oportunidade encontrada"
-            description="Ajuste os filtros ou aguarde novas operações dos produtores cadastrados na plataforma."
-          />
-        ) : (
-          <div className="space-y-2">
-            {visible.map((op) => (
-              <div
-                key={op.id}
-                className="group flex items-start gap-4 p-4 rounded-xl border border-gray-100 dark:border-dark-border hover:border-slate-300 dark:hover:border-slate-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-all"
-                onClick={() => router.push(`/dashboard/operations/${op.id}`)}
-              >
-                {/* Icon */}
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors">
-                  <FileText className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-                </div>
-
-                {/* Main */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                        {op.purpose ?? op.type}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5">
-                        {op.culture && (
-                        <span className="flex items-center gap-1">
-                          <svg className="h-3 w-3 text-green-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22V12M12 12C12 7 7 4 2 6c4 2 6 6 10 6zM12 12C12 7 17 4 22 6c-4 2-6 6-10 6z"/></svg>
-                          {op.culture}
-                        </span>
-                      )}
-                      {op.region && (
-                        <span className="flex items-center gap-1">
-                          <svg className="h-3 w-3 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-                          {op.region}
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1">
-                        <svg className="h-3 w-3 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                        {formatRelative(op.createdAt)}
-                      </span>
-                        {(op._count?.proposals ?? 0) > 0 && (
-                          <span className="text-brand-600 font-medium">{op._count?.proposals} proposta(s)</span>
-                        )}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                      <p className="text-base font-bold text-gray-900 dark:text-white">{formatCurrency(op.requestedAmount)}</p>
-                      <StatusBadge status={op.status} />
-                    </div>
-                  </div>
-                  {/* Risk tag */}
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="text-xs text-gray-400 dark:text-gray-500">{op.termMonths}m</span>
-                    {op.riskScore !== undefined && (
-                      <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${
-                        op.riskScore >= 700 ? 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400'
-                        : op.riskScore >= 500 ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400'
-                        : 'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
-                      }`}>
-                        Score {op.riskScore}
-                      </span>
-                    )}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/operations/${op.id}`); }}
-                      className="ml-auto flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
-                    >
-                      <Send className="h-3.5 w-3.5" /> Enviar Proposta
-                    </button>
+        <div className="space-y-5">
+          <div className="card">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Resumo Financeiro</h3>
+            <div className="space-y-3">
+              {[
+                { label: 'Taxa de Conversão', value: `${stats.conversionRate}%`, icon: <CheckCircle2 className="h-4 w-4 text-green-500" />, sub: 'aprovadas / total' },
+                { label: 'Score Médio Carteira', value: stats.avgScore > 0 ? String(stats.avgScore) : '—', icon: <BarChart3 className="h-4 w-4 text-blue-500" />, sub: 'das operações avaliadas' },
+                { label: 'Operações Recusadas', value: stats.rejectedOps, icon: <Activity className="h-4 w-4 text-red-400" />, sub: 'no período' },
+              ].map((m) => (
+                <div key={m.label} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                  <div>{m.icon}</div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">{m.value}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{m.label}</p>
                   </div>
                 </div>
-              </div>
-            ))}
-
-            {visible.length >= 10 && (
-              <div className="pt-2 text-center">
-                <button className="text-sm text-brand-600 hover:text-brand-500 flex items-center gap-1 mx-auto">
-                  Carregar mais <ChevronDown className="h-4 w-4" />
-                </button>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
-        )}
+
+          <div className="card bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/20 dark:to-blue-950/20 border-indigo-100 dark:border-indigo-900/30">
+            <div className="flex items-center gap-2 mb-2">
+              <Building2 className="h-4 w-4 text-indigo-600" />
+              <p className="text-sm font-semibold text-indigo-800 dark:text-indigo-300">Instituição Financeira</p>
+            </div>
+            <p className="text-xs text-indigo-600 dark:text-indigo-400">Acesse as operações disponíveis e envie propostas de crédito.</p>
+            <Link href="/dashboard/matching" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:underline">
+              Ver Deal Flow <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
