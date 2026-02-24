@@ -19,7 +19,6 @@ const mobileNavLinks = [
   { name: 'Parceiros', href: '/parceiros' },
   { name: 'API', href: '/api-docs' },
   { name: 'Sobre Nós', href: '/sobre' },
-  { name: 'Blog', href: '/blog' },
   { name: 'Contato', href: '/contato' },
 ];
 
@@ -63,9 +62,6 @@ export function Header() {
 
           <Link href="/sobre" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-500 transition-colors">
             Sobre Nós
-          </Link>
-          <Link href="/blog" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-500 transition-colors">
-            Blog
           </Link>
           <Link href="/contato" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-500 transition-colors">
             Contato
