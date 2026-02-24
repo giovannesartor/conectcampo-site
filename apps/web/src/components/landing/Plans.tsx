@@ -87,7 +87,7 @@ export function Plans() {
           </p>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-start">
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
@@ -95,9 +95,9 @@ export function Plans() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`card relative ${
+              className={`card relative flex flex-col h-full ${
                 plan.highlighted
-                  ? 'ring-2 ring-brand-500 shadow-xl shadow-brand-500/10 scale-105'
+                  ? 'ring-2 ring-brand-500 shadow-xl shadow-brand-500/10'
                   : ''
               }`}
             >
@@ -124,7 +124,7 @@ export function Plans() {
                 {plan.description}
               </p>
 
-              <ul className="mt-6 space-y-3">
+              <ul className="mt-6 space-y-3 flex-1">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
                     <Check className="h-4 w-4 text-brand-500 mt-0.5 flex-shrink-0" />
