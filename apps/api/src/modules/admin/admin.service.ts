@@ -1,12 +1,16 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UserRole, OperationStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditService, AuditFilters } from '../audit/audit.service';
 
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+  ) {}
 
   // ─── KPIs ────────────────────────────────────────────────────────────────────
 
@@ -251,26 +255,33 @@ export class AdminService {
 
   // ─── Audit Logs ──────────────────────────────────────────────────────────────
 
-  async getAuditLogs(page: number, perPage: number) {
-    const [logs, total] = await Promise.all([
-      this.prisma.auditLog.findMany({
-        skip: (page - 1) * perPage,
-        take: perPage,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: { select: { name: true, email: true } },
-        },
-      }),
-      this.prisma.auditLog.count(),
-    ]);
+  async getAuditLogs(filters: AuditFilters) {
+    return this.auditService.findAll(filters);
+  }
 
-    return {
-      logs,
-      total,
-      page,
-      perPage,
-      totalPages: Math.ceil(total / perPage),
-    };
+  async getAuditStats() {
+    return this.auditService.getActionStats();
+  }
+
+  async exportAuditLogs(filters: AuditFilters) {
+    // Retorna até 10 000 linhas para export CSV
+    const { logs } = await this.auditService.findAll({ ...filters, page: 1, perPage: 10_000 });
+    const header = 'timestamp,userId,userName,userEmail,action,entity,entityId,ipAddress\n';
+    const rows = logs
+      .map((l: any) =>
+        [
+          l.createdAt,
+          l.userId,
+          (l.user?.name ?? '').replace(/,/g, ' '),
+          l.user?.email ?? '',
+          l.action,
+          l.entity,
+          l.entityId,
+          l.ipAddress ?? '',
+        ].join(','),
+      )
+      .join('\n');
+    return header + rows;
   }
 
   // ─── Revenue ─────────────────────────────────────────────────────────────────

@@ -5,10 +5,13 @@ import { RequestMethod } from '@nestjs/common';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { AppLogger } from './common/logger/app-logger.service';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
+  const appLogger = new AppLogger();
+  const app = await NestFactory.create(AppModule, { logger: appLogger });
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
 
   // Security
   app.use(helmet());
@@ -28,6 +31,9 @@ async function bootstrap() {
 
   // Global exception filter
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Global HTTP logging interceptor (every request logged to Railway)
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   // Validation
   app.useGlobalPipes(
