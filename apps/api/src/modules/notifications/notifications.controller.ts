@@ -27,10 +27,14 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Listar minhas notificações' })
   async findMine(
     @CurrentUser('sub') userId: string,
-    @Query('page') page?: number,
-    @Query('perPage') perPage?: number,
+    @Query('page') page?: string,
+    @Query('perPage') perPage?: string,
   ) {
-    return this.notificationsService.findByUser(userId, page, perPage);
+    return this.notificationsService.findByUser(
+      userId,
+      page ? Math.max(1, parseInt(page, 10)) : 1,
+      perPage ? Math.min(100, parseInt(perPage, 10)) : 20,
+    );
   }
 
   @Patch('read-all')
