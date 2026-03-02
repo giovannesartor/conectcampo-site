@@ -141,15 +141,9 @@ export class AsaasService {
     const asaasSubscriptionId = subRes.data.id;
     this.logger.log(`Asaas subscription created: ${asaasSubscriptionId}`);
 
-    // Aguardar um momento para o Asaas gerar o primeiro pagamento
-    await new Promise((r) => setTimeout(r, 500));
+    // Retry com backoff para aguardar o Asaas gerar o primeiro pagamento
+    const firstPayment = await this.fetchFirstPaymentWithRetry(asaasSubscriptionId);
 
-    // Buscar primeiro pagamento para obter invoiceUrl
-    const paymentsRes = await this.client.get<AsaasPaymentsResponse>(
-      `/subscriptions/${asaasSubscriptionId}/payments`,
-    );
-
-    const firstPayment = paymentsRes.data.data[0];
     if (!firstPayment) {
       throw new BadRequestException('Pagamento não gerado pelo gateway. Tente novamente.');
     }
@@ -313,5 +307,43 @@ export class AsaasService {
     const expected = this.configService.get<string>('ASAAS_WEBHOOK_TOKEN');
     if (!expected) return true; // não configurado → aceitar (dev)
     return token === expected;
+  }
+
+  // ─── Cancel subscription in Asaas ────────────────────────────────────────────
+
+  async cancelSubscription(asaasSubscriptionId: string): Promise<void> {
+    try {
+      await this.client.delete(`/subscriptions/${asaasSubscriptionId}`);
+      this.logger.log(`Asaas subscription cancelled: ${asaasSubscriptionId}`);
+    } catch (err: any) {
+      this.logger.error(`Failed to cancel Asaas subscription ${asaasSubscriptionId}: ${err.message}`);
+      throw err;
+    }
+  }
+
+  // ─── Retry helper ─────────────────────────────────────────────────────────────
+
+  private async fetchFirstPaymentWithRetry(
+    asaasSubscriptionId: string,
+    maxAttempts = 5,
+    baseDelayMs = 1000,
+  ): Promise<{ id: string; invoiceUrl: string; status: string } | null> {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      await new Promise((r) => setTimeout(r, baseDelayMs * attempt));
+      const res = await this.client.get<AsaasPaymentsResponse>(
+        `/subscriptions/${asaasSubscriptionId}/payments`,
+      );
+      const payment = res.data.data?.[0];
+      if (payment) {
+        this.logger.log(
+          `First payment found on attempt ${attempt} for subscription ${asaasSubscriptionId}: ${payment.id}`,
+        );
+        return payment;
+      }
+      this.logger.warn(
+        `Attempt ${attempt}/${maxAttempts}: no payment yet for subscription ${asaasSubscriptionId}`,
+      );
+    }
+    return null;
   }
 }

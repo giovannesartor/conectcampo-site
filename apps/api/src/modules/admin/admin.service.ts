@@ -104,8 +104,8 @@ export class AdminService {
         status: op.status,
         requestedAmount: op.requestedAmount,
         createdAt: op.createdAt,
-        userName: (op as any).producerProfile?.user?.name ?? '—',
-        userEmail: (op as any).producerProfile?.user?.email ?? '—',
+        userName: op.producerProfile?.user?.name ?? '—',
+        userEmail: op.producerProfile?.user?.email ?? '—',
       })),
       userTrend,
     };
@@ -214,11 +214,11 @@ export class AdminService {
         termMonths: op.termMonths,
         purpose: op.purpose,
         createdAt: op.createdAt,
-        user: (op as any).producerProfile?.user ?? null,
-        score: (op as any).riskScore?.score ?? null,
-        riskProfile: (op as any).riskScore?.profile ?? null,
-        proposalsCount: (op as any)._count?.proposals ?? 0,
-        matchesCount: (op as any)._count?.matchResults ?? 0,
+        user: op.producerProfile?.user ?? null,
+        score: op.riskScore?.score ?? null,
+        riskProfile: op.riskScore?.profile ?? null,
+        proposalsCount: op._count?.proposals ?? 0,
+        matchesCount: op._count?.matchResults ?? 0,
       })),
       total,
       page,
@@ -246,9 +246,9 @@ export class AdminService {
       minTicket: p.minTicket,
       maxTicket: p.maxTicket,
       minScore: p.minScore,
-      matchesCount: (p as any)._count?.matchResults ?? 0,
-      proposalsCount: (p as any)._count?.proposals ?? 0,
-      commissionsCount: (p as any)._count?.commissions ?? 0,
+      matchesCount: p._count?.matchResults ?? 0,
+      proposalsCount: p._count?.proposals ?? 0,
+      commissionsCount: p._count?.commissions ?? 0,
       createdAt: p.createdAt,
     }));
   }
@@ -268,7 +268,7 @@ export class AdminService {
     const { logs } = await this.auditService.findAll({ ...filters, page: 1, perPage: 10_000 });
     const header = 'timestamp,userId,userName,userEmail,action,entity,entityId,ipAddress\n';
     const rows = logs
-      .map((l: any) =>
+      .map((l) =>
         [
           l.createdAt,
           l.userId,
@@ -327,7 +327,7 @@ export class AdminService {
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-  private aggregateByMonth(records: any[]): { month: string; count: number }[] {
+  private aggregateByMonth(records: { createdAt: Date; _count: number }[]): { month: string; count: number }[] {
     const map = new Map<string, number>();
     for (const r of records) {
       const d = new Date(r.createdAt);

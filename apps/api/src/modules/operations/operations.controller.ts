@@ -30,6 +30,16 @@ export class OperationsController {
     return this.operationsService.create(userId, data);
   }
 
+  @Get('available')
+  @Roles(UserRole.FINANCIAL_INSTITUTION, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Deal flow: operações disponíveis para instituições financeiras' })
+  async findAvailable(
+    @Query('page') page?: number,
+    @Query('perPage') perPage?: number,
+  ) {
+    return this.operationsService.findAvailable(page, perPage);
+  }
+
   @Get()
   @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
   @ApiOperation({ summary: 'Listar operações do produtor' })

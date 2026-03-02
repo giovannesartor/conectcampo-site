@@ -357,7 +357,7 @@ export class AuthService {
 
   // ─── Private token helpers ────────────────────────────────────────────────────
 
-  private async createEmailVerificationToken(userId: string): Promise<string> {
+  async createEmailVerificationToken(userId: string): Promise<string> {
     const token = uuidv4();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
     await this.prisma.emailVerificationToken.create({

@@ -10,10 +10,10 @@ import {
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 import { AsaasService } from '../subscriptions/asaas.service';
+import { AuthService } from '../auth/auth.service';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Request } from 'express';
-import { v4 as uuidv4 } from 'uuid';
 
 @ApiTags('webhooks')
 @Controller('webhook')
@@ -22,6 +22,7 @@ export class WebhookController {
 
   constructor(
     private readonly asaasService: AsaasService,
+    private readonly authService: AuthService,
     private readonly mailService: MailService,
     private readonly prisma: PrismaService,
   ) {}
@@ -54,11 +55,7 @@ export class WebhookController {
 
         // 2. E-mail de verificação (se ainda não verificado)
         if (!user.emailVerified) {
-          const token = uuidv4();
-          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
-          await this.prisma.emailVerificationToken.create({
-            data: { token, userId, expiresAt },
-          });
+          const token = await this.authService.createEmailVerificationToken(userId);
           this.mailService
             .sendEmailVerification(user.email, user.name, token)
             .catch(() => null);

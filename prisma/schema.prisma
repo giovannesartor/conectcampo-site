@@ -200,9 +200,6 @@ model User {
   consentLgpd    Boolean   @default(false)
   consentLgpdAt  DateTime?
 
-  // Multi-tenant
-  tenantId       String?
-
   // Soft delete
   deletedAt      DateTime?
 
@@ -223,7 +220,6 @@ model User {
 
   @@index([email])
   @@index([role])
-  @@index([tenantId])
   @@map("users")
 }
 
@@ -763,12 +759,13 @@ model AuditLog {
 // ──────────────────────────────────────────────
 
 model Notification {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   userId    String
   title     String
   message   String
   type      String   // info, warning, success, error
   isRead    Boolean  @default(false)
+  readAt    DateTime?
   link      String?
   metadata  Json?
 

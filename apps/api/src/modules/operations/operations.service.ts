@@ -124,4 +124,59 @@ export class OperationsService {
       data: { status },
     });
   }
+
+  /**
+   * Deal flow: available operations for financial institutions / partners.
+   * Returns submitted/scoring/matching operations with producer info and score.
+   */
+  async findAvailable(page = 1, perPage = 20) {
+    const visibleStatuses: OperationStatus[] = [
+      OperationStatus.SUBMITTED,
+      OperationStatus.SCORING,
+      OperationStatus.MATCHING,
+      OperationStatus.PROPOSALS_RECEIVED,
+    ];
+
+    const [data, total] = await Promise.all([
+      this.prisma.operationRequest.findMany({
+        where: { status: { in: visibleStatuses }, deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * perPage,
+        take: perPage,
+        include: {
+          producerProfile: {
+            include: {
+              user: { select: { id: true, name: true } },
+            },
+          },
+          riskScore: { select: { score: true, profile: true } },
+        },
+      }),
+      this.prisma.operationRequest.count({
+        where: { status: { in: visibleStatuses }, deletedAt: null },
+      }),
+    ]);
+
+    return {
+      data: data.map((op) => ({
+        id: op.id,
+        type: op.type,
+        status: op.status,
+        amount: Number(op.requestedAmount),
+        termMonths: op.termMonths,
+        purpose: op.purpose,
+        guarantees: op.guarantees,
+        createdAt: op.createdAt,
+        producerName: op.producerProfile?.user?.name ?? null,
+        score: op.riskScore?.score ?? null,
+        riskProfile: op.riskScore?.profile ?? null,
+      })),
+      meta: {
+        total,
+        page,
+        perPage,
+        totalPages: Math.ceil(total / perPage),
+      },
+    };
+  }
 }

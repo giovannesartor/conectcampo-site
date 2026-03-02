@@ -30,7 +30,7 @@ export class NotificationsService {
         title: n.title,
         message: n.message,
         createdAt: n.createdAt,
-        readAt: n.isRead ? n.createdAt : null,
+        readAt: n.readAt ?? null,
         link: n.link,
       })),
       unreadCount,
@@ -51,14 +51,14 @@ export class NotificationsService {
 
     return this.prisma.notification.update({
       where: { id: notificationId },
-      data: { isRead: true },
+      data: { isRead: true, readAt: new Date() },
     });
   }
 
   async markAllAsRead(userId: string) {
     const result = await this.prisma.notification.updateMany({
       where: { userId, isRead: false },
-      data: { isRead: true },
+      data: { isRead: true, readAt: new Date() },
     });
 
     return { marked: result.count };

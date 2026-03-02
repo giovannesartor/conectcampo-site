@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProducerProfileDto } from './dto/create-producer-profile.dto';
+import { CreateFinancialProfileDto } from './dto/create-financial-profile.dto';
 import { determineTier } from '@conectcampo/utils';
 
 @Injectable()
@@ -76,7 +77,7 @@ export class ProducersService {
     });
   }
 
-  async createFinancialProfile(userId: string, data: any) {
+  async createFinancialProfile(userId: string, data: CreateFinancialProfileDto) {
     const profile = await this.prisma.producerProfile.findUnique({
       where: { userId },
     });

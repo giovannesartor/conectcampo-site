@@ -37,13 +37,13 @@ interface Operation {
   score?: number;
 }
 
-type FilterKey = 'all' | 'SUBMITTED' | 'UNDER_REVIEW' | 'APPROVED';
+type FilterKey = 'all' | 'SUBMITTED' | 'IN_ANALYSIS' | 'APPROVED';
 
 const FILTER_CHIPS: { key: FilterKey; label: string }[] = [
-  { key: 'all',          label: 'Todas' },
-  { key: 'SUBMITTED',   label: 'Submetida' },
-  { key: 'UNDER_REVIEW', label: 'Em Análise' },
-  { key: 'APPROVED',    label: 'Aprovado' },
+  { key: 'all',         label: 'Todas' },
+  { key: 'SUBMITTED',  label: 'Submetida' },
+  { key: 'IN_ANALYSIS', label: 'Em Análise' },
+  { key: 'APPROVED',   label: 'Aprovado' },
 ];
 
 function greeting(name?: string) {
@@ -73,16 +73,16 @@ export function DashboardCorporate() {
     if (!silent) setLoading(true);
     else setRefreshing(true);
     try {
-      const opsRes = await api.get('/operations?page=1&perPage=50');
+      const opsRes = await api.get('/operations/available?page=1&perPage=50');
       const ops: Operation[] = opsRes.data.data ?? opsRes.data.operations ?? opsRes.data ?? [];
       if (!Array.isArray(ops)) { setLoading(false); setRefreshing(false); return; }
       setOperations(ops);
 
-      const pending = ops.filter((o) => ['SUBMITTED', 'UNDER_REVIEW'].includes(o.status)).length;
+      const pending = ops.filter((o) => ['SUBMITTED', 'IN_ANALYSIS'].includes(o.status)).length;
       const approved = ops.filter((o) => ['APPROVED', 'COMPLETED'].includes(o.status)).length;
       const rejected = ops.filter((o) => o.status === 'REJECTED').length;
       const volume = ops.reduce((a, o) => a + (o.amount ?? 0), 0);
-      const pendingVol = ops.filter((o) => ['SUBMITTED', 'UNDER_REVIEW'].includes(o.status)).reduce((a, o) => a + (o.amount ?? 0), 0);
+      const pendingVol = ops.filter((o) => ['SUBMITTED', 'IN_ANALYSIS'].includes(o.status)).reduce((a, o) => a + (o.amount ?? 0), 0);
       const scored = ops.filter((o) => (o.score ?? 0) > 0);
       const avgScore = scored.length > 0 ? scored.reduce((a, o) => a + (o.score ?? 0), 0) / scored.length : 0;
 

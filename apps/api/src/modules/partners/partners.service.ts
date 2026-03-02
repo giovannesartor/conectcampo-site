@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CreatePartnerDto, UpdatePartnerDto } from './dto/partner.dto';
 
 @Injectable()
 export class PartnersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: any) {
+  async create(data: CreatePartnerDto) {
     return this.prisma.partnerInstitution.create({ data });
   }
 
@@ -37,7 +38,7 @@ export class PartnersService {
     return partner;
   }
 
-  async update(id: string, data: any) {
+  async update(id: string, data: UpdatePartnerDto) {
     return this.prisma.partnerInstitution.update({ where: { id }, data });
   }
 
