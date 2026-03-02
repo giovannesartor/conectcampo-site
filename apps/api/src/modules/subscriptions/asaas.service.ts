@@ -98,11 +98,12 @@ export class AsaasService {
     phone?: string;
   }): Promise<AsaasCustomerResponse> {
     const res = await this.client.post<AsaasCustomerResponse>('/customers', {
-      name: data.name,
+      name: `${data.name} - ConectCampo`,
       email: data.email,
       cpfCnpj: this.cleanDoc(data.cpfCnpj),
       mobilePhone: data.phone ? data.phone.replace(/\D/g, '') : undefined,
       notificationDisabled: false,
+      externalReference: 'ConectCampo',
     });
     this.logger.log(`Asaas customer created: ${res.data.id}`);
     return res.data;
@@ -134,6 +135,7 @@ export class AsaasService {
       nextDueDate: dueDateStr,
       cycle: 'MONTHLY',
       description: description ?? `ConectCampo - ${PLAN_LABELS[plan]}`,
+      externalReference: 'ConectCampo',
     });
 
     const asaasSubscriptionId = subRes.data.id;
