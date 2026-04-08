@@ -86,14 +86,6 @@ export class QuantovaleController {
   }
 
   @Delete('disconnect')
-  @ApiOperation({ summary: 'Desconecta a conta QuantoVale' })
-  async disconnect(@Request() req: any) {
-    await this.svc.disconnect(req.user.sub);
-    return { ok: true };
-  }
-}
-
-  @Delete('disconnect')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Desconecta a conta QuantoVale' })
   async disconnect(@Request() req: any) {
