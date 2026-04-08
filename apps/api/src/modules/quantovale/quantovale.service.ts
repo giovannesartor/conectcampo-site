@@ -331,4 +331,4 @@ export class QuantovaleService {
 
     return tokens.access_token;
   }
-}}
+}
