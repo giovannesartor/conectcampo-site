@@ -41,6 +41,30 @@ export interface QuantovaleReport {
   [key: string]: unknown;
 }
 
+export interface QuantovaleValuationStatus {
+  id: string;
+  status: string;
+  progress?: number;
+  updated_at?: string;
+  [key: string]: unknown;
+}
+
+export interface QuantovalePlan {
+  id: string;
+  name: string;
+  price?: number;
+  currency?: string;
+  features?: string[];
+  [key: string]: unknown;
+}
+
+export interface QuantovaleSimulateResult {
+  equity_value?: number;
+  risk_score?: number;
+  summary?: string;
+  [key: string]: unknown;
+}
+
 export interface CreateValuationInput {
   company_name: string;
   plan: string;
@@ -221,9 +245,9 @@ export class QuantovaleService {
 
   // ── Busca valuations do QuantoVale usando o token armazenado ───────────────
 
-  async getValuations(userId: string): Promise<{ data: QuantovaleValuation[]; pagination: unknown }> {
+  async getValuations(userId: string, page = 1): Promise<{ data: QuantovaleValuation[]; pagination: unknown }> {
     const conn = await this._getActiveConnection(userId);
-    const url = `${this.apiUrl}/public/valuations`;
+    const url = `${this.apiUrl}/public/valuations?page=${page}`;
 
     let res = await this._fetchWithRetry(userId, conn, url, 'GET');
 
@@ -289,7 +313,7 @@ export class QuantovaleService {
 
   // ── Status de um valuation (polling) ─────────────────────────────────────
 
-  async getValuationStatus(userId: string, valuationId: string): Promise<unknown> {
+  async getValuationStatus(userId: string, valuationId: string): Promise<QuantovaleValuationStatus> {
     const conn = await this._getActiveConnection(userId);
     const url = `${this.apiUrl}/public/valuations/${valuationId}/status`;
     const res = await this._fetchWithRetry(userId, conn, url, 'GET');
@@ -298,12 +322,12 @@ export class QuantovaleService {
       this.logger.error(`QuantoVale getValuationStatus failed [${res.status}] body=${errBody}`);
       throw new BadRequestException('Erro ao buscar status do valuation.');
     }
-    return res.json();
+    return res.json() as Promise<QuantovaleValuationStatus>;
   }
 
   // ── Lista planos disponíveis ──────────────────────────────────────────────
 
-  async getPlans(userId: string): Promise<unknown> {
+  async getPlans(userId: string): Promise<{ data: QuantovalePlan[]; [key: string]: unknown }> {
     const conn = await this._getActiveConnection(userId);
     const url = `${this.apiUrl}/public/plans`;
     const res = await this._fetchWithRetry(userId, conn, url, 'GET');
@@ -312,12 +336,12 @@ export class QuantovaleService {
       this.logger.error(`QuantoVale getPlans failed [${res.status}] body=${errBody}`);
       throw new BadRequestException('Erro ao buscar planos do QuantoVale.');
     }
-    return res.json();
+    return res.json() as Promise<{ data: QuantovalePlan[]; [key: string]: unknown }>;
   }
 
   // ── Simulação gratuita (não requer autenticação no QuantoVale) ────────────
 
-  async simulate(input: Record<string, unknown>): Promise<unknown> {
+  async simulate(input: Record<string, unknown>): Promise<QuantovaleSimulateResult> {
     const url = `${this.apiUrl}/public/simulate`;
     const res = await fetch(url, {
       method: 'POST',
@@ -329,7 +353,7 @@ export class QuantovaleService {
       this.logger.error(`QuantoVale simulate failed [${res.status}] body=${errBody}`);
       throw new BadRequestException('Erro na simulação QuantoVale.');
     }
-    return res.json();
+    return res.json() as Promise<QuantovaleSimulateResult>;
   }
 
   // ── Desconecta o usuário (remove tokens do banco) ─────────────────────────
@@ -337,6 +361,20 @@ export class QuantovaleService {
   async disconnect(userId: string): Promise<void> {
     await this.prisma.quantovaleConnection.deleteMany({ where: { userId } });
     this.logger.log(`QuantoVale connection removed for user ${userId}`);
+  }
+
+  /**
+   * Public wrapper for token refresh — used by the cron service.
+   * Returns true if refreshed successfully, false if no refresh token.
+   */
+  async refreshUserToken(userId: string): Promise<boolean> {
+    const conn = await this.prisma.quantovaleConnection.findUnique({
+      where: { userId },
+      select: { refreshToken: true },
+    });
+    if (!conn?.refreshToken) return false;
+    await this._refreshAccessToken(userId, conn.refreshToken);
+    return true;
   }
 
   // ── Helpers privados ───────────────────────────────────────────────────────

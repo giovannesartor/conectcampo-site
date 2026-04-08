@@ -2,7 +2,16 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import Cookies from 'js-cookie';
+import toast from 'react-hot-toast';
 import { api } from '@/lib/api';
+
+/** Decode JWT payload without verification (client-side only). */
+function getTokenExpiryMs(token: string): number | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp ? payload.exp * 1000 : null;
+  } catch { return null; }
+}
 
 interface User {
   id: string;
@@ -34,6 +43,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }
   }, []);
+
+  // H: warn user 5 min before session expires
+  useEffect(() => {
+    const token = Cookies.get('accessToken');
+    if (!user || !token) return;
+    const expiryMs = getTokenExpiryMs(token);
+    if (!expiryMs) return;
+    const warnIn = expiryMs - Date.now() - 5 * 60 * 1000;
+    if (warnIn <= 0) return;
+    const id = setTimeout(() => {
+      toast('Sua sessão expira em 5 minutos. Salve seu trabalho.', {
+        duration: 10_000,
+        icon: '⏱️',
+      });
+    }, warnIn);
+    return () => clearTimeout(id);
+  }, [user]);
 
   async function fetchUser() {
     try {

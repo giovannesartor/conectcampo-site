@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   BarChart3,
+  ChevronLeft,
   ChevronRight,
   Clock,
   DollarSign,
@@ -74,6 +75,7 @@ export default function ValuationPage() {
   const [loadingValuations, setLoadingValuations] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
 
   // detail modal
   const [selected, setSelected] = useState<Valuation | null>(null);
@@ -88,27 +90,37 @@ export default function ValuationPage() {
 
   /* ── Fetch ── */
 
-  useEffect(() => { fetchStatus(); }, []); // eslint-disable-line
+  const fetchValuations = useCallback(async (pg = 1) => {
+    setLoadingValuations(true);
+    try {
+      const { data } = await api.get<{ data: Valuation[]; pagination: Pagination }>(
+        `/quantovale/valuations?page=${pg}`,
+      );
+      setValuations(data.data ?? []);
+      setPagination(data.pagination ?? null);
+    } catch { toast.error('Erro ao buscar valuations.'); }
+    finally { setLoadingValuations(false); }
+  }, []);
 
   const fetchStatus = useCallback(async () => {
     setLoadingStatus(true);
     try {
       const { data } = await api.get<ConnectionStatus>('/quantovale/status');
       setStatus(data);
-      if (data.connected) fetchValuations();
+      if (data.connected) fetchValuations(1);
     } catch { toast.error('Erro ao verificar conexão.'); }
     finally { setLoadingStatus(false); }
-  }, []); // eslint-disable-line
+  }, [fetchValuations]);
 
-  async function fetchValuations() {
-    setLoadingValuations(true);
-    try {
-      const { data } = await api.get<{ data: Valuation[]; pagination: Pagination }>('/quantovale/valuations');
-      setValuations(data.data ?? []);
-      setPagination(data.pagination ?? null);
-    } catch { toast.error('Erro ao buscar valuations.'); }
-    finally { setLoadingValuations(false); }
-  }
+  useEffect(() => { fetchStatus(); }, [fetchStatus]);
+
+  // B: poll every 15 s while any valuation is still processing / pending
+  useEffect(() => {
+    const needsPoll = valuations.some((v) => v.status === 'processing' || v.status === 'pending');
+    if (!needsPoll) return;
+    const id = setInterval(() => fetchValuations(page), 15_000);
+    return () => clearInterval(id);
+  }, [valuations, page, fetchValuations]);
 
   /* ── Actions ── */
 
@@ -157,6 +169,12 @@ export default function ValuationPage() {
     setIframeLoading(true);
     setIframeKey((k) => k + 1);
     setCreateOpen(true);
+  }
+
+  // A+F: close create modal and silently refresh the list
+  function closeCreate() {
+    setCreateOpen(false);
+    fetchValuations(page);
   }
 
   /* ── Helpers ── */
@@ -274,7 +292,7 @@ export default function ValuationPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => fetchValuations()}
+              onClick={() => fetchValuations(page)}
               disabled={loadingValuations}
               className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
             >
@@ -342,7 +360,23 @@ export default function ValuationPage() {
         {/* List */}
         {loadingValuations ? (
           <div className="space-y-3">
-            {[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />)}
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 animate-pulse">
+                <div className="flex items-center gap-4">
+                  <div className="hidden sm:block h-10 w-10 rounded-lg bg-gray-200 dark:bg-gray-700 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-40 rounded bg-gray-200 dark:bg-gray-700" />
+                      <div className="h-5 w-20 rounded-full bg-gray-200 dark:bg-gray-700" />
+                    </div>
+                    <div className="h-3 w-24 rounded bg-gray-200 dark:bg-gray-700" />
+                  </div>
+                  <div className="shrink-0">
+                    <div className="h-6 w-28 rounded bg-gray-200 dark:bg-gray-700" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-12 text-center space-y-3">
@@ -405,10 +439,31 @@ export default function ValuationPage() {
                 </div>
               );
             })}
-            {pagination?.total_pages && pagination.total_pages > 1 && (
-              <p className="text-center text-xs text-gray-500 py-2">
-                Mostrando {filtered.length} de {pagination.total} valuations
-              </p>
+            {(pagination?.total_pages ?? 1) > 1 && (
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
+                <p className="text-xs text-gray-500">
+                  {pagination?.total ? `${pagination.total} valuations no total` : ''}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={page === 1}
+                    onClick={() => { const p = page - 1; setPage(p); fetchValuations(p); }}
+                    className="inline-flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5" /> Anterior
+                  </button>
+                  <span className="text-xs text-gray-500 tabular-nums">
+                    {page} / {pagination?.total_pages}
+                  </span>
+                  <button
+                    disabled={page === (pagination?.total_pages ?? 1)}
+                    onClick={() => { const p = page + 1; setPage(p); fetchValuations(p); }}
+                    className="inline-flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    Próxima <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -537,7 +592,7 @@ export default function ValuationPage() {
 
       {/* ═══ Create iframe modal ═══ */}
       {createOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black/60" onClick={() => setCreateOpen(false)}>
+        <div className="fixed inset-0 z-50 flex flex-col bg-black/60" onClick={closeCreate}>
           <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shrink-0" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3">
               <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -559,7 +614,7 @@ export default function ValuationPage() {
                 <Maximize2 className="h-3.5 w-3.5" /> Abrir em nova aba
               </a>
               <button
-                onClick={() => setCreateOpen(false)}
+                onClick={closeCreate}
                 className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
               >
                 <X className="h-5 w-5" />

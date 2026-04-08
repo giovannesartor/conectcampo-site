@@ -5,6 +5,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   Request,
   HttpCode,
   HttpStatus,
@@ -48,8 +49,8 @@ export class QuantovaleController {
 
   @Get('valuations')
   @ApiOperation({ summary: 'Lista valuations do usuário no QuantoVale' })
-  async getValuations(@Request() req: any) {
-    return this.svc.getValuations(req.user.sub);
+  async getValuations(@Request() req: any, @Query('page') page?: string) {
+    return this.svc.getValuations(req.user.sub, Number(page) || 1);
   }
 
   @Post('valuations')
