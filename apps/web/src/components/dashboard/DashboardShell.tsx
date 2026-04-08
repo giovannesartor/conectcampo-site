@@ -107,7 +107,7 @@ function buildNav(role: string, plan: string): NavSection[] {
       {
         title: 'Análise',
         items: [
-          { label: 'Analytics',          href: '/dashboard/matching',           icon: <PieChart className="h-5 w-5" /> },
+          { label: 'Analytics',          href: '/dashboard/matching',           icon: <PieChart className="h-5 w-5" /> },          { label: 'Valuations',           href: '/dashboard/valuation',         icon: <DollarSign className="h-5 w-5" /> },          { label: 'Valuations',         href: '/dashboard/valuation',         icon: <TrendingUp className="h-5 w-5" /> },
         ],
       },
       {
@@ -162,6 +162,7 @@ function buildNav(role: string, plan: string): NavSection[] {
         items: [
           { label: 'Analytics',          href: '/dashboard/scoring',           icon: <TrendingUp className="h-5 w-5" /> },
           { label: 'Score Premium',      href: '/dashboard/scoring',           icon: <Sparkles className="h-5 w-5" />, badge: 'PRO' },
+          { label: 'Valuations',         href: '/dashboard/valuation',         icon: <DollarSign className="h-5 w-5" /> },
         ],
       },
       {
