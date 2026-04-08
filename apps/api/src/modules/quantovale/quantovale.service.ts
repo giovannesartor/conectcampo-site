@@ -48,7 +48,7 @@ export class QuantovaleService {
     this.redirectUri = this.config.getOrThrow<string>('QUANTOVALE_REDIRECT_URI');
     this.authorizeUrl = this.config.get<string>(
       'QUANTOVALE_AUTHORIZE_URL',
-      'https://quantovale.online/oauth/autorizar',
+      'https://quantovale.online/oauth/authorize',
     );
     this.apiUrl = this.config.get<string>(
       'QUANTOVALE_API_URL',
@@ -80,20 +80,20 @@ export class QuantovaleService {
     redirectUri: string,
   ): Promise<{ ok: boolean; scopes: string[] }> {
     // Troca o código por tokens no QuantoVale
-    const body = new URLSearchParams({
+    const body = {
       grant_type: 'authorization_code',
       code,
       redirect_uri: redirectUri,
       client_id: this.clientId,
       client_secret: this.clientSecret,
-    });
+    };
 
     let tokens: QuantovaleTokenResponse;
     try {
       const res = await fetch(`${this.apiUrl}/oauth/token`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString(),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
