@@ -179,6 +179,8 @@ export class QuantovaleService {
     }
 
     if (!res.ok) {
+      const errBody = await res.text().catch(() => '<unreadable>');
+      this.logger.error(`QuantoVale valuations failed [${res.status}] url=${this.apiUrl}/valuations body=${errBody}`);
       throw new BadRequestException('Erro ao buscar valuations no QuantoVale.');
     }
 
