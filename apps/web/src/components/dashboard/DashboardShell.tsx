@@ -85,6 +85,12 @@ function buildNav(role: string, plan: string): NavSection[] {
         ],
       },
       {
+        title: 'Integrações',
+        items: [
+          { label: 'Valuations',         href: '/dashboard/valuation',         icon: <TrendingUp className="h-5 w-5" /> },
+        ],
+      },
+      {
         title: 'Conta',
         items: [
           { label: 'Configurações',      href: '/dashboard/settings',          icon: <Settings className="h-5 w-5" /> },
