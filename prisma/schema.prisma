@@ -217,6 +217,7 @@ model User {
   notifications    Notification[]
   passwordResetTokens    PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
+  quantovaleConnection QuantovaleConnection?
 
   @@index([email])
   @@index([role])
@@ -776,4 +777,25 @@ model Notification {
 
   @@index([userId, isRead])
   @@map("notifications")
+}
+
+// ──────────────────────────────────────────────
+// INTEGRAÇÕES EXTERNAS
+// ──────────────────────────────────────────────
+
+/// Armazena os tokens OAuth2 do QuantoVale vinculados a um usuário ConectCampo.
+model QuantovaleConnection {
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  scopes       String[]
+
+  connectedAt  DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("quantovale_connections")
 }

@@ -31,5 +31,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/admin/:path*'],
+  matcher: ['/dashboard/admin/:path*', '/callback', '/oauth/callback'],
 };

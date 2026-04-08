@@ -229,6 +229,11 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const planInfo = PLAN_LABELS[effectivePlan] ?? null;
   const navSections = buildNav(effectiveRole, effectivePlan);
 
+  async function handleLogout() {
+    await logout();
+    router.push('/');
+  }
+
   function isActive(href: string) {
     if (href === '/dashboard') return pathname === '/dashboard';
     return pathname.startsWith(href);
@@ -316,12 +321,12 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 {isPreviewMode ? (ROLE_LABELS[effectiveRole] ?? effectiveRole) : (ROLE_LABELS[user.role] ?? user.role)}
               </p>
             </div>
-            <button onClick={logout} className="text-gray-400 hover:text-red-500 transition-colors" title="Sair">
+            <button onClick={handleLogout} className="text-gray-400 hover:text-red-500 transition-colors" title="Sair">
               <LogOut className="h-4 w-4" />
             </button>
           </div>
         ) : (
-          <button onClick={logout} className="w-full flex justify-center text-gray-400 hover:text-red-500" title="Sair">
+          <button onClick={handleLogout} className="w-full flex justify-center text-gray-400 hover:text-red-500" title="Sair">
             <LogOut className="h-5 w-5" />
           </button>
         )}
