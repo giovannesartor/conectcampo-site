@@ -259,6 +259,65 @@ export class QuantovaleService {
     return res.json() as Promise<QuantovaleReport>;
   }
 
+  // ── Busca detalhes de um valuation ──────────────────────────────────────────
+
+  async getValuation(userId: string, valuationId: string): Promise<QuantovaleValuation> {
+    const conn = await this._getActiveConnection(userId);
+    const url = `${this.apiUrl}/public/valuations/${valuationId}`;
+    const res = await this._fetchWithRetry(userId, conn, url, 'GET');
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '<unreadable>');
+      this.logger.error(`QuantoVale getValuation failed [${res.status}] body=${errBody}`);
+      throw new BadRequestException('Erro ao buscar valuation no QuantoVale.');
+    }
+    return res.json() as Promise<QuantovaleValuation>;
+  }
+
+  // ── Status de um valuation (polling) ─────────────────────────────────────
+
+  async getValuationStatus(userId: string, valuationId: string): Promise<unknown> {
+    const conn = await this._getActiveConnection(userId);
+    const url = `${this.apiUrl}/public/valuations/${valuationId}/status`;
+    const res = await this._fetchWithRetry(userId, conn, url, 'GET');
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '<unreadable>');
+      this.logger.error(`QuantoVale getValuationStatus failed [${res.status}] body=${errBody}`);
+      throw new BadRequestException('Erro ao buscar status do valuation.');
+    }
+    return res.json();
+  }
+
+  // ── Lista planos disponíveis ──────────────────────────────────────────────
+
+  async getPlans(userId: string): Promise<unknown> {
+    const conn = await this._getActiveConnection(userId);
+    const url = `${this.apiUrl}/public/plans`;
+    const res = await this._fetchWithRetry(userId, conn, url, 'GET');
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '<unreadable>');
+      this.logger.error(`QuantoVale getPlans failed [${res.status}] body=${errBody}`);
+      throw new BadRequestException('Erro ao buscar planos do QuantoVale.');
+    }
+    return res.json();
+  }
+
+  // ── Simulação gratuita (não requer autenticação no QuantoVale) ────────────
+
+  async simulate(input: Record<string, unknown>): Promise<unknown> {
+    const url = `${this.apiUrl}/public/simulate`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'API-Version': QV_API_VERSION },
+      body: JSON.stringify(input),
+    });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '<unreadable>');
+      this.logger.error(`QuantoVale simulate failed [${res.status}] body=${errBody}`);
+      throw new BadRequestException('Erro na simulação QuantoVale.');
+    }
+    return res.json();
+  }
+
   // ── Desconecta o usuário (remove tokens do banco) ─────────────────────────
 
   async disconnect(userId: string): Promise<void> {

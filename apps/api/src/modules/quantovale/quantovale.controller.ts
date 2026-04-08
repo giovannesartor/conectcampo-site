@@ -40,6 +40,12 @@ export class QuantovaleController {
     return this.svc.getConnectionStatus(req.user.sub);
   }
 
+  @Get('plans')
+  @ApiOperation({ summary: 'Lista planos disponíveis no QuantoVale' })
+  async getPlans(@Request() req: any) {
+    return this.svc.getPlans(req.user.sub);
+  }
+
   @Get('valuations')
   @ApiOperation({ summary: 'Lista valuations do usuário no QuantoVale' })
   async getValuations(@Request() req: any) {
@@ -54,11 +60,38 @@ export class QuantovaleController {
     return { data: valuation };
   }
 
+  @Get('valuations/:id')
+  @ApiOperation({ summary: 'Detalhes de um valuation específico' })
+  async getValuation(@Request() req: any, @Param('id') id: string) {
+    return this.svc.getValuation(req.user.sub, id);
+  }
+
+  @Get('valuations/:id/status')
+  @ApiOperation({ summary: 'Status de processamento de um valuation' })
+  async getValuationStatus(@Request() req: any, @Param('id') id: string) {
+    return this.svc.getValuationStatus(req.user.sub, id);
+  }
+
   @Get('valuations/:id/report')
   @ApiOperation({ summary: 'Busca o relatório detalhado de um valuation (v2)' })
   async getValuationReport(@Request() req: any, @Param('id') id: string) {
     return this.svc.getValuationReport(req.user.sub, id);
   }
+
+  @Post('simulate')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Simulação gratuita de valuation' })
+  async simulate(@Body() body: Record<string, unknown>) {
+    return this.svc.simulate(body);
+  }
+
+  @Delete('disconnect')
+  @ApiOperation({ summary: 'Desconecta a conta QuantoVale' })
+  async disconnect(@Request() req: any) {
+    await this.svc.disconnect(req.user.sub);
+    return { ok: true };
+  }
+}
 
   @Delete('disconnect')
   @HttpCode(HttpStatus.OK)
