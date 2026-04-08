@@ -1,5 +1,10 @@
+import { Suspense } from 'react';
 import { QuantovaleCallbackView } from '@/components/quantovale/QuantovaleCallbackView';
 
 export default function QuantovaleCallbackPage() {
-  return <QuantovaleCallbackView />;
+  return (
+    <Suspense>
+      <QuantovaleCallbackView />
+    </Suspense>
+  );
 }
