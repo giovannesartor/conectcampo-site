@@ -18,7 +18,8 @@ interface QuantovaleTokenResponse {
   refresh_token?: string;
   expires_in?: number;
   token_type: string;
-  scopes?: string[];
+  scope?: string;   // OpenAPI spec → string separado por espaço
+  scopes?: string[]; // fallback caso a API retorne array
 }
 
 export interface QuantovaleValuation {
@@ -59,8 +60,8 @@ export class QuantovaleService {
   private readonly clientSecret: string;
   private readonly redirectUri: string;
   private readonly authorizeUrl: string;
-  private readonly tokenUrl: string;  // e.g. https://quantovale.online/oauth/token
-  private readonly apiUrl: string;   // e.g. https://quantovale.online/api/v1
+  private readonly tokenUrl: string;
+  private readonly apiUrl: string;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -69,17 +70,42 @@ export class QuantovaleService {
     this.clientId = this.config.getOrThrow<string>('QUANTOVALE_CLIENT_ID');
     this.clientSecret = this.config.getOrThrow<string>('QUANTOVALE_CLIENT_SECRET');
     this.redirectUri = this.config.getOrThrow<string>('QUANTOVALE_REDIRECT_URI');
+
+    // Authorize é no frontend (quantovale.online)
     this.authorizeUrl = this.config.get<string>(
       'QUANTOVALE_AUTHORIZE_URL',
       'https://quantovale.online/oauth/authorize',
     );
-    this.tokenUrl = this.config.get<string>(
-      'QUANTOVALE_TOKEN_URL',
-      'https://quantovale.online/oauth/token',
-    );
-    this.apiUrl = this.config.get<string>(
+
+    // API vive em api.quantovale.online (NÃO em quantovale.online)
+    let apiUrl = this.config.get<string>(
       'QUANTOVALE_API_URL',
-      'https://quantovale.online/api/v1',
+      'https://api.quantovale.online/api/v1',
+    );
+    // Auto-corrige se alguém configurou o domínio do frontend por engano
+    apiUrl = this._fixApiDomain(apiUrl);
+    this.apiUrl = apiUrl;
+
+    let tokenUrl = this.config.get<string>(
+      'QUANTOVALE_TOKEN_URL',
+      `${this.apiUrl}/oauth/token`,  // https://api.quantovale.online/api/v1/oauth/token
+    );
+    tokenUrl = this._fixApiDomain(tokenUrl);
+    this.tokenUrl = tokenUrl;
+
+    this.logger.log(
+      `QuantoVale config → tokenUrl=${this.tokenUrl} apiUrl=${this.apiUrl} authorizeUrl=${this.authorizeUrl}`,
+    );
+  }
+
+  /**
+   * Se a URL usa quantovale.online sem o prefixo api., corrige para api.quantovale.online.
+   * quantovale.online é o SPA/frontend e retorna HTML para qualquer rota desconhecida.
+   */
+  private _fixApiDomain(url: string): string {
+    return url.replace(
+      /\/\/quantovale\.online\//,
+      '//api.quantovale.online/',
     );
   }
 
@@ -128,78 +154,15 @@ export class QuantovaleService {
       client_secret: this.clientSecret,
     };
 
-    // Tenta múltiplas combinações de URL + Content-Type até uma funcionar
-    const attempts = [
-      { url: this.tokenUrl, ct: 'application/json', payload: JSON.stringify(body) },
-      { url: this.tokenUrl, ct: 'application/x-www-form-urlencoded', payload: new URLSearchParams(body as any).toString() },
-      { url: `${this.apiUrl}/oauth/token`, ct: 'application/json', payload: JSON.stringify(body) },
-      { url: `${this.apiUrl}/oauth/token`, ct: 'application/x-www-form-urlencoded', payload: new URLSearchParams(body as any).toString() },
-    ];
-
-    let tokens: QuantovaleTokenResponse | null = null;
-    let lastError = '';
-
-    for (const attempt of attempts) {
-      try {
-        this.logger.log(`Token attempt → ${attempt.ct} @ ${attempt.url}`);
-
-        const res = await fetch(attempt.url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': attempt.ct,
-            Accept: 'application/json',
-          },
-          body: attempt.payload,
-        });
-
-        const rawBody = await res.text();
-        const contentType = res.headers.get('content-type') ?? '';
-
-        this.logger.log(`Token response [${res.status}] content-type=${contentType} body=${rawBody.substring(0, 500)}`);
-
-        // Se retornou HTML, essa URL/formato não funciona — tenta próxima
-        if (rawBody.trimStart().startsWith('<!') || rawBody.trimStart().startsWith('<html')) {
-          lastError = `HTML response from ${attempt.url} (${attempt.ct})`;
-          continue;
-        }
-
-        // Tenta parsear JSON
-        let parsed: any;
-        try {
-          parsed = JSON.parse(rawBody);
-        } catch {
-          lastError = `Non-JSON response from ${attempt.url}: ${rawBody.substring(0, 200)}`;
-          continue;
-        }
-
-        // Se tem um erro explícito do QuantoVale
-        if (!res.ok || parsed.error || parsed.detail) {
-          lastError = `QuantoVale error [${res.status}]: ${rawBody.substring(0, 500)}`;
-          continue;
-        }
-
-        // Sucesso!
-        tokens = parsed as QuantovaleTokenResponse;
-        this.logger.log(`Token exchange succeeded via ${attempt.ct} @ ${attempt.url}`);
-        break;
-      } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        lastError = `Fetch failed for ${attempt.url}: ${errMsg}`;
-        this.logger.warn(lastError);
-        continue;
-      }
-    }
-
-    if (!tokens || !tokens.access_token) {
-      this.logger.error(`All token exchange attempts failed. Last error: ${lastError}`);
-      throw new BadRequestException(`Falha ao trocar código com o QuantoVale. ${lastError}`);
-    }
+    const tokens = await this._tokenRequest(body);
 
     const expiresAt = tokens.expires_in
       ? new Date(Date.now() + tokens.expires_in * 1000)
       : null;
 
-    const scopes = tokens.scopes ?? [];
+    // OpenAPI retorna "scope" (string) — converte pra array
+    const scopes: string[] = tokens.scopes
+      ?? (tokens.scope ? tokens.scope.split(' ').filter(Boolean) : []);
 
     // Upsert — se o usuário já tinha conexão, atualiza
     await this.prisma.quantovaleConnection.upsert({
@@ -377,41 +340,57 @@ export class QuantovaleService {
     return tokens.access_token;
   }
 
-  /** Tenta POST no token endpoint com JSON e form-urlencoded, ambas URLs */
+  /**
+   * POST no token endpoint.
+   * Tenta form-urlencoded (padrão OAuth2 RFC 6749) e JSON como fallback.
+   */
   private async _tokenRequest(body: Record<string, string>): Promise<QuantovaleTokenResponse> {
+    // form-urlencoded é o padrão OAuth2, JSON como fallback
     const attempts = [
-      { url: this.tokenUrl, ct: 'application/json', payload: JSON.stringify(body) },
-      { url: this.tokenUrl, ct: 'application/x-www-form-urlencoded', payload: new URLSearchParams(body).toString() },
-      { url: `${this.apiUrl}/oauth/token`, ct: 'application/json', payload: JSON.stringify(body) },
-      { url: `${this.apiUrl}/oauth/token`, ct: 'application/x-www-form-urlencoded', payload: new URLSearchParams(body).toString() },
+      { ct: 'application/x-www-form-urlencoded', payload: new URLSearchParams(body).toString() },
+      { ct: 'application/json', payload: JSON.stringify(body) },
     ];
 
     let lastError = '';
     for (const attempt of attempts) {
       try {
-        const res = await fetch(attempt.url, {
+        this.logger.log(`Token request → ${attempt.ct} @ ${this.tokenUrl}`);
+
+        const res = await fetch(this.tokenUrl, {
           method: 'POST',
           headers: { 'Content-Type': attempt.ct, Accept: 'application/json' },
           body: attempt.payload,
         });
         const raw = await res.text();
+        const ct = res.headers.get('content-type') ?? '';
+
+        this.logger.log(`Token response [${res.status}] ct=${ct} body=${raw.substring(0, 500)}`);
 
         if (raw.trimStart().startsWith('<!') || raw.trimStart().startsWith('<html')) {
-          lastError = `HTML from ${attempt.url}`;
+          lastError = `HTML from ${this.tokenUrl} (${attempt.ct})`;
           continue;
         }
 
         let parsed: any;
-        try { parsed = JSON.parse(raw); } catch { lastError = `Non-JSON from ${attempt.url}`; continue; }
-        if (!res.ok || parsed.error || parsed.detail) { lastError = `Error [${res.status}]: ${raw.substring(0, 300)}`; continue; }
+        try { parsed = JSON.parse(raw); } catch { lastError = `Non-JSON from ${this.tokenUrl}: ${raw.substring(0, 200)}`; continue; }
 
+        if (!res.ok || parsed.error || parsed.detail) {
+          lastError = `QuantoVale [${res.status}]: ${parsed.error ?? parsed.detail ?? raw.substring(0, 300)}`;
+          // Se o erro é 401/403 com JSON, não vale tentar outro Content-Type
+          if (res.status === 401 || res.status === 403) break;
+          continue;
+        }
+
+        this.logger.log(`Token OK via ${attempt.ct}`);
         return parsed as QuantovaleTokenResponse;
       } catch (err) {
         lastError = err instanceof Error ? err.message : String(err);
+        this.logger.warn(`Token fetch error: ${lastError}`);
         continue;
       }
     }
 
-    throw new BadRequestException(`Sessão QuantoVale expirada. ${lastError}`);
+    this.logger.error(`Token request failed. Last: ${lastError}`);
+    throw new BadRequestException(`Falha na autenticação QuantoVale. ${lastError}`);
   }
 }
