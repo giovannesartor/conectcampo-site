@@ -4,4 +4,5 @@
  *   https://conectcampo.digital/callback
  *   https://conectcampo.digital/oauth/callback
  */
-export { default } from '../callback/page';
+import QuantovaleCallbackPage from '../callback/page';
+export default QuantovaleCallbackPage;
