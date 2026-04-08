@@ -48,11 +48,11 @@ export class QuantovaleService {
     this.redirectUri = this.config.getOrThrow<string>('QUANTOVALE_REDIRECT_URI');
     this.authorizeUrl = this.config.get<string>(
       'QUANTOVALE_AUTHORIZE_URL',
-      'https://quantovale.com.br/oauth/autorizar',
+      'https://quantovale.online/oauth/autorizar',
     );
     this.apiUrl = this.config.get<string>(
       'QUANTOVALE_API_URL',
-      'https://api.quantovale.com.br',
+      'https://api.quantovale.online',
     );
   }
 
