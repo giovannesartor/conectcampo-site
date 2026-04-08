@@ -1,8 +1,12 @@
 /**
- * /oauth/callback — alias da rota de callback OAuth2 do QuantoVale.
+ * /oauth/callback — alias de /callback para o OAuth2 do QuantoVale.
  * Ambas as URLs estão registradas no painel do QuantoVale:
  *   https://conectcampo.digital/callback
  *   https://conectcampo.digital/oauth/callback
  */
-import QuantovaleCallbackPage from '../callback/page';
-export default QuantovaleCallbackPage;
+import { QuantovaleCallbackView } from '@/components/quantovale/QuantovaleCallbackView';
+
+export default function OAuthCallbackPage() {
+  return <QuantovaleCallbackView />;
+}
+
