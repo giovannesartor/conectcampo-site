@@ -191,17 +191,31 @@ export class QuantovaleService {
   async getConnectionStatus(userId: string) {
     const conn = await this.prisma.quantovaleConnection.findUnique({
       where: { userId },
-      select: { connectedAt: true, scopes: true, expiresAt: true },
+      select: { connectedAt: true, scopes: true, expiresAt: true, refreshToken: true },
     });
 
     if (!conn) return { connected: false };
 
-    const isExpired = conn.expiresAt ? conn.expiresAt < new Date() : false;
+    let tokenExpired = conn.expiresAt ? conn.expiresAt < new Date() : false;
+
+    // Se o token expirou mas há refresh_token, tenta renovar silenciosamente
+    if (tokenExpired && conn.refreshToken) {
+      try {
+        this.logger.log(`getConnectionStatus: token expirado para ${userId}, tentando renovação silenciosa...`);
+        await this._refreshAccessToken(userId, conn.refreshToken);
+        tokenExpired = false; // renovação OK
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        this.logger.warn(`getConnectionStatus: renovação silenciosa falhou para ${userId}: ${msg}`);
+        // tokenExpired permanece true — usuário precisará reconectar
+      }
+    }
+
     return {
       connected: true,
       connectedAt: conn.connectedAt,
       scopes: conn.scopes,
-      tokenExpired: isExpired,
+      tokenExpired,
     };
   }
 
@@ -340,6 +354,19 @@ export class QuantovaleService {
         'Conta QuantoVale não conectada. Acesse Configurações → Integrações.',
       );
     }
+
+    // Refresh proativo: se o token está expirado e temos refresh_token, renova antes de usar
+    if (conn.expiresAt && conn.expiresAt < new Date() && conn.refreshToken) {
+      try {
+        this.logger.log(`Token expirado para usuário ${userId}, renovando automaticamente...`);
+        const newToken = await this._refreshAccessToken(userId, conn.refreshToken);
+        return { ...conn, accessToken: newToken };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        this.logger.warn(`Auto-refresh falhou para usuário ${userId}: ${msg}. Continuando com token antigo.`);
+      }
+    }
+
     return conn;
   }
 
