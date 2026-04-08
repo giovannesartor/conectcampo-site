@@ -120,7 +120,6 @@ export class QuantovaleService {
     code: string,
     redirectUri: string,
   ): Promise<{ ok: boolean; scopes: string[] }> {
-    // Troca o código por tokens no QuantoVale
     const body = {
       grant_type: 'authorization_code',
       code,
@@ -129,26 +128,71 @@ export class QuantovaleService {
       client_secret: this.clientSecret,
     };
 
-    let tokens: QuantovaleTokenResponse;
-    try {
-      const res = await fetch(this.tokenUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+    // Tenta múltiplas combinações de URL + Content-Type até uma funcionar
+    const attempts = [
+      { url: this.tokenUrl, ct: 'application/json', payload: JSON.stringify(body) },
+      { url: this.tokenUrl, ct: 'application/x-www-form-urlencoded', payload: new URLSearchParams(body as any).toString() },
+      { url: `${this.apiUrl}/oauth/token`, ct: 'application/json', payload: JSON.stringify(body) },
+      { url: `${this.apiUrl}/oauth/token`, ct: 'application/x-www-form-urlencoded', payload: new URLSearchParams(body as any).toString() },
+    ];
 
-      if (!res.ok) {
-        const err = await res.text();
-        this.logger.error(`QuantoVale token exchange failed: ${err}`);
-        throw new BadRequestException('Falha ao trocar código com o QuantoVale.');
+    let tokens: QuantovaleTokenResponse | null = null;
+    let lastError = '';
+
+    for (const attempt of attempts) {
+      try {
+        this.logger.log(`Token attempt → ${attempt.ct} @ ${attempt.url}`);
+
+        const res = await fetch(attempt.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': attempt.ct,
+            Accept: 'application/json',
+          },
+          body: attempt.payload,
+        });
+
+        const rawBody = await res.text();
+        const contentType = res.headers.get('content-type') ?? '';
+
+        this.logger.log(`Token response [${res.status}] content-type=${contentType} body=${rawBody.substring(0, 500)}`);
+
+        // Se retornou HTML, essa URL/formato não funciona — tenta próxima
+        if (rawBody.trimStart().startsWith('<!') || rawBody.trimStart().startsWith('<html')) {
+          lastError = `HTML response from ${attempt.url} (${attempt.ct})`;
+          continue;
+        }
+
+        // Tenta parsear JSON
+        let parsed: any;
+        try {
+          parsed = JSON.parse(rawBody);
+        } catch {
+          lastError = `Non-JSON response from ${attempt.url}: ${rawBody.substring(0, 200)}`;
+          continue;
+        }
+
+        // Se tem um erro explícito do QuantoVale
+        if (!res.ok || parsed.error || parsed.detail) {
+          lastError = `QuantoVale error [${res.status}]: ${rawBody.substring(0, 500)}`;
+          continue;
+        }
+
+        // Sucesso!
+        tokens = parsed as QuantovaleTokenResponse;
+        this.logger.log(`Token exchange succeeded via ${attempt.ct} @ ${attempt.url}`);
+        break;
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        lastError = `Fetch failed for ${attempt.url}: ${errMsg}`;
+        this.logger.warn(lastError);
+        continue;
       }
+    }
 
-      tokens = await res.json() as QuantovaleTokenResponse;
-    } catch (err) {
-      if (err instanceof BadRequestException) throw err;
-      const errMsg = err instanceof Error ? `${err.message}\n${err.stack}` : String(err);
-      this.logger.error(`Error calling QuantoVale token endpoint [${this.tokenUrl}]: ${errMsg}`);
-      throw new BadRequestException('Erro de comunicação com o QuantoVale.');
+    if (!tokens || !tokens.access_token) {
+      this.logger.error(`All token exchange attempts failed. Last error: ${lastError}`);
+      throw new BadRequestException(`Falha ao trocar código com o QuantoVale. ${lastError}`);
     }
 
     const expiresAt = tokens.expires_in
@@ -310,20 +354,14 @@ export class QuantovaleService {
   }
 
   private async _refreshAccessToken(userId: string, refreshToken: string): Promise<string> {
-    const res = await fetch(this.tokenUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-        client_id: this.clientId,
-        client_secret: this.clientSecret,
-      }),
-    });
+    const body = {
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+      client_id: this.clientId,
+      client_secret: this.clientSecret,
+    };
 
-    if (!res.ok) throw new BadRequestException('Sessão QuantoVale expirada. Reconecte.');
-
-    const tokens = await res.json() as QuantovaleTokenResponse;
+    const tokens = await this._tokenRequest(body);
 
     await this.prisma.quantovaleConnection.update({
       where: { userId },
@@ -337,5 +375,43 @@ export class QuantovaleService {
     });
 
     return tokens.access_token;
+  }
+
+  /** Tenta POST no token endpoint com JSON e form-urlencoded, ambas URLs */
+  private async _tokenRequest(body: Record<string, string>): Promise<QuantovaleTokenResponse> {
+    const attempts = [
+      { url: this.tokenUrl, ct: 'application/json', payload: JSON.stringify(body) },
+      { url: this.tokenUrl, ct: 'application/x-www-form-urlencoded', payload: new URLSearchParams(body).toString() },
+      { url: `${this.apiUrl}/oauth/token`, ct: 'application/json', payload: JSON.stringify(body) },
+      { url: `${this.apiUrl}/oauth/token`, ct: 'application/x-www-form-urlencoded', payload: new URLSearchParams(body).toString() },
+    ];
+
+    let lastError = '';
+    for (const attempt of attempts) {
+      try {
+        const res = await fetch(attempt.url, {
+          method: 'POST',
+          headers: { 'Content-Type': attempt.ct, Accept: 'application/json' },
+          body: attempt.payload,
+        });
+        const raw = await res.text();
+
+        if (raw.trimStart().startsWith('<!') || raw.trimStart().startsWith('<html')) {
+          lastError = `HTML from ${attempt.url}`;
+          continue;
+        }
+
+        let parsed: any;
+        try { parsed = JSON.parse(raw); } catch { lastError = `Non-JSON from ${attempt.url}`; continue; }
+        if (!res.ok || parsed.error || parsed.detail) { lastError = `Error [${res.status}]: ${raw.substring(0, 300)}`; continue; }
+
+        return parsed as QuantovaleTokenResponse;
+      } catch (err) {
+        lastError = err instanceof Error ? err.message : String(err);
+        continue;
+      }
+    }
+
+    throw new BadRequestException(`Sessão QuantoVale expirada. ${lastError}`);
   }
 }
