@@ -59,7 +59,8 @@ export class QuantovaleService {
   private readonly clientSecret: string;
   private readonly redirectUri: string;
   private readonly authorizeUrl: string;
-  private readonly apiUrl: string;  // e.g. https://quantovale.online/api/v1
+  private readonly tokenUrl: string;  // e.g. https://quantovale.online/oauth/token
+  private readonly apiUrl: string;   // e.g. https://quantovale.online/api/v1
 
   constructor(
     private readonly prisma: PrismaService,
@@ -71,6 +72,10 @@ export class QuantovaleService {
     this.authorizeUrl = this.config.get<string>(
       'QUANTOVALE_AUTHORIZE_URL',
       'https://quantovale.online/oauth/authorize',
+    );
+    this.tokenUrl = this.config.get<string>(
+      'QUANTOVALE_TOKEN_URL',
+      'https://quantovale.online/oauth/token',
     );
     this.apiUrl = this.config.get<string>(
       'QUANTOVALE_API_URL',
@@ -126,7 +131,7 @@ export class QuantovaleService {
 
     let tokens: QuantovaleTokenResponse;
     try {
-      const res = await fetch(`${this.apiUrl}/oauth/token`, {
+      const res = await fetch(this.tokenUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -142,7 +147,7 @@ export class QuantovaleService {
     } catch (err) {
       if (err instanceof BadRequestException) throw err;
       const errMsg = err instanceof Error ? `${err.message}\n${err.stack}` : String(err);
-      this.logger.error(`Error calling QuantoVale token endpoint [${this.apiUrl}/oauth/token]: ${errMsg}`);
+      this.logger.error(`Error calling QuantoVale token endpoint [${this.tokenUrl}]: ${errMsg}`);
       throw new BadRequestException('Erro de comunicação com o QuantoVale.');
     }
 
@@ -305,7 +310,7 @@ export class QuantovaleService {
   }
 
   private async _refreshAccessToken(userId: string, refreshToken: string): Promise<string> {
-    const res = await fetch(`${this.apiUrl}/oauth/token`, {
+    const res = await fetch(this.tokenUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
