@@ -141,7 +141,8 @@ export class QuantovaleService {
       tokens = await res.json() as QuantovaleTokenResponse;
     } catch (err) {
       if (err instanceof BadRequestException) throw err;
-      this.logger.error('Error calling QuantoVale token endpoint', err instanceof Error ? err.stack : String(err));
+      const errMsg = err instanceof Error ? `${err.message}\n${err.stack}` : String(err);
+      this.logger.error(`Error calling QuantoVale token endpoint [${this.apiUrl}/oauth/token]: ${errMsg}`);
       throw new BadRequestException('Erro de comunicação com o QuantoVale.');
     }
 
@@ -289,7 +290,8 @@ export class QuantovaleService {
     try {
       res = await fetch(url, opts);
     } catch (err) {
-      this.logger.error(`QuantoVale fetch error [${url}]`, err instanceof Error ? err.stack : String(err));
+      const errMsg = err instanceof Error ? `${err.message}\n${err.stack}` : String(err);
+      this.logger.error(`QuantoVale fetch error [${url}]: ${errMsg}`);
       throw new BadRequestException('Erro de comunicação com o QuantoVale.');
     }
 
