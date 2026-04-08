@@ -163,7 +163,7 @@ export class QuantovaleService {
 
     let res: Response;
     try {
-      res = await fetch(`${this.apiUrl}/api/v1/valuations`, {
+      res = await fetch(`${this.apiUrl}/valuations`, {
         headers: { Authorization: `Bearer ${conn.accessToken}` },
       });
     } catch {
@@ -173,7 +173,7 @@ export class QuantovaleService {
     // Token expirado: tenta renovar
     if (res.status === 401 && conn.refreshToken) {
       const newToken = await this._refreshAccessToken(userId, conn.refreshToken);
-      res = await fetch(`${this.apiUrl}/api/v1/valuations`, {
+      res = await fetch(`${this.apiUrl}/valuations`, {
         headers: { Authorization: `Bearer ${newToken}` },
       });
     }
@@ -213,17 +213,17 @@ export class QuantovaleService {
   }
 
   private async _refreshAccessToken(userId: string, refreshToken: string): Promise<string> {
-    const body = new URLSearchParams({
+    const body = {
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
       client_id: this.clientId,
       client_secret: this.clientSecret,
-    });
+    };
 
     const res = await fetch(`${this.apiUrl}/oauth/token`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString(),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) throw new BadRequestException('Sessão QuantoVale expirada. Reconecte.');
