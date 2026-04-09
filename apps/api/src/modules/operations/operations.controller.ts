@@ -24,7 +24,7 @@ export class OperationsController {
   constructor(private readonly operationsService: OperationsService) {}
 
   @Post()
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
   @ApiOperation({ summary: 'Criar nova operação de crédito' })
   async create(@CurrentUser('sub') userId: string, @Body() data: CreateOperationDto) {
     return this.operationsService.create(userId, data);
