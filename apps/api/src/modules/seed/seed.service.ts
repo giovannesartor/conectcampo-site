@@ -48,20 +48,23 @@ export class SeedService implements OnApplicationBootstrap {
     this.logger.log(`Admin user ready: ${user.email} (${user.role})`);
 
     // Second admin
-    const secondAdmin = await this.prisma.user.upsert({
-      where: { email: 'jeansartor@gmail.com' },
-      update: { role: UserRole.ADMIN, isActive: true },
-      create: {
-        email: 'jeansartor@gmail.com',
-        passwordHash,
-        name: 'Jean Sartor',
-        role: UserRole.ADMIN,
-        consentLgpd: true,
-        consentLgpdAt: new Date(),
-      },
-    });
-
-    this.logger.log(`Admin user ready: ${secondAdmin.email} (${secondAdmin.role})`);
+    const jeanPassword = process.env.JEAN_ADMIN_PASSWORD;
+    if (jeanPassword) {
+      const jeanHash = await bcrypt.hash(jeanPassword, 12);
+      const secondAdmin = await this.prisma.user.upsert({
+        where: { email: 'jeansartor@gmail.com' },
+        update: { role: UserRole.ADMIN, isActive: true, passwordHash: jeanHash },
+        create: {
+          email: 'jeansartor@gmail.com',
+          passwordHash: jeanHash,
+          name: 'Jean Sartor',
+          role: UserRole.ADMIN,
+          consentLgpd: true,
+          consentLgpdAt: new Date(),
+        },
+      });
+      this.logger.log(`Admin user ready: ${secondAdmin.email} (${secondAdmin.role})`);
+    }
   }
 
   // ── Test Users ─────────────────────────────────────────────────────────────
