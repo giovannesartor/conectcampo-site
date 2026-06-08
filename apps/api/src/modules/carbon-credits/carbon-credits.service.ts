@@ -338,8 +338,8 @@ export class CarbonCreditsService {
     ]);
 
     const totalProjects = projects.length;
-    const activeProjects = projects.filter(
-      (p) =>
+    const activeProjects = (projects as any[]).filter(
+      (p: any) =>
         ![
           CarbonProjectStatus.DRAFT,
           CarbonProjectStatus.CANCELLED,
@@ -347,21 +347,21 @@ export class CarbonCreditsService {
         ].includes(p.status as CarbonProjectStatus),
     ).length;
 
-    const totalCreditsIssued = credits
-      .filter((c) => c.status === CarbonCreditStatus.ISSUED)
-      .reduce((sum, c) => sum + Number(c.quantity), 0);
+    const totalCreditsIssued = (credits as any[])
+      .filter((c: any) => c.status === CarbonCreditStatus.ISSUED)
+      .reduce((sum: number, c: any) => sum + Number(c.quantity), 0);
 
-    const totalCreditsRetired = credits
-      .filter((c) => c.status === CarbonCreditStatus.RETIRED)
-      .reduce((sum, c) => sum + Number(c.quantity), 0);
+    const totalCreditsRetired = (credits as any[])
+      .filter((c: any) => c.status === CarbonCreditStatus.RETIRED)
+      .reduce((sum: number, c: any) => sum + Number(c.quantity), 0);
 
-    const totalRevenueEstimated = projects.reduce(
-      (sum, p) => sum + Number(p.totalEstimatedRevenue ?? 0),
+    const totalRevenueEstimated = (projects as any[]).reduce(
+      (sum: number, p: any) => sum + Number(p.totalEstimatedRevenue ?? 0),
       0,
     );
 
-    const totalCO2Projected = projects.reduce(
-      (sum, p) => sum + Number(p.projectedReduction),
+    const totalCO2Projected = (projects as any[]).reduce(
+      (sum: number, p: any) => sum + Number(p.projectedReduction),
       0,
     );
 
