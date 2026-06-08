@@ -30,6 +30,7 @@ import {
   UsersRound,
   Sparkles,
   Eye,
+  Leaf,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { Logo } from '@/components/Logo';
@@ -85,6 +86,12 @@ function buildNav(role: string, plan: string): NavSection[] {
         ],
       },
       {
+        title: 'Sustentabilidade',
+        items: [
+          { label: 'Crédito de Carbono', href: '/dashboard/carbon-credits',    icon: <Leaf className="h-5 w-5" /> },
+        ],
+      },
+      {
         title: 'Integrações',
         items: [
           { label: 'Valuations',         href: '/dashboard/valuation',         icon: <TrendingUp className="h-5 w-5" /> },
@@ -113,7 +120,8 @@ function buildNav(role: string, plan: string): NavSection[] {
       {
         title: 'Análise',
         items: [
-          { label: 'Analytics',          href: '/dashboard/matching',           icon: <PieChart className="h-5 w-5" /> },          { label: 'Valuations',           href: '/dashboard/valuation',         icon: <DollarSign className="h-5 w-5" /> },          { label: 'Valuations',         href: '/dashboard/valuation',         icon: <TrendingUp className="h-5 w-5" /> },
+          { label: 'Analytics',          href: '/dashboard/matching',           icon: <PieChart className="h-5 w-5" /> },
+          { label: 'Valuations',         href: '/dashboard/valuation',         icon: <TrendingUp className="h-5 w-5" /> },
         ],
       },
       {
@@ -164,6 +172,12 @@ function buildNav(role: string, plan: string): NavSection[] {
         ],
       },
       {
+        title: 'Sustentabilidade',
+        items: [
+          { label: 'Crédito de Carbono', href: '/dashboard/carbon-credits',    icon: <Leaf className="h-5 w-5" /> },
+        ],
+      },
+      {
         title: 'Analytics',
         items: [
           { label: 'Analytics',          href: '/dashboard/scoring',           icon: <TrendingUp className="h-5 w-5" /> },
@@ -190,6 +204,12 @@ function buildNav(role: string, plan: string): NavSection[] {
         { label: 'Operações',            href: '/dashboard/operations',        icon: <FileText className="h-5 w-5" /> },
         { label: 'Propostas',            href: '/dashboard/proposals',         icon: <CreditCard className="h-5 w-5" /> },
         { label: 'Documentos',           href: '/dashboard/documents',         icon: <FolderOpen className="h-5 w-5" /> },
+      ],
+    },
+    {
+      title: 'Sustentabilidade',
+      items: [
+        { label: 'Crédito de Carbono',   href: '/dashboard/carbon-credits',    icon: <Leaf className="h-5 w-5" /> },
       ],
     },
     {

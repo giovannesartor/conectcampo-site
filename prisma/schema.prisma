@@ -342,6 +342,7 @@ model ProducerProfile {
   financialProfile  FinancialProfile?
   operations        OperationRequest[]
   riskScores        RiskScore[]
+  carbonProjects    CarbonProject[]
 
   @@index([tier])
   @@index([state])
@@ -777,6 +778,203 @@ model Notification {
 
   @@index([userId, isRead])
   @@map("notifications")
+}
+
+// ──────────────────────────────────────────────
+// CRÉDITO DE CARBONO
+// ──────────────────────────────────────────────
+
+enum CarbonStandard {
+  VERRA_VCS         // Verified Carbon Standard
+  GOLD_STANDARD     // Gold Standard
+  CERRADO_PROTOCOL  // Protocolo Cerrado
+  AMAZON_FUND       // Fundo Amazônia
+  REDD_PLUS         // REDD+
+  CAR_REGISTRY      // Registro CAR
+  OUTRO
+}
+
+enum CarbonProjectType {
+  FLORESTA_NATIVA        // Preservação / restauração floresta nativa
+  REFLORESTATION         // Reflorestamento
+  PASTAGEM_RECUPERADA    // Recuperação de pastagens degradadas
+  INTEGRACAO_LAVOURA     // Integração lavoura-pecuária-floresta
+  AGRICULTURA_CARBONO    // Agricultura de baixo carbono (ABC+)
+  BIODIGESTAO            // Biodigestão / biogás
+  ENERGIA_RENOVAVEL      // Energia renovável na fazenda
+  MANEJO_SOLO            // Plantio direto / manejo de solo
+  OUTRO
+}
+
+enum CarbonProjectStatus {
+  DRAFT
+  IN_VALIDATION
+  VALIDATED
+  REGISTERED
+  MONITORING
+  VERIFIED
+  ISSUING_CREDITS
+  ACTIVE
+  SUSPENDED
+  COMPLETED
+  CANCELLED
+}
+
+enum CarbonCreditStatus {
+  PENDING
+  ISSUED
+  RETIRED
+  CANCELLED
+  TRANSFERRED
+}
+
+enum CarbonTransactionType {
+  ISSUANCE        // Emissão de créditos
+  SALE            // Venda no mercado voluntário
+  RETIREMENT      // Aposentadoria / uso próprio
+  TRANSFER        // Transferência entre carteiras
+  CANCELLATION    // Cancelamento
+}
+
+model CarbonProject {
+  id                  String              @id @default(uuid())
+  producerProfileId   String
+  name                String
+  description         String?
+  projectType         CarbonProjectType
+  standard            CarbonStandard
+  status              CarbonProjectStatus @default(DRAFT)
+  state               BrazilianState
+  city                String
+  latitude            Decimal?            @db.Decimal(10, 7)
+  longitude           Decimal?            @db.Decimal(10, 7)
+
+  // Área e baseline
+  totalAreaHa         Decimal             @db.Decimal(12, 2)  // hectares totais do projeto
+  eligibleAreaHa      Decimal             @db.Decimal(12, 2)  // hectares elegíveis p/ crédito
+  baselineEmissions   Decimal             @db.Decimal(15, 4)  // tCO₂e/ano (linha de base)
+  projectedReduction  Decimal             @db.Decimal(15, 4)  // tCO₂e/ano projetado
+  projectDurationYears Int                @default(20)
+
+  // Credenciamento
+  verificationBody    String?             // Entidade verificadora
+  registryId          String?             // Número no registro externo
+  certificationDate   DateTime?
+  nextVerificationDate DateTime?
+
+  // Financeiro
+  estimatedCreditPrice Decimal?           @db.Decimal(10, 2)  // R$/tCO₂e
+  totalEstimatedRevenue Decimal?          @db.Decimal(15, 2)  // R$ projetado
+
+  deletedAt           DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  // Relations
+  producerProfile     ProducerProfile     @relation(fields: [producerProfileId], references: [id])
+  inventories         CarbonInventory[]
+  credits             CarbonCredit[]
+  documents           CarbonDocument[]
+
+  @@index([producerProfileId])
+  @@index([status])
+  @@index([projectType])
+  @@index([standard])
+  @@map("carbon_projects")
+}
+
+model CarbonInventory {
+  id              String        @id @default(uuid())
+  projectId       String
+  year            Int
+  measuredEmissions Decimal     @db.Decimal(15, 4)  // tCO₂e medido
+  baselineEmissions Decimal     @db.Decimal(15, 4)  // tCO₂e linha de base
+  netReduction    Decimal       @db.Decimal(15, 4)  // tCO₂e líquido reduzido
+  leakage         Decimal       @db.Decimal(15, 4)  @default(0) // vazamento
+  buffer          Decimal       @db.Decimal(15, 4)  @default(0) // reserva buffer
+  creditsEligible Decimal       @db.Decimal(15, 4)  // créditos elegíveis
+  methodology     String?       // metodologia de medição
+  verifiedBy      String?
+  verifiedAt      DateTime?
+  reportUrl       String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  project         CarbonProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, year])
+  @@index([projectId])
+  @@map("carbon_inventories")
+}
+
+model CarbonCredit {
+  id              String              @id @default(uuid())
+  projectId       String
+  serialNumber    String?             @unique
+  vintage         Int                 // ano de referência
+  quantity        Decimal             @db.Decimal(15, 4)  // tCO₂e
+  status          CarbonCreditStatus  @default(PENDING)
+  issuedAt        DateTime?
+  retiredAt       DateTime?
+  retirementReason String?
+  retiredByEntity  String?            // empresa/entidade que aposentou
+  pricePerCredit  Decimal?            @db.Decimal(10, 2)  // R$/tCO₂e
+  totalValue      Decimal?            @db.Decimal(15, 2)  // R$ total
+
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  // Relations
+  project         CarbonProject       @relation(fields: [projectId], references: [id])
+  transactions    CarbonTransaction[]
+
+  @@index([projectId])
+  @@index([status])
+  @@index([vintage])
+  @@map("carbon_credits")
+}
+
+model CarbonTransaction {
+  id              String                @id @default(uuid())
+  creditId        String
+  type            CarbonTransactionType
+  quantity        Decimal               @db.Decimal(15, 4)
+  pricePerCredit  Decimal?              @db.Decimal(10, 2)
+  totalValue      Decimal?              @db.Decimal(15, 2)
+  buyerName       String?
+  buyerDocument   String?               // CPF/CNPJ comprador
+  notes           String?
+  transactionDate DateTime              @default(now())
+
+  createdAt       DateTime              @default(now())
+
+  // Relations
+  credit          CarbonCredit          @relation(fields: [creditId], references: [id])
+
+  @@index([creditId])
+  @@index([type])
+  @@map("carbon_transactions")
+}
+
+model CarbonDocument {
+  id          String        @id @default(uuid())
+  projectId   String
+  name        String
+  fileKey     String
+  fileUrl     String
+  fileSize    Int
+  mimeType    String
+  category    String        // validacao, monitoramento, verificacao, contrato, outro
+
+  createdAt   DateTime      @default(now())
+
+  // Relations
+  project     CarbonProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("carbon_documents")
 }
 
 // ──────────────────────────────────────────────

@@ -21,6 +21,7 @@ import { SeedModule } from './modules/seed/seed.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { WebhookModule } from './modules/webhooks/webhook.module';
 import { QuantovaleModule } from './modules/quantovale/quantovale.module';
+import { CarbonCreditsModule } from './modules/carbon-credits/carbon-credits.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 
 @Module({
@@ -62,6 +63,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
     NotificationsModule,
     WebhookModule,
     QuantovaleModule,
+    CarbonCreditsModule,
   ],
   providers: [
     {
