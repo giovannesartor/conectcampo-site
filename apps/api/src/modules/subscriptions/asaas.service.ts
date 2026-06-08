@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SubscriptionPlan, PaymentStatus } from '@prisma/client';
 import axios, { AxiosInstance } from 'axios';
+import * as crypto from 'crypto';
 
 // ─── Plan config ──────────────────────────────────────────────────────────────
 
@@ -223,6 +224,14 @@ export class AsaasService {
       return null;
     }
 
+    // ── Idempotência: já estava ativa, evitar reprocessamento ────────────────
+    if (subscription.isActive && subscription.paymentStatus === PaymentStatus.ACTIVE) {
+      this.logger.log(
+        `Subscription ${subscription.id} already active — skipping duplicate webhook`,
+      );
+      return subscription.userId;
+    }
+
     const now = new Date();
     const periodEnd = new Date(now);
     periodEnd.setMonth(periodEnd.getMonth() + 1);
@@ -301,12 +310,21 @@ export class AsaasService {
     return { userId: null };
   }
 
-  // ─── Verify webhook token ─────────────────────────────────────────────────────
+  // ─── Verify webhook token (timing-safe) ──────────────────────────────────────
 
   verifyWebhookToken(token: string | undefined): boolean {
     const expected = this.configService.get<string>('ASAAS_WEBHOOK_TOKEN');
     if (!expected) return true; // não configurado → aceitar (dev)
-    return token === expected;
+    if (!token) return false;
+    // Timing-safe comparison — evita timing attacks por comparação de strings
+    try {
+      const expectedBuf = Buffer.from(expected, 'utf8');
+      const tokenBuf = Buffer.from(token, 'utf8');
+      if (expectedBuf.length !== tokenBuf.length) return false;
+      return crypto.timingSafeEqual(expectedBuf, tokenBuf);
+    } catch {
+      return false;
+    }
   }
 
   // ─── Cancel subscription in Asaas ────────────────────────────────────────────

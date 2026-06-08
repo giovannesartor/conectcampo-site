@@ -13,8 +13,25 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: appLogger });
   const logger = new Logger('Bootstrap');
 
-  // Security
-  app.use(helmet());
+  // Security — Helmet com CSP explícita
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"], // Swagger UI requer inline styles
+          imgSrc: ["'self'", 'data:', 'https:'],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'", 'https:', 'data:'],
+          objectSrc: ["'none'"],
+          frameSrc: ["'none'"],
+          upgradeInsecureRequests: [],
+        },
+      },
+      crossOriginEmbedderPolicy: false, // necessário para Swagger UI funcionar
+    }),
+  );
   const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
     .split(',')
     .map((o) => o.trim());
@@ -61,6 +78,12 @@ async function bootstrap() {
     .addTag('partners', 'Instituições financeiras parceiras')
     .addTag('documents', 'Data room / documentos')
     .addTag('subscriptions', 'Assinaturas e planos')
+    .addTag('webhooks', 'Webhooks de gateways de pagamento')
+    .addTag('notifications', 'Notificações do usuário')
+    .addTag('carbon-credits', 'Créditos de carbono e projetos ESG')
+    .addTag('quantovale', 'Integração QuantoVale — valuation agro')
+    .addTag('admin', 'Painel administrativo')
+    .addTag('users', 'Gerenciamento de usuários')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
