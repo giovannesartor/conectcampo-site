@@ -12,6 +12,7 @@ COPY package.json turbo.json ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/types/package.json ./packages/types/
 COPY packages/utils/package.json ./packages/utils/
+COPY prisma/schema.prisma ./prisma/
 
 RUN npm install --legacy-peer-deps
 
