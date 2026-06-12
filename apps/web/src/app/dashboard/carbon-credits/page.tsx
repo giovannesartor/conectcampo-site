@@ -201,10 +201,10 @@ export default function CarbonCreditsDashboard() {
             <Percent className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-500 dark:text-emerald-400 mb-0.5">Comiss\u00e3o ConectCampo</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-500 dark:text-emerald-400 mb-0.5">Comissão ConectCampo</p>
             <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-200">6%</p>
             <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">
-              Incide apenas sobre a receita efetivamente gerada na comercializa\u00e7\u00e3o dos cr\u00e9ditos. Sem receita, sem custo.
+              Incide apenas sobre a receita efetivamente gerada na comercialização dos créditos. Sem receita, sem custo.
             </p>
           </div>
         </div>
