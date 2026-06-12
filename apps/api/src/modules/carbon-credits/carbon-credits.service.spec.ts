@@ -55,7 +55,7 @@ describe('CarbonCreditsService', () => {
     const dto = {
       name: 'Reflorestamento São Paulo',
       description: 'Projeto de reflorestamento',
-      projectType: CarbonProjectType.REFORESTATION,
+      projectType: CarbonProjectType.REFLORESTATION,
       standard: CarbonStandard.VERRA_VCS,
       state: 'SP',
       city: 'Campinas',
