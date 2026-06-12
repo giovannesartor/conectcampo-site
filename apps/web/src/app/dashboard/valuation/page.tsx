@@ -18,6 +18,7 @@ import {
   Unlink,
   X,
   Zap,
+  AlertTriangle,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
@@ -257,7 +258,7 @@ export default function ValuationPage() {
     return (
       <div className="flex items-center justify-center h-[70vh]">
         <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 p-10 text-center space-y-4 max-w-md w-full">
-          <p className="text-3xl">⚠️</p>
+          <AlertTriangle className="h-10 w-10 text-amber-500 mx-auto" />
           <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-200">Sessão expirada</h3>
           <p className="text-sm text-amber-700 dark:text-amber-300">Reconecte para continuar acessando seus valuations.</p>
           <button onClick={handleConnect} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-700 transition">

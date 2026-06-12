@@ -7,15 +7,15 @@ import { ChevronRight, Leaf, Info } from 'lucide-react';
 import { api } from '@/lib/api';
 
 const PROJECT_TYPES = [
-  { value: 'FLORESTA_NATIVA',     label: '🌳 Floresta Nativa',                  desc: 'Preservação ou restauração de floresta nativa' },
-  { value: 'REFLORESTATION',      label: '🌱 Reflorestamento',                  desc: 'Plantio de mudas em áreas degradadas' },
-  { value: 'PASTAGEM_RECUPERADA', label: '🐄 Pastagem Recuperada',              desc: 'Recuperação de pastagens degradadas com sequestro de carbono' },
-  { value: 'INTEGRACAO_LAVOURA',  label: '🌿 ILPF',                            desc: 'Integração lavoura-pecuária-floresta' },
-  { value: 'AGRICULTURA_CARBONO', label: '🚜 Agricultura Baixo Carbono',         desc: 'Programa ABC+ e práticas de baixo carbono' },
-  { value: 'BIODIGESTAO',         label: '♻️ Biodigestão',                     desc: 'Biodigestores e geração de biogás' },
-  { value: 'ENERGIA_RENOVAVEL',   label: '☀️ Energia Renovável',               desc: 'Solar, eólico e outras renováveis na propriedade' },
-  { value: 'MANEJO_SOLO',         label: '🌾 Manejo de Solo',                   desc: 'Plantio direto e práticas de conservação do solo' },
-  { value: 'OUTRO',               label: '📋 Outro',                           desc: 'Outros tipos de projeto' },
+  { value: 'FLORESTA_NATIVA',     label: 'Floresta Nativa',             desc: 'Preservação ou restauração de floresta nativa' },
+  { value: 'REFLORESTATION',      label: 'Reflorestamento',             desc: 'Plantio de mudas em áreas degradadas' },
+  { value: 'PASTAGEM_RECUPERADA', label: 'Pastagem Recuperada',         desc: 'Recuperação de pastagens degradadas com sequestro de carbono' },
+  { value: 'INTEGRACAO_LAVOURA',  label: 'ILPF',                        desc: 'Integração lavoura-pecuária-floresta' },
+  { value: 'AGRICULTURA_CARBONO', label: 'Agricultura Baixo Carbono',   desc: 'Programa ABC+ e práticas de baixo carbono' },
+  { value: 'BIODIGESTAO',         label: 'Biodigestão',                 desc: 'Biodigestores e geração de biogás' },
+  { value: 'ENERGIA_RENOVAVEL',   label: 'Energia Renovável',           desc: 'Solar, eólico e outras renováveis na propriedade' },
+  { value: 'MANEJO_SOLO',         label: 'Manejo de Solo',              desc: 'Plantio direto e práticas de conservação do solo' },
+  { value: 'OUTRO',               label: 'Outro',                       desc: 'Outros tipos de projeto' },
 ];
 
 const STANDARDS = [

@@ -45,15 +45,15 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.
 };
 
 const TYPE_LABELS: Record<string, string> = {
-  FLORESTA_NATIVA:     '🌳 Floresta Nativa',
-  REFLORESTATION:      '🌱 Reflorestamento',
-  PASTAGEM_RECUPERADA: '🐄 Pastagem Recuperada',
-  INTEGRACAO_LAVOURA:  '🌿 ILPF',
-  AGRICULTURA_CARBONO: '🚜 Agricultura Baixo Carbono',
-  BIODIGESTAO:         '♻️ Biodigestão',
-  ENERGIA_RENOVAVEL:   '☀️ Energia Renovável',
-  MANEJO_SOLO:         '🌾 Manejo de Solo',
-  OUTRO:               '📋 Outro',
+  FLORESTA_NATIVA:     'Floresta Nativa',
+  REFLORESTATION:      'Reflorestamento',
+  PASTAGEM_RECUPERADA: 'Pastagem Recuperada',
+  INTEGRACAO_LAVOURA:  'ILPF',
+  AGRICULTURA_CARBONO: 'Agricultura Baixo Carbono',
+  BIODIGESTAO:         'Biodigestão',
+  ENERGIA_RENOVAVEL:   'Energia Renovável',
+  MANEJO_SOLO:         'Manejo de Solo',
+  OUTRO:               'Outro',
 };
 
 const STANDARD_LABELS: Record<string, string> = {

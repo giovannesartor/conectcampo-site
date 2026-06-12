@@ -16,6 +16,8 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
+  Receipt,
+  Percent,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
@@ -175,6 +177,35 @@ export default function CarbonCreditsDashboard() {
               <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> ABC+ (Agricultura)</span>
               <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> REDD+</span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Precificação da plataforma */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="rounded-xl border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/30 p-5 flex items-start gap-4">
+          <div className="h-10 w-10 rounded-xl bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center shrink-0">
+            <Receipt className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-violet-500 dark:text-violet-400 mb-0.5">Taxa de Setup</p>
+            <p className="text-2xl font-bold text-violet-900 dark:text-violet-200">R$&nbsp;5.000</p>
+            <p className="text-sm text-violet-700 dark:text-violet-300 mt-1">
+              Paga uma única vez na ativação do projeto. Cobre onboarding técnico, validação inicial e suporte dedicado ao processo de certificação.
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-5 flex items-start gap-4">
+          <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0">
+            <Percent className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-500 dark:text-emerald-400 mb-0.5">Comiss\u00e3o ConectCampo</p>
+            <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-200">6%</p>
+            <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">
+              Incide apenas sobre a receita efetivamente gerada na comercializa\u00e7\u00e3o dos cr\u00e9ditos. Sem receita, sem custo.
+            </p>
           </div>
         </div>
       </div>

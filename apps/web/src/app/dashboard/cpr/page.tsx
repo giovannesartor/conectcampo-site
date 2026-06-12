@@ -13,6 +13,7 @@ import {
   ChevronRight,
   X,
   Loader2,
+  DollarSign,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
@@ -391,7 +392,7 @@ export default function CprPage() {
                       }`}
                     >
                       <p className="font-medium text-sm text-gray-900 dark:text-white">
-                        {p === 'EMISSAO' ? '📄 Emissão de CPR' : '🏦 Captação de Crédito'}
+                        {p === 'EMISSAO' ? 'Emissão de CPR' : 'Captação de Crédito'}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {p === 'EMISSAO'
@@ -554,7 +555,7 @@ export default function CprPage() {
               {/* Fee info */}
               {form.precoUnitario && form.quantidade && (
                 <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3 text-sm">
-                  <p className="text-emerald-700 dark:text-emerald-400 font-medium">💰 Valor estimado</p>
+                  <p className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1.5"><DollarSign className="h-4 w-4" /> Valor estimado</p>
                   <p className="text-emerald-600 dark:text-emerald-500 mt-1">
                     Total: <strong>{formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario))}</strong>
                     {' '}· Fee ConectCampo (6%): <strong>{formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario) * 0.06)}</strong>
