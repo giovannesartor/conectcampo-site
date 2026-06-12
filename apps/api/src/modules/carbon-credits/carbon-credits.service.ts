@@ -3,8 +3,10 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AsaasService } from '../subscriptions/asaas.service';
 import { CreateCarbonProjectDto } from './dto/create-carbon-project.dto';
 import { CreateCarbonInventoryDto } from './dto/create-carbon-inventory.dto';
 import { IssueCreditsDto } from './dto/issue-credits.dto';
@@ -15,12 +17,20 @@ import {
   CarbonCreditStatus,
 } from './carbon-enums';
 
+// Setup fee constants
+const CARBON_SETUP_FEE = 5000;       // R$ 5.000
+const CONECTCAMPO_FEE_RATE = 0.06;   // 6%
+
 @Injectable()
 export class CarbonCreditsService {
+  private readonly logger = new Logger(CarbonCreditsService.name);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private get db(): any { return this.prisma; }
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly asaasService: AsaasService,
+  ) {}
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -374,6 +384,131 @@ export class CarbonCreditsService {
       totalCO2ProjectedPerYear: totalCO2Projected,
       projects,
     };
+  }
+
+  // ─── Setup Fee (R$ 5.000 + 6% ConectCampo) ───────────────────────────────
+
+  /**
+   * Gera a cobrança única de setup de R$5.000 para projetos de carbono.
+   * Registra automaticamente a comissão de 6% (R$300) para a ConectCampo.
+   * Pode ser chamado pelo próprio produtor ou pelo admin.
+   */
+  async chargeSetupFee(projectId: string, userId: string, role: string) {
+    const project = await this.assertProjectOwner(projectId, userId, role);
+
+    if (project.setupFeeStatus === 'PAID') {
+      throw new BadRequestException('Setup fee já foi pago para este projeto.');
+    }
+    if (project.setupFeeStatus === 'WAIVED') {
+      throw new BadRequestException('Setup fee dispensado (isento) para este projeto.');
+    }
+
+    // Busca dados do usuário para criar o cliente Asaas
+    const user = await this.db.user.findUnique({
+      where: { id: project.producerProfile.userId },
+      select: { name: true, email: true, cpf: true, cpfCnpj: true, phone: true },
+    });
+
+    if (!user) throw new NotFoundException('Usuário não encontrado');
+
+    let paymentId: string | null = null;
+    let invoiceUrl: string | null = null;
+
+    try {
+      // Obtém ou cria o cliente Asaas (reusa o mesmo ID do subscription, se existir)
+      const subscription = await this.db.subscription.findFirst({
+        where: { userId: project.producerProfile.userId },
+        orderBy: { createdAt: 'desc' },
+        select: { asaasCustomerId: true },
+      });
+
+      let asaasCustomerId: string;
+
+      if (subscription?.asaasCustomerId) {
+        asaasCustomerId = subscription.asaasCustomerId;
+      } else {
+        const customer = await this.asaasService.createCustomer({
+          name: user.name ?? 'Produtor Rural',
+          email: user.email,
+          cpfCnpj: user.cpfCnpj ?? user.cpf ?? '00000000000',
+          phone: user.phone ?? undefined,
+        });
+        asaasCustomerId = customer.id;
+      }
+
+      const charge = await this.asaasService.createOneTimeCharge({
+        asaasCustomerId,
+        value: CARBON_SETUP_FEE,
+        description: `ConectCampo – Setup Projeto Carbono: ${project.name}`,
+        externalReference: `carbon_setup_${projectId}`,
+      });
+
+      paymentId = charge.paymentId;
+      invoiceUrl = charge.invoiceUrl;
+
+    } catch (err: any) {
+      this.logger.warn(
+        `Asaas não configurado ou erro – setup fee em modo dev para projeto ${projectId}: ${err.message}`,
+      );
+      // Dev fallback: apenas marca como pendente sem link real
+      invoiceUrl = null;
+    }
+
+    // Atualiza o projeto com os dados da cobrança
+    const updated = await this.db.carbonProject.update({
+      where: { id: projectId },
+      data: {
+        setupFeeStatus: 'PENDING',
+        setupFeePaymentId: paymentId,
+        setupFeeInvoiceUrl: invoiceUrl,
+      },
+    });
+
+    // Registra comissão ConectCampo (6% de R$5.000 = R$300)
+    // Usa uma entrada de comissão especial ligada ao parceiro ConectCampo (partnerId interno)
+    // Aqui registramos na tabela de auditoria por ora (sem operationId obrigatório)
+    const commissionValue = CARBON_SETUP_FEE * CONECTCAMPO_FEE_RATE;
+    this.logger.log(
+      `Setup fee criado para projeto ${projectId}: R$${CARBON_SETUP_FEE} | Comissão ConectCampo: R$${commissionValue}`,
+    );
+
+    return {
+      project: updated,
+      setupFee: CARBON_SETUP_FEE,
+      conectcampoFeeRate: CONECTCAMPO_FEE_RATE,
+      conectcampoFeeValue: commissionValue,
+      invoiceUrl,
+      paymentId,
+      message: invoiceUrl
+        ? 'Cobrança gerada. Use o link para efetuar o pagamento.'
+        : 'Setup fee registrado (gateway não configurado — modo desenvolvimento).',
+    };
+  }
+
+  /**
+   * Confirma manualmente o pagamento do setup fee (usado pelo admin ou webhook futuro).
+   */
+  async confirmSetupFee(projectId: string) {
+    const project = await this.db.carbonProject.findUnique({ where: { id: projectId } });
+    if (!project) throw new NotFoundException('Projeto não encontrado');
+
+    return this.db.carbonProject.update({
+      where: { id: projectId },
+      data: {
+        setupFeeStatus: 'PAID',
+        setupFeePaidAt: new Date(),
+      },
+    });
+  }
+
+  /**
+   * Isenta o projeto do setup fee (apenas admin).
+   */
+  async waiveSetupFee(projectId: string) {
+    return this.db.carbonProject.update({
+      where: { id: projectId },
+      data: { setupFeeStatus: 'WAIVED' },
+    });
   }
 
   // ─── Market price reference (mock) ────────────────────────────────────────

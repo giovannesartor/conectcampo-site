@@ -89,6 +89,7 @@ function buildNav(role: string, plan: string): NavSection[] {
         title: 'Sustentabilidade',
         items: [
           { label: 'Crédito de Carbono', href: '/dashboard/carbon-credits',    icon: <Leaf className="h-5 w-5" /> },
+          { label: 'CPR',                href: '/dashboard/cpr',               icon: <ScrollText className="h-5 w-5" /> },
         ],
       },
       {
@@ -175,6 +176,7 @@ function buildNav(role: string, plan: string): NavSection[] {
         title: 'Sustentabilidade',
         items: [
           { label: 'Crédito de Carbono', href: '/dashboard/carbon-credits',    icon: <Leaf className="h-5 w-5" /> },
+          { label: 'CPR',                href: '/dashboard/cpr',               icon: <ScrollText className="h-5 w-5" /> },
         ],
       },
       {

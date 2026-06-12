@@ -174,4 +174,34 @@ export class CarbonCreditsController {
   ) {
     return this.service.transactCredit(creditId, userId, role, dto);
   }
+
+  // ─── Setup Fee ────────────────────────────────────────────────────────────
+
+  @Post('projects/:id/setup-fee')
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Gerar cobrança de setup carbono (R$ 5.000 + 6% ConectCampo)',
+    description: 'Cria a cobrança única de onboarding do projeto de carbono via Asaas. Retorna link de pagamento (PIX/boleto/cartão).',
+  })
+  async chargeSetupFee(
+    @Param('id') id: string,
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    return this.service.chargeSetupFee(id, userId, role);
+  }
+
+  @Patch('projects/:id/setup-fee/confirm')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: '[Admin] Confirmar manualmente o pagamento do setup fee' })
+  async confirmSetupFee(@Param('id') id: string) {
+    return this.service.confirmSetupFee(id);
+  }
+
+  @Patch('projects/:id/setup-fee/waive')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: '[Admin] Isentar projeto do setup fee' })
+  async waiveSetupFee(@Param('id') id: string) {
+    return this.service.waiveSetupFee(id);
+  }
 }

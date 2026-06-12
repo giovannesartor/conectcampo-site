@@ -218,6 +218,7 @@ model User {
   passwordResetTokens    PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
   quantovaleConnection QuantovaleConnection?
+  cprDocuments         CprDocument[]
 
   @@index([email])
   @@index([role])
@@ -343,6 +344,7 @@ model ProducerProfile {
   operations        OperationRequest[]
   riskScores        RiskScore[]
   carbonProjects    CarbonProject[]
+  cprDocuments      CprDocument[]
 
   @@index([tier])
   @@index([state])
@@ -784,6 +786,32 @@ model Notification {
 // CRÉDITO DE CARBONO
 // ──────────────────────────────────────────────
 
+enum SetupFeeStatus {
+  PENDING    // Aguardando pagamento
+  PAID       // Pago
+  WAIVED     // Isento (admin)
+  FAILED     // Falha no pagamento
+}
+
+enum CprPurpose {
+  EMISSAO    // Emissão de CPR física/financeira
+  CAPTACAO   // Uso da CPR como garantia para captação
+}
+
+enum CprStatus {
+  RASCUNHO
+  EMITIDA
+  REGISTRADA
+  LIQUIDADA
+  CANCELADA
+  VENCIDA
+}
+
+enum CprType {
+  FISICA      // CPR Física — entrega de produto
+  FINANCEIRA  // CPR Financeira — liquidação em dinheiro
+}
+
 enum CarbonStandard {
   VERRA_VCS         // Verified Carbon Standard
   GOLD_STANDARD     // Gold Standard
@@ -865,6 +893,12 @@ model CarbonProject {
   // Financeiro
   estimatedCreditPrice Decimal?           @db.Decimal(10, 2)  // R$/tCO₂e
   totalEstimatedRevenue Decimal?          @db.Decimal(15, 2)  // R$ projetado
+
+  // Setup fee (R$ 5.000 + 6% ConectCampo)
+  setupFeeStatus      SetupFeeStatus      @default(PENDING)
+  setupFeePaymentId   String?             // Asaas payment ID
+  setupFeeInvoiceUrl  String?             // URL do boleto/link de pagamento
+  setupFeePaidAt      DateTime?
 
   deletedAt           DateTime?
   createdAt           DateTime            @default(now())
@@ -975,6 +1009,87 @@ model CarbonDocument {
 
   @@index([projectId])
   @@map("carbon_documents")
+}
+
+// ──────────────────────────────────────────────
+// CPR — CÉDULA DE PRODUTO RURAL
+// ──────────────────────────────────────────────
+
+model CprDocument {
+  id                  String      @id @default(uuid())
+  userId              String
+  producerProfileId   String?
+
+  // Identificação
+  numeroCpr           String?     @unique // número sequencial ao registrar
+  purpose             CprPurpose
+  type                CprType     @default(FINANCEIRA)
+  status              CprStatus   @default(RASCUNHO)
+
+  // Emitente (produtor rural)
+  emitenteNome        String
+  emitenteCpfCnpj     String
+  emitenteEndereco    String?
+  emitenteCidade      String?
+  emitenteEstado      BrazilianState?
+  emitenteCarNumero   String?     // número CAR
+
+  // Credor (instituição financeira ou pessoa que recebe)
+  credorNome          String
+  credorCpfCnpj       String
+  credorTipo          String?     // banco, cooperativa, pessoa fisica, etc.
+
+  // Produto / garantia
+  produto             String      // soja, milho, boi gordo, etc.
+  quantidade          Decimal     @db.Decimal(15, 4)
+  unidade             String      // sacas, toneladas, arrobas, etc.
+  safraAno            String?     // ex: "2025/2026"
+  precoUnitario       Decimal?    @db.Decimal(10, 2)
+  valorTotal          Decimal?    @db.Decimal(15, 2)
+  localEntrega        String?
+  dataEntrega         DateTime?
+
+  // Vencimento
+  dataVencimento      DateTime
+  prazoMeses          Int?
+
+  // Garantia adicional (para captação)
+  garantiaTipo        String?     // imovel, penhor safra, aval, etc.
+  garantiaDescricao   String?
+  garantiaValor       Decimal?    @db.Decimal(15, 2)
+
+  // Finalidade / captação
+  finalidade          String?     // custeio, investimento, giro, etc.
+  valorCaptacao       Decimal?    @db.Decimal(15, 2)  // valor a captar (se captacao)
+
+  // Cartório / registro
+  cartorioNome        String?
+  cartorioRegistroNum String?
+  cartorioRegistradoEm DateTime?
+
+  // Arquivo PDF gerado
+  pdfKey              String?     // S3 key
+  pdfUrl              String?
+
+  // ConectCampo fee (6% sobre valor total)
+  conectcampoFeeRate  Decimal     @db.Decimal(5, 4)   @default(0.06)
+  conectcampoFeeValue Decimal?    @db.Decimal(15, 2)
+
+  observacoes         String?
+
+  deletedAt           DateTime?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  // Relations
+  user                User        @relation(fields: [userId], references: [id])
+  producerProfile     ProducerProfile? @relation(fields: [producerProfileId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([purpose])
+  @@index([emitenteCpfCnpj])
+  @@map("cpr_documents")
 }
 
 // ──────────────────────────────────────────────

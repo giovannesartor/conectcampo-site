@@ -339,6 +339,40 @@ export class AsaasService {
     }
   }
 
+  // ─── One-time charge (ex: setup fee carbono) ─────────────────────────────────
+
+  async createOneTimeCharge(params: {
+    asaasCustomerId: string;
+    value: number;
+    description: string;
+    externalReference?: string;
+    daysUntilDue?: number;
+  }): Promise<{ paymentId: string; invoiceUrl: string }> {
+    const { asaasCustomerId, value, description, externalReference, daysUntilDue = 3 } = params;
+
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + daysUntilDue);
+    const dueDateStr = dueDate.toISOString().split('T')[0];
+
+    const res = await this.client.post<{ id: string; invoiceUrl: string }>(
+      '/payments',
+      {
+        customer: asaasCustomerId,
+        billingType: 'UNDEFINED', // cliente escolhe PIX, boleto ou cartão
+        value,
+        dueDate: dueDateStr,
+        description,
+        externalReference: externalReference ?? 'ConectCampo',
+      },
+    );
+
+    this.logger.log(
+      `One-time charge created: ${res.data.id} – R$${value} – ${description}`,
+    );
+
+    return { paymentId: res.data.id, invoiceUrl: res.data.invoiceUrl };
+  }
+
   // ─── Retry helper ─────────────────────────────────────────────────────────────
 
   private async fetchFirstPaymentWithRetry(
