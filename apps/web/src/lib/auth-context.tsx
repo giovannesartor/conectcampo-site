@@ -55,7 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const id = setTimeout(() => {
       toast('Sua sessão expira em 5 minutos. Salve seu trabalho.', {
         duration: 10_000,
-        icon: '⏱️',
       });
     }, warnIn);
     return () => clearTimeout(id);

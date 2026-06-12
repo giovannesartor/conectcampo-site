@@ -30,7 +30,7 @@ export function CTA() {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
             <Link
-              href="#"
+              href="/contato"
               className="inline-flex items-center justify-center rounded-lg border border-white/30 bg-white/10 backdrop-blur px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white/20"
             >
               Agendar Demo

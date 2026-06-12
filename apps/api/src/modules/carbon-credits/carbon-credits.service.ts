@@ -24,8 +24,6 @@ const CONECTCAMPO_FEE_RATE = 0.06;   // 6%
 @Injectable()
 export class CarbonCreditsService {
   private readonly logger = new Logger(CarbonCreditsService.name);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private get db(): any { return this.prisma; }
 
   constructor(
     private readonly prisma: PrismaService,
@@ -47,7 +45,7 @@ export class CarbonCreditsService {
   }
 
   private async assertProjectOwner(projectId: string, userId: string, role: string) {
-    const project = await this.db.carbonProject.findUnique({
+    const project = await this.prisma.carbonProject.findUnique({
       where: { id: projectId },
       include: { producerProfile: true },
     });
@@ -68,7 +66,7 @@ export class CarbonCreditsService {
         ? dto.estimatedCreditPrice * dto.projectedReduction * (dto.projectDurationYears ?? 20)
         : null;
 
-    return this.db.carbonProject.create({
+    return this.prisma.carbonProject.create({
       data: {
         producerProfileId: profile.id,
         name: dto.name,
@@ -107,7 +105,7 @@ export class CarbonCreditsService {
           };
 
     const [data, total] = await Promise.all([
-      this.db.carbonProject.findMany({
+      this.prisma.carbonProject.findMany({
         where,
         skip,
         take: perPage,
@@ -117,7 +115,7 @@ export class CarbonCreditsService {
           _count: { select: { credits: true, inventories: true } },
         },
       }),
-      this.db.carbonProject.count({ where }),
+      this.prisma.carbonProject.count({ where }),
     ]);
 
     return { data, meta: { total, page, perPage, totalPages: Math.ceil(total / perPage) } };
@@ -126,11 +124,11 @@ export class CarbonCreditsService {
   async findProjectById(projectId: string, userId: string, role: string) {
     const project = await this.assertProjectOwner(projectId, userId, role);
     const [inventories, credits] = await Promise.all([
-      this.db.carbonInventory.findMany({
+      this.prisma.carbonInventory.findMany({
         where: { projectId },
         orderBy: { year: 'desc' },
       }),
-      this.db.carbonCredit.findMany({
+      this.prisma.carbonCredit.findMany({
         where: { projectId },
         orderBy: { vintage: 'desc' },
         include: { transactions: true },
@@ -146,7 +144,7 @@ export class CarbonCreditsService {
     status: CarbonProjectStatus,
   ) {
     await this.assertProjectOwner(projectId, userId, role);
-    return this.db.carbonProject.update({
+    return this.prisma.carbonProject.update({
       where: { id: projectId },
       data: { status },
     });
@@ -154,7 +152,7 @@ export class CarbonCreditsService {
 
   async deleteProject(projectId: string, userId: string, role: string) {
     await this.assertProjectOwner(projectId, userId, role);
-    return this.db.carbonProject.update({
+    return this.prisma.carbonProject.update({
       where: { id: projectId },
       data: { deletedAt: new Date() },
     });
@@ -175,7 +173,7 @@ export class CarbonCreditsService {
     const buffer = dto.buffer ?? 0;
     const creditsEligible = Math.max(0, netReduction - leakage - buffer);
 
-    return this.db.carbonInventory.create({
+    return this.prisma.carbonInventory.create({
       data: {
         projectId,
         year: dto.year,
@@ -193,7 +191,7 @@ export class CarbonCreditsService {
 
   async getInventories(projectId: string, userId: string, role: string) {
     await this.assertProjectOwner(projectId, userId, role);
-    return this.db.carbonInventory.findMany({
+    return this.prisma.carbonInventory.findMany({
       where: { projectId },
       orderBy: { year: 'desc' },
     });
@@ -226,7 +224,7 @@ export class CarbonCreditsService {
     const totalValue =
       dto.pricePerCredit ? dto.quantity * dto.pricePerCredit : null;
 
-    return this.db.carbonCredit.create({
+    return this.prisma.carbonCredit.create({
       data: {
         projectId,
         vintage: dto.vintage,
@@ -242,7 +240,7 @@ export class CarbonCreditsService {
 
   async getCredits(projectId: string, userId: string, role: string) {
     await this.assertProjectOwner(projectId, userId, role);
-    return this.db.carbonCredit.findMany({
+    return this.prisma.carbonCredit.findMany({
       where: { projectId },
       orderBy: { vintage: 'desc' },
       include: { transactions: { orderBy: { transactionDate: 'desc' } } },
@@ -255,7 +253,7 @@ export class CarbonCreditsService {
     role: string,
     dto: TransactCreditsDto,
   ) {
-    const credit = await this.db.carbonCredit.findUnique({
+    const credit = await this.prisma.carbonCredit.findUnique({
       where: { id: creditId },
       include: { project: { include: { producerProfile: true } } },
     });
@@ -277,7 +275,7 @@ export class CarbonCreditsService {
       dto.pricePerCredit ? dto.quantity * dto.pricePerCredit : null;
 
     const [transaction, updatedCredit] = await this.prisma.$transaction([
-      this.db.carbonTransaction.create({
+      this.prisma.carbonTransaction.create({
         data: {
           creditId,
           type: dto.type,
@@ -289,7 +287,7 @@ export class CarbonCreditsService {
           notes: dto.notes,
         },
       }),
-      this.db.carbonCredit.update({
+      this.prisma.carbonCredit.update({
         where: { id: creditId },
         data: {
           status:
@@ -321,7 +319,7 @@ export class CarbonCreditsService {
         : { deletedAt: null, producerProfile: { userId } };
 
     const [projects, credits] = await Promise.all([
-      this.db.carbonProject.findMany({
+      this.prisma.carbonProject.findMany({
         where,
         select: {
           id: true,
@@ -336,7 +334,7 @@ export class CarbonCreditsService {
           _count: { select: { credits: true } },
         },
       }),
-      this.db.carbonCredit.findMany({
+      this.prisma.carbonCredit.findMany({
         where: { project: where },
         select: {
           quantity: true,
@@ -404,9 +402,9 @@ export class CarbonCreditsService {
     }
 
     // Busca dados do usuário para criar o cliente Asaas
-    const user = await this.db.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: project.producerProfile.userId },
-      select: { name: true, email: true, cpf: true, cpfCnpj: true, phone: true },
+      select: { name: true, email: true, cpf: true, cnpj: true, phone: true },
     });
 
     if (!user) throw new NotFoundException('Usuário não encontrado');
@@ -416,7 +414,7 @@ export class CarbonCreditsService {
 
     try {
       // Obtém ou cria o cliente Asaas (reusa o mesmo ID do subscription, se existir)
-      const subscription = await this.db.subscription.findFirst({
+      const subscription = await this.prisma.subscription.findFirst({
         where: { userId: project.producerProfile.userId },
         orderBy: { createdAt: 'desc' },
         select: { asaasCustomerId: true },
@@ -430,7 +428,7 @@ export class CarbonCreditsService {
         const customer = await this.asaasService.createCustomer({
           name: user.name ?? 'Produtor Rural',
           email: user.email,
-          cpfCnpj: user.cpfCnpj ?? user.cpf ?? '00000000000',
+          cpfCnpj: user.cpf ?? user.cnpj ?? '00000000000',
           phone: user.phone ?? undefined,
         });
         asaasCustomerId = customer.id;
@@ -455,7 +453,7 @@ export class CarbonCreditsService {
     }
 
     // Atualiza o projeto com os dados da cobrança
-    const updated = await this.db.carbonProject.update({
+    const updated = await this.prisma.carbonProject.update({
       where: { id: projectId },
       data: {
         setupFeeStatus: 'PENDING',
@@ -489,10 +487,10 @@ export class CarbonCreditsService {
    * Confirma manualmente o pagamento do setup fee (usado pelo admin ou webhook futuro).
    */
   async confirmSetupFee(projectId: string) {
-    const project = await this.db.carbonProject.findUnique({ where: { id: projectId } });
+    const project = await this.prisma.carbonProject.findUnique({ where: { id: projectId } });
     if (!project) throw new NotFoundException('Projeto não encontrado');
 
-    return this.db.carbonProject.update({
+    return this.prisma.carbonProject.update({
       where: { id: projectId },
       data: {
         setupFeeStatus: 'PAID',
@@ -505,7 +503,7 @@ export class CarbonCreditsService {
    * Isenta o projeto do setup fee (apenas admin).
    */
   async waiveSetupFee(projectId: string) {
-    return this.db.carbonProject.update({
+    return this.prisma.carbonProject.update({
       where: { id: projectId },
       data: { setupFeeStatus: 'WAIVED' },
     });

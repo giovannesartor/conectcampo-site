@@ -15,15 +15,13 @@ const CONECTCAMPO_FEE_RATE = 0.06; // 6%
 @Injectable()
 export class CprService {
   private readonly logger = new Logger(CprService.name);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private get db(): any { return this.prisma; }
 
   constructor(private readonly prisma: PrismaService) {}
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
   private async assertOwner(cprId: string, userId: string, role: string) {
-    const cpr = await this.db.cprDocument.findUnique({ where: { id: cprId } });
+    const cpr = await this.prisma.cprDocument.findUnique({ where: { id: cprId } });
     if (!cpr || cpr.deletedAt) throw new NotFoundException('CPR não encontrada');
     if (role !== UserRole.ADMIN && cpr.userId !== userId) {
       throw new ForbiddenException('Acesso negado');
@@ -33,7 +31,9 @@ export class CprService {
 
   private generateNumeroCpr(): string {
     const year = new Date().getFullYear();
-    const seq = Math.floor(Math.random() * 900000) + 100000; // 6 dígitos
+    // Use crypto-safe random to avoid collision-prone Math.random()
+    const bytes = crypto.getRandomValues(new Uint32Array(1));
+    const seq = (bytes[0] % 900000) + 100000; // 6 dígitos
     return `CPR-${year}-${seq}`;
   }
 
@@ -53,7 +53,7 @@ export class CprService {
     const conectcampoFeeValue =
       valorTotal != null ? valorTotal * CONECTCAMPO_FEE_RATE : null;
 
-    const cpr = await this.db.cprDocument.create({
+    const cpr = await this.prisma.cprDocument.create({
       data: {
         userId,
         producerProfileId: producerProfile?.id ?? null,
@@ -66,7 +66,7 @@ export class CprService {
         emitenteCpfCnpj: dto.emitenteCpfCnpj,
         emitenteEndereco: dto.emitenteEndereco,
         emitenteCidade: dto.emitenteCidade,
-        emitenteEstado: dto.emitenteEstado,
+        emitenteEstado: dto.emitenteEstado as import('@prisma/client').BrazilianState | undefined,
         emitenteCarNumero: dto.emitenteCarNumero,
 
         // Credor
@@ -117,7 +117,7 @@ export class CprService {
         : { deletedAt: null, userId };
 
     const [data, total] = await Promise.all([
-      this.db.cprDocument.findMany({
+      this.prisma.cprDocument.findMany({
         where,
         skip,
         take: perPage,
@@ -141,7 +141,7 @@ export class CprService {
           createdAt: true,
         },
       }),
-      this.db.cprDocument.count({ where }),
+      this.prisma.cprDocument.count({ where }),
     ]);
 
     return {
@@ -173,10 +173,11 @@ export class CprService {
     const conectcampoFeeValue =
       valorTotal != null ? valorTotal * CONECTCAMPO_FEE_RATE : null;
 
-    return this.db.cprDocument.update({
+    return this.prisma.cprDocument.update({
       where: { id: cprId },
       data: {
         ...dto,
+        emitenteEstado: dto.emitenteEstado as import('@prisma/client').BrazilianState | undefined,
         dataVencimento: dto.dataVencimento ? new Date(dto.dataVencimento) : undefined,
         dataEntrega: dto.dataEntrega ? new Date(dto.dataEntrega) : undefined,
         ...(valorTotal != null && { valorTotal }),
@@ -187,7 +188,7 @@ export class CprService {
 
   async delete(cprId: string, userId: string, role: string) {
     await this.assertOwner(cprId, userId, role);
-    return this.db.cprDocument.update({
+    return this.prisma.cprDocument.update({
       where: { id: cprId },
       data: { deletedAt: new Date(), status: 'CANCELADA' },
     });
@@ -206,7 +207,7 @@ export class CprService {
 
     const numeroCpr = this.generateNumeroCpr();
 
-    const updated = await this.db.cprDocument.update({
+    const updated = await this.prisma.cprDocument.update({
       where: { id: cprId },
       data: {
         status: 'EMITIDA',
@@ -233,7 +234,7 @@ export class CprService {
       throw new BadRequestException('Apenas CPRs emitidas podem ser registradas em cartório.');
     }
 
-    return this.db.cprDocument.update({
+    return this.prisma.cprDocument.update({
       where: { id: cprId },
       data: {
         status: 'REGISTRADA',
@@ -253,7 +254,7 @@ export class CprService {
       throw new BadRequestException('CPR não pode ser liquidada neste status.');
     }
 
-    return this.db.cprDocument.update({
+    return this.prisma.cprDocument.update({
       where: { id: cprId },
       data: { status: 'LIQUIDADA' },
     });
@@ -265,7 +266,7 @@ export class CprService {
     const where =
       role === UserRole.ADMIN ? { deletedAt: null } : { deletedAt: null, userId };
 
-    const all = await this.db.cprDocument.findMany({
+    const all = await this.prisma.cprDocument.findMany({
       where,
       select: {
         status: true,

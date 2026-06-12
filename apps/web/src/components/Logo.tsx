@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -17,22 +18,21 @@ export function Logo({ size = 'md', showText = true, href = '/', className = '' 
   const s = sizes[size];
 
   const content = showText ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <Image
       src="/logo.svg"
       alt="ConectCampo"
       width={s.fullW}
+      height={40}
       style={{ width: s.fullW, height: 'auto' }}
-      loading="eager"
+      priority
     />
   ) : (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <Image
       src="/logo-icon.svg"
       alt="ConectCampo"
       width={s.iconW}
       height={s.iconW}
-      loading="eager"
+      priority
     />
   );
 
