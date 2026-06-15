@@ -255,7 +255,7 @@ function RegisterForm() {
         <p className="mt-8 text-xs text-gray-400 dark:text-gray-500 text-center">
           ConectCampo é um produto{' '}
           <span className="font-semibold">AG Digital</span>
-          {' '}· CNPJ 54.079.299/0001-40 · Pagamentos via Asaas
+          {' '}· CNPJ 54.079.299/0001-40 · Pagamentos via ValsaPay ou Asaas
         </p>
 
         <div className="mt-4 text-center">
@@ -428,7 +428,7 @@ function RegisterForm() {
                   required
                 />
                 <p className="mt-1 text-xs text-gray-400">
-                  Necessário para processamento de pagamento via Asaas (AG Digital)
+                  Necessário para processamento de pagamento (ValsaPay ou Asaas)
                 </p>
               </div>
             )}

@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { AnimatedCounter } from './AnimatedCounter';
 import { CreditSimulator } from './CreditSimulator';
 import { AgroBackground } from './AgroBackground';
 
@@ -152,19 +151,14 @@ export function Hero() {
             className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8"
           >
             {[
-              { icon: <TrendSVG />, label: 'Volume transacionado', prefix: 'R$ ', end: 500, suffix: 'M+' },
-              { icon: <ShieldSVG />, label: 'Parceiros financeiros', end: 50, suffix: '+' },
-              { icon: <ClockSVG />, label: 'Tempo médio de aprovação', end: 48, suffix: 'h' },
+              { icon: <ClockSVG />, value: '48h', label: 'Pré-análise automática' },
+              { icon: <ShieldSVG />, value: 'Multi-parceiros', label: 'Sua operação enviada a vários financiadores' },
+              { icon: <TrendSVG />, value: '100% digital', label: 'Da CPR ao crédito, sem papelada' },
             ].map((stat) => (
-              <div key={stat.label} className="flex flex-col items-center">
+              <div key={stat.value} className="flex flex-col items-center text-center">
                 {stat.icon}
                 <span className="text-3xl font-bold text-gray-900 dark:text-white">
-                  <AnimatedCounter
-                    end={stat.end}
-                    prefix={stat.prefix}
-                    suffix={stat.suffix}
-                    duration={2000}
-                  />
+                  {stat.value}
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
                   {stat.label}
