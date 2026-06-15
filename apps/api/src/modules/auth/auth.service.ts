@@ -12,8 +12,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { AsaasService } from '../subscriptions/asaas.service';
+import { ValsaService } from '../subscriptions/valsa.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
-import { RegisterDto } from './dto/register.dto';
+import { RegisterDto, PaymentGateway } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -29,6 +30,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly mailService: MailService,
     private readonly asaasService: AsaasService,
+    private readonly valsaService: ValsaService,
     private readonly subscriptionsService: SubscriptionsService,
   ) {}
 
@@ -92,33 +94,46 @@ export class AuthService {
       };
     }
 
-    // ── Planos pagos — criar customer + assinatura no Asaas ──────────────────
+    // ── Planos pagos — criar checkout no gateway escolhido ───────────────────
     const cpfCnpj = (dto.cpf ?? dto.cnpj)!;
+
+    // Valsa é o gateway recomendado (padrão quando não especificado)
+    const gateway = dto.gateway ?? PaymentGateway.VALSA;
 
     let invoiceUrl: string | null = null;
     try {
-      const result = await this.asaasService.createCustomerAndSubscription({
-        userId: user.id,
-        name: user.name,
-        email: user.email,
-        cpfCnpj,
-        phone: dto.phone,
-        plan: dto.plan,
-      });
-      invoiceUrl = result.invoiceUrl;
+      if (gateway === PaymentGateway.VALSA) {
+        const result = await this.valsaService.createPendingSubscription({
+          userId: user.id,
+          plan: dto.plan,
+          email: user.email,
+        });
+        invoiceUrl = result.invoiceUrl;
+      } else {
+        const result = await this.asaasService.createCustomerAndSubscription({
+          userId: user.id,
+          name: user.name,
+          email: user.email,
+          cpfCnpj,
+          phone: dto.phone,
+          plan: dto.plan,
+        });
+        invoiceUrl = result.invoiceUrl;
+      }
     } catch (err: any) {
-      // Se Asaas falhar, remover usuário criado para não deixar registro órfão
+      // Se o gateway falhar, remover usuário criado para não deixar registro órfão
       await this.prisma.user.delete({ where: { id: user.id } }).catch(() => null);
-      this.logger.error(`Asaas error during register: ${err.message}`);
+      this.logger.error(`Payment gateway (${gateway}) error during register: ${err.message}`);
       throw new BadRequestException(
         'Erro ao processar pagamento. Verifique seus dados e tente novamente.',
       );
     }
 
-    this.logger.log(`Paid user registered (pending payment): ${user.email}`);
+    this.logger.log(`Paid user registered (pending payment via ${gateway}): ${user.email}`);
 
     return {
       requiresPayment: true,
+      gateway,
       invoiceUrl,
       user: { id: user.id, email: user.email, name: user.name, role: user.role },
     };

@@ -43,7 +43,7 @@ export default function MatchingPage() {
 
   async function loadOperations() {
     try {
-      const { data } = await api.get('/operations?page=1&perPage=100&status=SUBMITTED,UNDER_REVIEW,APPROVED');
+      const { data } = await api.get('/operations/available?page=1&perPage=100');
       setOperations(data.data || data);
     } catch {
       toast.error('Erro ao carregar operações disponíveis.');

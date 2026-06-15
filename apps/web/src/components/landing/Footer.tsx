@@ -74,7 +74,11 @@ export function Footer() {
             {' '}· AG PARTICIPACOES SOCIETARIAS LTDA · CNPJ 54.079.299/0001-40
           </p>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-            Pagamentos processados por AG Digital via Asaas
+            Pagamentos processados com segurança via{' '}
+            <span className="font-medium text-gray-500 dark:text-gray-400">ValsaPay</span>
+            {' '}ou{' '}
+            <span className="font-medium text-gray-500 dark:text-gray-400">Asaas</span>
+            {' '}· PIX, cartão ou boleto
           </p>
         </div>
       </div>

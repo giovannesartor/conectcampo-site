@@ -141,7 +141,7 @@ export function Hero() {
           >
             Instituições financeiras entram{' '}
             <span className="font-semibold text-emerald-500">gratuitamente</span>
-            {' '}· PIX, cartão ou boleto via Asaas
+            {' '}· Pague com PIX, cartão ou boleto via ValsaPay ou Asaas
           </motion.p>
 
           {/* Stats */}

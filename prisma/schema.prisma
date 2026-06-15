@@ -200,6 +200,8 @@ model User {
   consentLgpd    Boolean   @default(false)
   consentLgpdAt  DateTime?
 
+  notificationPreferences Json?
+
   // Soft delete
   deletedAt      DateTime?
 
@@ -560,7 +562,7 @@ model Proposal {
   operationId        String
   partnerId          String
   amount             Decimal        @db.Decimal(15, 2)
-  interestRate       Decimal        @db.Decimal(5, 4) // % a.a.
+  interestRate       Decimal        @db.Decimal(8, 4) // % a.a.
   termMonths         Int
   conditions         String?
   requiredGuarantees GuaranteeType[]
@@ -620,8 +622,12 @@ model Subscription {
   asaasCustomerId       String?
   asaasSubscriptionId   String?          @unique
   asaasPaymentId        String?          // ID do primeiro pagamento
-  invoiceUrl            String?          // URL de pagamento Asaas
+  invoiceUrl            String?          // URL de pagamento (Asaas ou Valsa)
   paymentStatus         PaymentStatus    @default(PENDING)
+
+  // Gateway de pagamento ("ASAAS" | "VALSA")
+  gateway               String?          @default("ASAAS")
+  valsaPaymentId        String?          // ID do pagamento na Valsa
 
   isActive              Boolean          @default(false)
   currentPeriodStart    DateTime         @default(now())

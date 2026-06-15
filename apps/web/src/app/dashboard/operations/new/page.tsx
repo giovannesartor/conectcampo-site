@@ -72,22 +72,37 @@ export default function NewOperationWizard() {
   async function handleSubmit() {
     setSubmitting(true);
     try {
+      const instrumentLabel =
+        OPERATION_TYPES.find((o) => o.value === form.type)?.label ?? form.type;
+      const requestedAmount = parseFloat(form.amount.replace(/\D/g, '')) / 100;
+
+      const purpose =
+        [instrumentLabel, form.crop, form.farmLocation].filter(Boolean).join(' · ') ||
+        instrumentLabel;
+
+      const notes = [
+        form.farmName && `Propriedade: ${form.farmName}`,
+        form.farmArea && `Área total: ${form.farmArea} ha`,
+        form.guaranteeDescription && `Garantias: ${form.guaranteeDescription}`,
+        form.notes && form.notes,
+      ]
+        .filter(Boolean)
+        .join('\n');
+
       await api.post('/operations', {
-        type: form.type,
-        amount: parseFloat(form.amount.replace(/\D/g, '')) / 100,
+        // `form.purpose` guarda a Finalidade (CUSTEIO | INVESTIMENTO | GIRO | MERCADO_CAPITAIS),
+        // que corresponde ao enum OperationType do backend.
+        type: form.purpose,
+        requestedAmount,
         termMonths: parseInt(form.termMonths),
-        purpose: form.purpose,
-        crop: form.crop,
-        farmName: form.farmName,
-        farmLocation: form.farmLocation,
-        farmArea: form.farmArea ? parseFloat(form.farmArea) : undefined,
-        guaranteeDescription: form.guaranteeDescription,
-        notes: form.notes,
+        purpose,
+        notes: notes || undefined,
       });
+      toast.success('Operação criada com sucesso!');
       router.push('/dashboard/operations');
     } catch (err) {
       console.error('Failed to create operation', err);
-      toast.error('Erro ao criar operação. Tente novamente.');
+      toast.error('Erro ao criar operação. Verifique os dados e tente novamente.');
     } finally {
       setSubmitting(false);
     }

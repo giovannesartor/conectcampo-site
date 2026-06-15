@@ -112,6 +112,7 @@ function RegisterForm() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [lgpd, setLgpd] = useState(false);
+  const [gateway, setGateway] = useState<'VALSA' | 'ASAAS'>('VALSA');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -157,6 +158,7 @@ function RegisterForm() {
         plan: selectedPlan,
         phone: form.phone.replace(/\D/g, ''),
       };
+      if (!planConfig.free) payload.gateway = gateway;
       if (planConfig.docType === 'cpf') payload.cpf = cleanDoc;
       else payload.cnpj = cleanDoc;
 
@@ -459,6 +461,57 @@ function RegisterForm() {
               </p>
             </div>
 
+            {/* Forma de pagamento — apenas planos pagos */}
+            {!planConfig?.free && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Forma de pagamento
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Valsa — recomendada */}
+                  <button
+                    type="button"
+                    onClick={() => setGateway('VALSA')}
+                    className={`relative rounded-xl border-2 p-4 text-left transition-all ${
+                      gateway === 'VALSA'
+                        ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/20'
+                        : 'border-gray-200 dark:border-dark-border hover:border-brand-300'
+                    }`}
+                  >
+                    <span className="absolute -top-2.5 right-3 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white shadow">
+                      Recomendada
+                    </span>
+                    <p className="font-semibold text-gray-900 dark:text-white">ValsaPay</p>
+                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                      PIX instantâneo · checkout rápido
+                    </p>
+                    {gateway === 'VALSA' && (
+                      <Check className="absolute bottom-3 right-3 h-4 w-4 text-brand-600" />
+                    )}
+                  </button>
+
+                  {/* Asaas */}
+                  <button
+                    type="button"
+                    onClick={() => setGateway('ASAAS')}
+                    className={`relative rounded-xl border-2 p-4 text-left transition-all ${
+                      gateway === 'ASAAS'
+                        ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/20'
+                        : 'border-gray-200 dark:border-dark-border hover:border-brand-300'
+                    }`}
+                  >
+                    <p className="font-semibold text-gray-900 dark:text-white">Asaas</p>
+                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                      PIX, cartão ou boleto
+                    </p>
+                    {gateway === 'ASAAS' && (
+                      <Check className="absolute bottom-3 right-3 h-4 w-4 text-brand-600" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* LGPD */}
             <div className="flex items-start gap-2">
               <input
@@ -505,8 +558,10 @@ function RegisterForm() {
             {!planConfig?.free && (
               <p className="text-center text-xs text-gray-400">
                 O pagamento abre em uma nova aba via{' '}
-                <span className="font-medium">Asaas · AG Digital</span>
-                {' '}— PIX, cartão ou boleto. Você acompanha aqui.
+                <span className="font-medium">
+                  {gateway === 'VALSA' ? 'ValsaPay' : 'Asaas · AG Digital'}
+                </span>
+                {' '}— {gateway === 'VALSA' ? 'PIX instantâneo' : 'PIX, cartão ou boleto'}. Você acompanha aqui.
               </p>
             )}
           </form>

@@ -259,7 +259,40 @@ export class AsaasService {
     return subscription.userId;
   }
 
-  // ─── Handle webhook ───────────────────────────────────────────────────────────
+  // ─── Confirm one-time carbon setup fee ────────────────────────────────────────
+
+  private async confirmCarbonSetupFee(
+    externalReference: string,
+    paymentId?: string,
+  ): Promise<void> {
+    const projectId = externalReference.replace('carbon_setup_', '');
+    const project = await this.prisma.carbonProject.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      this.logger.warn(`Carbon setup fee webhook: projeto ${projectId} não encontrado`);
+      return;
+    }
+
+    // Idempotência: já pago
+    if (project.setupFeeStatus === 'PAID') {
+      this.logger.log(`Carbon setup fee do projeto ${projectId} já confirmado — ignorando`);
+      return;
+    }
+
+    await this.prisma.carbonProject.update({
+      where: { id: projectId },
+      data: {
+        setupFeeStatus: 'PAID',
+        setupFeePaidAt: new Date(),
+        ...(paymentId ? { setupFeePaymentId: paymentId } : {}),
+      },
+    });
+
+    this.logger.log(`Carbon setup fee confirmado para projeto ${projectId}`);
+  }
+
 
   async handleWebhook(
     event: string,
@@ -271,13 +304,20 @@ export class AsaasService {
       const payment = payload.payment;
       const asaasSubscriptionId: string | undefined = payment?.subscription;
 
-      if (!asaasSubscriptionId) {
-        this.logger.warn('Webhook: payment has no subscription ID');
+      if (asaasSubscriptionId) {
+        const userId = await this.activateBySubscriptionId(asaasSubscriptionId);
+        return { userId };
+      }
+
+      // Cobrança avulsa (ex.: setup fee de crédito de carbono) — sem assinatura
+      const externalReference: string | undefined = payment?.externalReference;
+      if (externalReference?.startsWith('carbon_setup_')) {
+        await this.confirmCarbonSetupFee(externalReference, payment?.id);
         return { userId: null };
       }
 
-      const userId = await this.activateBySubscriptionId(asaasSubscriptionId);
-      return { userId };
+      this.logger.warn('Webhook: pagamento sem assinatura nem referência conhecida');
+      return { userId: null };
     }
 
     // Pagamento vencido (evento de pagamento)

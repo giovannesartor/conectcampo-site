@@ -13,6 +13,11 @@ import { UserRole, SubscriptionPlan } from '@prisma/client';
 import { IsCPF } from '../../../common/validators/is-cpf.validator';
 import { IsCNPJ } from '../../../common/validators/is-cnpj.validator';
 
+export enum PaymentGateway {
+  VALSA = 'VALSA',
+  ASAAS = 'ASAAS',
+}
+
 export class RegisterDto {
   @ApiProperty({ example: 'joao@agro.com' })
   @IsEmail({}, { message: 'Email inválido' })
@@ -38,6 +43,14 @@ export class RegisterDto {
   @ApiProperty({ enum: SubscriptionPlan, example: SubscriptionPlan.START })
   @IsEnum(SubscriptionPlan, { message: 'Plano inválido' })
   plan: SubscriptionPlan;
+
+  /**
+   * Gateway de pagamento para planos pagos. Padrão: VALSA (recomendado).
+   */
+  @ApiPropertyOptional({ example: 'VALSA', enum: ['VALSA', 'ASAAS'] })
+  @IsOptional()
+  @IsEnum(PaymentGateway, { message: 'Gateway inválido' })
+  gateway?: PaymentGateway;
 
   @ApiPropertyOptional({ example: '11999999999' })
   @IsOptional()

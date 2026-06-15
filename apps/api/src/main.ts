@@ -10,7 +10,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const appLogger = new AppLogger();
-  const app = await NestFactory.create(AppModule, { logger: appLogger });
+  const app = await NestFactory.create(AppModule, { logger: appLogger, rawBody: true });
   const logger = new Logger('Bootstrap');
 
   // Security — Helmet com CSP explícita

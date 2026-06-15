@@ -19,6 +19,7 @@ export class UsersService {
         avatarUrl: true,
         emailVerified: true,
         isActive: true,
+        notificationPreferences: true,
         createdAt: true,
       },
     });
@@ -32,10 +33,19 @@ export class UsersService {
     });
   }
 
-  async updateProfile(userId: string, data: { name?: string; phone?: string; avatarUrl?: string }) {
+  async updateProfile(
+    userId: string,
+    data: { name?: string; phone?: string; avatarUrl?: string; notificationPreferences?: Record<string, boolean> },
+  ) {
+    const { name, phone, avatarUrl, notificationPreferences } = data;
     return this.prisma.user.update({
       where: { id: userId },
-      data,
+      data: {
+        ...(name !== undefined ? { name } : {}),
+        ...(phone !== undefined ? { phone } : {}),
+        ...(avatarUrl !== undefined ? { avatarUrl } : {}),
+        ...(notificationPreferences !== undefined ? { notificationPreferences } : {}),
+      },
       select: {
         id: true,
         email: true,
@@ -43,6 +53,7 @@ export class UsersService {
         role: true,
         phone: true,
         avatarUrl: true,
+        notificationPreferences: true,
       },
     });
   }

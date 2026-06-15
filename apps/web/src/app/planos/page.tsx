@@ -152,9 +152,28 @@ export default function PlanosPage() {
             </div>
           ))}
         </div>
-      </section>
 
-      {/* FAQ teaser */}
+        {/* Opções de pagamento */}
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Escolha entre dois checkouts seguros no momento da assinatura:
+          </p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            <span className="inline-flex items-center gap-2 rounded-full border-2 border-brand-500 bg-brand-50 dark:bg-brand-950/20 px-4 py-1.5 text-sm font-semibold text-brand-700 dark:text-brand-300">
+              ValsaPay
+              <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                Recomendado
+              </span>
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-dark-border px-4 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300">
+              Asaas
+            </span>
+          </div>
+          <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">
+            PIX, cartão ou boleto · processado com segurança
+          </p>
+        </div>
+      </section>
       <section className="px-6 pb-20 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-gray-500 dark:text-gray-400">

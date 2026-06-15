@@ -21,7 +21,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Atualizar perfil' })
   async updateProfile(
     @CurrentUser('sub') userId: string,
-    @Body() data: { name?: string; phone?: string },
+    @Body() data: { name?: string; phone?: string; notificationPreferences?: Record<string, boolean> },
   ) {
     return this.usersService.updateProfile(userId, data);
   }

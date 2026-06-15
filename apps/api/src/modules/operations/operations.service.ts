@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { OperationStatus } from '@prisma/client';
+import { OperationStatus, PartnerType, ProposalStatus } from '@prisma/client';
+import { CreateProposalDto } from './dto/create-proposal.dto';
 
 @Injectable()
 export class OperationsService {
@@ -44,6 +45,132 @@ export class OperationsService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  /**
+   * Instituição financeira / parceiro envia uma proposta para uma operação.
+   * Resolve (ou cria) a PartnerInstitution vinculada ao CNPJ do usuário.
+   */
+  async createProposal(userId: string, dto: CreateProposalDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Usuário não encontrado');
+
+    const operation = await this.prisma.operationRequest.findFirst({
+      where: { id: dto.operationId, deletedAt: null },
+    });
+    if (!operation) throw new NotFoundException('Operação não encontrada');
+
+    const partner = await this.resolvePartnerForUser(user);
+
+    const validUntil = new Date();
+    validUntil.setDate(validUntil.getDate() + 30);
+
+    const proposal = await this.prisma.proposal.create({
+      data: {
+        operationId: dto.operationId,
+        partnerId: partner.id,
+        amount: dto.amount,
+        interestRate: dto.interestRate,
+        termMonths: dto.termMonths,
+        conditions: dto.notes,
+        status: ProposalStatus.PENDING,
+        validUntil,
+      },
+    });
+
+    // Sinaliza que a operação recebeu propostas
+    const advanceable: OperationStatus[] = [
+      OperationStatus.SUBMITTED,
+      OperationStatus.SCORING,
+      OperationStatus.MATCHING,
+    ];
+    if (advanceable.includes(operation.status)) {
+      await this.prisma.operationRequest.update({
+        where: { id: operation.id },
+        data: { status: OperationStatus.PROPOSALS_RECEIVED },
+      });
+    }
+
+    return proposal;
+  }
+
+  /**
+   * Produtor aceita uma proposta recebida.
+   */
+  async acceptProposal(proposalId: string, userId: string, userRole?: string) {
+    const proposal = await this.getProposalForProducer(proposalId, userId, userRole);
+
+    const updated = await this.prisma.proposal.update({
+      where: { id: proposalId },
+      data: { status: ProposalStatus.ACCEPTED, respondedAt: new Date() },
+    });
+
+    // Recusa automaticamente as demais propostas pendentes da mesma operação
+    await this.prisma.proposal.updateMany({
+      where: {
+        operationId: proposal.operationId,
+        id: { not: proposalId },
+        status: ProposalStatus.PENDING,
+      },
+      data: { status: ProposalStatus.REJECTED, respondedAt: new Date() },
+    });
+
+    await this.prisma.operationRequest.update({
+      where: { id: proposal.operationId },
+      data: { status: OperationStatus.ACCEPTED },
+    });
+
+    return updated;
+  }
+
+  /**
+   * Produtor recusa uma proposta recebida.
+   */
+  async rejectProposal(proposalId: string, userId: string, userRole?: string) {
+    await this.getProposalForProducer(proposalId, userId, userRole);
+
+    return this.prisma.proposal.update({
+      where: { id: proposalId },
+      data: { status: ProposalStatus.REJECTED, respondedAt: new Date() },
+    });
+  }
+
+  private async getProposalForProducer(proposalId: string, userId: string, userRole?: string) {
+    const proposal = await this.prisma.proposal.findUnique({
+      where: { id: proposalId },
+      include: {
+        operation: {
+          include: { producerProfile: { select: { userId: true } } },
+        },
+      },
+    });
+
+    if (!proposal) throw new NotFoundException('Proposta não encontrada');
+    if (userRole !== 'ADMIN' && proposal.operation.producerProfile.userId !== userId) {
+      throw new ForbiddenException('Acesso não autorizado');
+    }
+
+    return proposal;
+  }
+
+  private async resolvePartnerForUser(user: { id: string; name: string; email: string; phone: string | null; cnpj: string | null }) {
+    if (user.cnpj) {
+      const existing = await this.prisma.partnerInstitution.findUnique({
+        where: { cnpj: user.cnpj },
+      });
+      if (existing) return existing;
+    }
+
+    return this.prisma.partnerInstitution.create({
+      data: {
+        name: user.name,
+        type: PartnerType.BANCO,
+        cnpj: user.cnpj ?? `USER-${user.id}`,
+        contactEmail: user.email,
+        contactPhone: user.phone ?? undefined,
+      },
+    });
+  }
+
 
   async findAll(userId: string, page = 1, perPage = 10) {
     const profile = await this.prisma.producerProfile.findUnique({

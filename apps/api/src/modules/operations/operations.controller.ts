@@ -11,6 +11,7 @@ import {
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { OperationsService } from './operations.service';
 import { CreateOperationDto } from './dto/create-operation.dto';
+import { CreateProposalDto } from './dto/create-proposal.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -31,7 +32,7 @@ export class OperationsController {
   }
 
   @Get('available')
-  @Roles(UserRole.FINANCIAL_INSTITUTION, UserRole.ADMIN)
+  @Roles(UserRole.FINANCIAL_INSTITUTION, UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
   @ApiOperation({ summary: 'Deal flow: operações disponíveis para instituições financeiras' })
   async findAvailable(
     @Query('page') page?: number,
@@ -56,6 +57,38 @@ export class OperationsController {
   @ApiOperation({ summary: 'Propostas recebidas pelo produtor' })
   async getProposals(@CurrentUser('sub') userId: string) {
     return this.operationsService.getUserProposals(userId);
+  }
+
+  @Post('proposals')
+  @Roles(UserRole.FINANCIAL_INSTITUTION, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Instituição financeira envia proposta para uma operação' })
+  async createProposal(
+    @CurrentUser('sub') userId: string,
+    @Body() data: CreateProposalDto,
+  ) {
+    return this.operationsService.createProposal(userId, data);
+  }
+
+  @Patch('proposals/:id/accept')
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Produtor aceita uma proposta' })
+  async acceptProposal(
+    @Param('id') id: string,
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    return this.operationsService.acceptProposal(id, userId, role);
+  }
+
+  @Patch('proposals/:id/reject')
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Produtor recusa uma proposta' })
+  async rejectProposal(
+    @Param('id') id: string,
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    return this.operationsService.rejectProposal(id, userId, role);
   }
 
   @Get(':id')

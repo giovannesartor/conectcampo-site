@@ -10,9 +10,11 @@ import {
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 import { AsaasService } from '../subscriptions/asaas.service';
+import { ValsaService } from '../subscriptions/valsa.service';
 import { AuthService } from '../auth/auth.service';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RawBodyRequest } from '@nestjs/common';
 import { Request } from 'express';
 
 @ApiTags('webhooks')
@@ -22,6 +24,7 @@ export class WebhookController {
 
   constructor(
     private readonly asaasService: AsaasService,
+    private readonly valsaService: ValsaService,
     private readonly authService: AuthService,
     private readonly mailService: MailService,
     private readonly prisma: PrismaService,
@@ -47,22 +50,60 @@ export class WebhookController {
 
     const { userId } = await this.asaasService.handleWebhook(body.event, body);
 
-    if (userId) {
-      const user = await this.prisma.user.findUnique({ where: { id: userId } });
-      if (user) {
-        // 1. Confirmação de pagamento
-        this.mailService.sendPaymentConfirmation(user.email, user.name).catch(() => null);
-
-        // 2. E-mail de verificação (se ainda não verificado)
-        if (!user.emailVerified) {
-          const token = await this.authService.createEmailVerificationToken(userId);
-          this.mailService
-            .sendEmailVerification(user.email, user.name, token)
-            .catch(() => null);
-        }
-      }
-    }
+    await this.notifyUser(userId);
 
     return { received: true };
+  }
+
+  // ─── Valsa – POST /webhook/valsapay ──────────────────────────────────────
+
+  @Public()
+  @Post('valsapay')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Webhook da Valsa Digital para confirmar pagamentos' })
+  async valsaWebhook(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers('x-webhook-signature') signature: string,
+  ) {
+    const rawPayload = req.rawBody ? req.rawBody.toString() : JSON.stringify(req.body ?? {});
+
+    if (!this.valsaService.verifyWebhookSignature(signature, rawPayload)) {
+      this.logger.warn('Valsa webhook: assinatura inválida');
+      throw new UnauthorizedException('Assinatura inválida');
+    }
+
+    let payload: any;
+    try {
+      payload = rawPayload ? JSON.parse(rawPayload) : {};
+    } catch {
+      payload = req.body ?? {};
+    }
+    this.logger.log(`Valsa webhook received: ${payload?.event}`);
+
+    const { userId } = await this.valsaService.handleWebhook(payload);
+
+    await this.notifyUser(userId);
+
+    return { success: true };
+  }
+
+  // ─── Pós-pagamento: e-mails de confirmação e verificação ──────────────────
+
+  private async notifyUser(userId: string | null) {
+    if (!userId) return;
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return;
+
+    // 1. Confirmação de pagamento
+    this.mailService.sendPaymentConfirmation(user.email, user.name).catch(() => null);
+
+    // 2. E-mail de verificação (se ainda não verificado)
+    if (!user.emailVerified) {
+      const token = await this.authService.createEmailVerificationToken(userId);
+      this.mailService
+        .sendEmailVerification(user.email, user.name, token)
+        .catch(() => null);
+    }
   }
 }
