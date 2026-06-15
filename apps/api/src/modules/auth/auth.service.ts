@@ -54,25 +54,53 @@ export class AuthService {
       throw new ConflictException('Email já cadastrado');
     }
 
+    // CPF/CNPJ também são únicos — valida antes para retornar mensagem amigável
+    if (dto.cpf) {
+      const cpfTaken = await this.prisma.user.findUnique({ where: { cpf: dto.cpf } });
+      if (cpfTaken) {
+        throw new ConflictException('CPF já cadastrado');
+      }
+    }
+    if (dto.cnpj) {
+      const cnpjTaken = await this.prisma.user.findUnique({ where: { cnpj: dto.cnpj } });
+      if (cnpjTaken) {
+        throw new ConflictException('CNPJ já cadastrado');
+      }
+    }
+
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const role = this.resolveRole(dto.email, dto.role);
     const isFree = dto.plan === SubscriptionPlan.CORPORATE;
 
     // Conta inativa até pagamento (planos pagos) ou ativa direto (plano grátis)
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        passwordHash,
-        name: dto.name,
-        role,
-        phone: dto.phone,
-        cpf: dto.cpf,
-        cnpj: dto.cnpj,
-        isActive: isFree, // free = ativo, paid = aguarda pagamento
-        consentLgpd: true,
-        consentLgpdAt: new Date(),
-      },
-    });
+    let user;
+    try {
+      user = await this.prisma.user.create({
+        data: {
+          email: dto.email,
+          passwordHash,
+          name: dto.name,
+          role,
+          phone: dto.phone,
+          cpf: dto.cpf,
+          cnpj: dto.cnpj,
+          isActive: isFree, // free = ativo, paid = aguarda pagamento
+          consentLgpd: true,
+          consentLgpdAt: new Date(),
+        },
+      });
+    } catch (err: any) {
+      // Falha de unicidade (corrida entre a checagem acima e o insert)
+      if (err?.code === 'P2002') {
+        const field = Array.isArray(err?.meta?.target)
+          ? err.meta.target[0]
+          : err?.meta?.target;
+        const label =
+          field === 'cpf' ? 'CPF' : field === 'cnpj' ? 'CNPJ' : 'Email';
+        throw new ConflictException(`${label} já cadastrado`);
+      }
+      throw err;
+    }
 
     // ── Plano gratuito (Instituição Financeira) ──────────────────────────────
     if (isFree) {
