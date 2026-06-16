@@ -21,12 +21,12 @@ const colorMap = {
 export function KPICard({ title, value, subtitle, icon, trend, color = 'green' }: KPICardProps) {
   return (
     <div className="card hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{title}</p>
+          <p className="mt-1.5 sm:mt-2 text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate">{value}</p>
           {subtitle && (
-            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{subtitle}</p>
+            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 truncate">{subtitle}</p>
           )}
           {trend && (
             <div className={`mt-2 inline-flex items-center text-xs font-medium ${trend.value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -34,7 +34,7 @@ export function KPICard({ title, value, subtitle, icon, trend, color = 'green' }
             </div>
           )}
         </div>
-        <div className={`rounded-xl p-3 ${colorMap[color]}`}>
+        <div className={`flex-shrink-0 rounded-xl p-2 sm:p-3 ${colorMap[color]}`}>
           {icon}
         </div>
       </div>

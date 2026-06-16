@@ -32,7 +32,7 @@
   }
 
   .card {
-    @apply rounded-xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm;
+    @apply rounded-xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card p-4 sm:p-6 shadow-sm;
   }
 
   .input {

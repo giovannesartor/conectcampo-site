@@ -47,21 +47,35 @@ const STORAGE_KEY = 'conectcampo_tour_completed';
 
 export function OnboardingTour() {
   const [active, setActive] = useState(false);
+  const [steps, setSteps] = useState<TourStep[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0, height: 0 });
 
   useEffect(() => {
     const completed = localStorage.getItem(STORAGE_KEY);
-    if (!completed) {
-      // Delay to allow DOM to settle
-      const timer = setTimeout(() => setActive(true), 1500);
-      return () => clearTimeout(timer);
-    }
+    if (completed) return;
+
+    // O tour destaca itens da sidebar, que ficam ocultos no mobile.
+    // Só executa em telas grandes (lg+), onde a sidebar está visível.
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) return;
+
+    // Delay to allow DOM to settle
+    const timer = setTimeout(() => {
+      // Mantém apenas os passos cujo elemento alvo realmente existe no DOM.
+      const available = TOUR_STEPS.filter((s) => document.querySelector(s.target));
+      if (available.length === 0) {
+        localStorage.setItem(STORAGE_KEY, 'true');
+        return;
+      }
+      setSteps(available);
+      setActive(true);
+    }, 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   const updatePosition = useCallback(() => {
-    if (!active) return;
-    const step = TOUR_STEPS[currentStep];
+    if (!active || steps.length === 0) return;
+    const step = steps[currentStep];
     const element = document.querySelector(step.target);
     if (element) {
       const rect = element.getBoundingClientRect();
@@ -72,7 +86,7 @@ export function OnboardingTour() {
         height: rect.height,
       });
     }
-  }, [active, currentStep]);
+  }, [active, currentStep, steps]);
 
   useEffect(() => {
     updatePosition();
@@ -86,7 +100,7 @@ export function OnboardingTour() {
   }
 
   function handleNext() {
-    if (currentStep < TOUR_STEPS.length - 1) {
+    if (currentStep < steps.length - 1) {
       setCurrentStep((s) => s + 1);
     } else {
       handleClose();
@@ -97,10 +111,10 @@ export function OnboardingTour() {
     if (currentStep > 0) setCurrentStep((s) => s - 1);
   }
 
-  if (!active) return null;
+  if (!active || steps.length === 0) return null;
 
-  const step = TOUR_STEPS[currentStep];
-  const isLast = currentStep === TOUR_STEPS.length - 1;
+  const step = steps[currentStep];
+  const isLast = currentStep === steps.length - 1;
 
   // Calculate tooltip position
   const tooltipStyle: React.CSSProperties = {
@@ -172,7 +186,7 @@ export function OnboardingTour() {
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-gray-400">
-            {currentStep + 1} de {TOUR_STEPS.length}
+            {currentStep + 1} de {steps.length}
           </span>
           <div className="flex items-center gap-2">
             {currentStep > 0 && (

@@ -62,6 +62,14 @@ const ROLE_LABELS: Record<string, string> = {
 interface NavItem { label: string; href: string; icon: ReactNode; badge?: string }
 interface NavSection { title: string; items: NavItem[] }
 
+// Mapeia rotas da sidebar para os marcadores usados pelo OnboardingTour
+const TOUR_ATTR: Record<string, string> = {
+  '/dashboard': 'overview',
+  '/dashboard/operations': 'operations',
+  '/dashboard/proposals': 'proposals',
+  '/dashboard/documents': 'documents',
+};
+
 function buildNav(role: string, plan: string): NavSection[] {
   if (role === 'ADMIN') {
     return [
@@ -314,6 +322,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                   <Link
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
+                    data-tour={TOUR_ATTR[item.href]}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                       isActive(item.href)
                         ? 'bg-brand-50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-400'
@@ -385,6 +394,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               <button onClick={() => setMobileOpen(true)} className="lg:hidden btn-ghost p-1.5">
                 <Menu className="h-5 w-5" />
               </button>
+              {/* Mobile: logo compacto (some quando a saudação aparece) */}
+              <div className="sm:hidden">
+                <Logo size="sm" href="/dashboard" />
+              </div>
               <div className="hidden sm:block">
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-bold text-gray-900 dark:text-white">
