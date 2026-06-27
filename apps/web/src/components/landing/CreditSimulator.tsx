@@ -27,7 +27,7 @@ export function CreditSimulator() {
   const [term, setTerm] = useState(24);
 
   const result = useMemo(() => {
-    const annualRate = 0.105; // 10.5% a.a. (taxa média crédito rural)
+    const annualRate = 0.12; // 12% a.a. (taxa média crédito rural)
     const monthlyRate = Math.pow(1 + annualRate, 1 / 12) - 1;
     const monthlyPayment =
       (amount * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -term));
@@ -55,7 +55,7 @@ export function CreditSimulator() {
               Simulador de Crédito Rural
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Estimativa com taxa média de mercado · 10,5% a.a.
+              Estimativa com taxa média de mercado · 12% a.a.
             </p>
           </div>
         </div>
@@ -134,8 +134,8 @@ export function CreditSimulator() {
         </div>
 
         <p className="mt-4 text-center text-xs text-gray-400">
-          * Simulação ilustrativa. Taxa e condições variam conforme análise de crédito e instituição
-          financeira parceira.
+          * Simulação ilustrativa. O banco parceiro também pode analisar seu cadastro e a taxa de
+          juros pode variar conforme perfil de crédito e instituição financeira.
         </p>
       </div>
     </motion.div>
