@@ -6,19 +6,20 @@ interface KPICardProps {
   subtitle?: string;
   icon: ReactNode;
   trend?: { value: number; label: string };
-  color?: 'green' | 'blue' | 'purple' | 'amber' | 'red' | 'cyan';
+  color?: 'brand' | 'green' | 'blue' | 'purple' | 'amber' | 'red' | 'cyan';
 }
 
 const colorMap = {
-  green: 'bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400',
-  blue: 'bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400',
+  brand:  'bg-brand-100 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400',
+  green:  'bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400',
+  blue:   'bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400',
   purple: 'bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400',
-  amber: 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400',
-  red: 'bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400',
-  cyan: 'bg-cyan-50 dark:bg-cyan-950/20 text-cyan-600 dark:text-cyan-400',
+  amber:  'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400',
+  red:    'bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400',
+  cyan:   'bg-cyan-50 dark:bg-cyan-950/20 text-cyan-600 dark:text-cyan-400',
 };
 
-export function KPICard({ title, value, subtitle, icon, trend, color = 'green' }: KPICardProps) {
+export function KPICard({ title, value, subtitle, icon, trend, color = 'brand' }: KPICardProps) {
   return (
     <div className="card hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-2">

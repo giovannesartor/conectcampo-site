@@ -43,7 +43,7 @@ import { usePreview } from '@/lib/preview-context';
 // ─── Plan config ──────────────────────────────────────────────────────────────
 
 const PLAN_LABELS: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  START:       { label: 'Plano START',       color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/30',  border: 'border-emerald-200 dark:border-emerald-800' },
+  START:       { label: 'Plano START',       color: 'text-brand-700 dark:text-brand-400',   bg: 'bg-brand-50 dark:bg-brand-950/30',      border: 'border-brand-200 dark:border-brand-800' },
   PRO:         { label: 'Plano PRO',          color: 'text-blue-700 dark:text-blue-400',       bg: 'bg-blue-50 dark:bg-blue-950/30',         border: 'border-blue-200 dark:border-blue-800' },
   COOPERATIVE: { label: 'Cooperativa',        color: 'text-violet-700 dark:text-violet-400',   bg: 'bg-violet-50 dark:bg-violet-950/30',     border: 'border-violet-200 dark:border-violet-800' },
   CORPORATE:   { label: 'Acesso Gratuito',    color: 'text-slate-700 dark:text-slate-400',     bg: 'bg-slate-100 dark:bg-slate-800/40',      border: 'border-slate-200 dark:border-slate-700' },

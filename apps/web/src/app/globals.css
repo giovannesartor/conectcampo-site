@@ -5,12 +5,12 @@
 @layer base {
   :root {
     --background: #ffffff;
-    --foreground: #0f1117;
+    --foreground: #0a0f0c;
   }
 
   .dark {
-    --background: #0f1117;
-    --foreground: #e4e4e7;
+    --background: #0a0f0c;
+    --foreground: #e4e7e4;
   }
 
   body {

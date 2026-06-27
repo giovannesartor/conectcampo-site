@@ -7,32 +7,33 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Paleta derivada das cores reais da logo ConectCampo
         brand: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',
-          300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
-          950: '#052e16',
+          50:  '#f0fdf5',
+          100: '#d0f9e4',
+          200: '#a0f2c8',
+          300: '#5de6a0',
+          400: '#29ce72',
+          500: '#00a03c', // verde vivo da logo (C direito, claro)
+          600: '#008c3c', // verde vivo da logo (C direito, core)
+          700: '#006830',
+          800: '#003c28', // verde escuro da logo (C esquerdo)
+          900: '#002818',
+          950: '#001410',
         },
         agro: {
           earth: '#8B6914',
-          sky: '#87CEEB',
-          field: '#228B22',
-          gold: '#DAA520',
-          sunset: '#FF8C00',
+          sky:   '#87CEEB',
+          field: '#003c28', // verde escuro da logo
+          gold:  '#b48c3c', // dourado do ponto da logo
+          sunset:'#d97706',
         },
         dark: {
-          bg: '#0f1117',
-          card: '#1a1d26',
-          border: '#2a2d36',
-          text: '#e4e4e7',
-          muted: '#71717a',
+          bg:     '#0a0f0c',
+          card:   '#131a14',
+          border: '#1e2d20',
+          text:   '#e4e7e4',
+          muted:  '#6b7a6d',
         },
       },
       fontFamily: {
@@ -40,7 +41,8 @@ module.exports = {
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'hero-pattern': 'linear-gradient(135deg, #052e16 0%, #14532d 50%, #166534 100%)',
+        // Gradiente usando os verdes escuros da logo (C esquerdo)
+        'hero-pattern': 'linear-gradient(135deg, #001410 0%, #003c28 55%, #006830 100%)',
       },
     },
   },
