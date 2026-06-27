@@ -4,34 +4,48 @@ import Image from 'next/image';
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
   showText?: boolean;
+  variant?: 'horizontal' | 'vertical' | 'icon';
   href?: string;
   className?: string;
 }
 
 const sizes = {
-  sm: { iconW: 32, fullW: 120 },
-  md: { iconW: 40, fullW: 155 },
-  lg: { iconW: 56, fullW: 210 },
+  sm: { iconW: 32, fullW: 120, vertW: 100 },
+  md: { iconW: 48, fullW: 180, vertW: 140 },
+  lg: { iconW: 64, fullW: 260, vertW: 200 },
 };
 
-export function Logo({ size = 'md', showText = true, href = '/', className = '' }: LogoProps) {
+export function Logo({ size = 'md', showText = true, variant, href = '/', className = '' }: LogoProps) {
   const s = sizes[size];
 
-  const content = showText ? (
+  // Determina qual logo usar: variant tem prioridade, depois showText
+  const resolvedVariant = variant ?? (showText ? 'horizontal' : 'icon');
+
+  const content = resolvedVariant === 'vertical' ? (
     <Image
-      src="/logo.svg"
+      src="/logo-vertical.png"
       alt="ConectCampo"
-      width={s.fullW}
-      height={40}
-      style={{ width: s.fullW, height: 'auto' }}
+      width={s.vertW}
+      height={s.vertW}
+      style={{ width: s.vertW, height: 'auto' }}
+      priority
+    />
+  ) : resolvedVariant === 'icon' ? (
+    <Image
+      src="/logo-icon.png"
+      alt="ConectCampo"
+      width={s.iconW}
+      height={s.iconW}
+      style={{ width: s.iconW, height: 'auto' }}
       priority
     />
   ) : (
     <Image
-      src="/logo-icon.svg"
+      src="/logo.png"
       alt="ConectCampo"
-      width={s.iconW}
-      height={s.iconW}
+      width={s.fullW}
+      height={60}
+      style={{ width: s.fullW, height: 'auto' }}
       priority
     />
   );
