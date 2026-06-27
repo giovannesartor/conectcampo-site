@@ -16,7 +16,7 @@ import {
   Legend,
 } from 'recharts';
 
-const COLORS = ['#16a34a', '#2563eb', '#9333ea', '#f59e0b', '#06b6d4', '#ef4444'];
+const COLORS = ['#008c3c', '#2563eb', '#9333ea', '#f59e0b', '#06b6d4', '#ef4444'];
 
 interface ChartCardProps {
   title: string;
@@ -59,8 +59,8 @@ export function RevenueAreaChart({ data }: RevenueChartProps) {
         <AreaChart data={data}>
           <defs>
             <linearGradient id="colorComm" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#16a34a" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
+              <stop offset="5%" stopColor="#008c3c" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#008c3c" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="colorSubs" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
@@ -90,7 +90,7 @@ export function RevenueAreaChart({ data }: RevenueChartProps) {
           <Area
             type="monotone"
             dataKey="commissions"
-            stroke="#16a34a"
+            stroke="#008c3c"
             fillOpacity={1}
             fill="url(#colorComm)"
             strokeWidth={2}
@@ -149,7 +149,7 @@ export function OperationsBarChart({ data }: OperationsChartProps) {
               fontSize: '12px',
             }}
           />
-          <Bar dataKey="count" fill="#16a34a" radius={[4, 4, 0, 0]} name="Operações" />
+          <Bar dataKey="count" fill="#008c3c" radius={[4, 4, 0, 0]} name="Operações" />
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>

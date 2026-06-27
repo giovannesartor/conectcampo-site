@@ -71,7 +71,7 @@ export function exportPDF(
       <title>${title}</title>
       <style>
         body { font-family: 'Inter', Arial, sans-serif; padding: 40px; color: #111; }
-        h1 { font-size: 22px; color: #16a34a; margin-bottom: 4px; }
+        h1 { font-size: 22px; color: #008c3c; margin-bottom: 4px; }
         .subtitle { font-size: 12px; color: #6b7280; margin-bottom: 24px; }
         table { width: 100%; border-collapse: collapse; }
         th { background: #f9fafb; border: 1px solid #e5e7eb; padding: 8px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; text-align: left; color: #6b7280; }

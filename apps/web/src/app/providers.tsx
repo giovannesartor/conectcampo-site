@@ -19,7 +19,7 @@ export function Providers({ children }: { children: ReactNode }) {
               background: '#333',
               color: '#fff',
             },
-            success: { iconTheme: { primary: '#22c55e', secondary: '#fff' } },
+            success: { iconTheme: { primary: '#008c3c', secondary: '#fff' } },
             error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
           }}
         />
