@@ -22,7 +22,7 @@ function formatBRL(value: number) {
   });
 }
 
-export function CreditSimulator() {
+export function CreditSimulator({ embedded = false }: { embedded?: boolean }) {
   const [amount, setAmount] = useState(500000);
   const [term, setTerm] = useState(24);
 
@@ -43,9 +43,9 @@ export function CreditSimulator() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="mt-16 mx-auto max-w-2xl"
+      className={embedded ? 'w-full' : 'mt-16 mx-auto max-w-2xl'}
     >
-      <div className="rounded-2xl border border-gray-200 dark:border-dark-border bg-white/80 dark:bg-dark-card/80 backdrop-blur-lg p-6 sm:p-8 shadow-xl">
+      <div className={`rounded-2xl border border-gray-200 dark:border-dark-border bg-white/85 dark:bg-dark-card/85 backdrop-blur-xl p-6 sm:p-8 ${embedded ? 'shadow-2xl shadow-brand-900/15 ring-1 ring-black/5' : 'shadow-xl'}`}>
         <div className="flex items-center gap-3 mb-6">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white">
             <Calculator className="h-5 w-5" />

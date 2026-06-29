@@ -9,7 +9,7 @@ const segments = [
     tier: 'Faixa A',
     title: 'Pequeno Produtor',
     range: 'Até R$ 500 mil',
-    color: 'from-green-500 to-green-600',
+    color: 'from-brand-400 to-brand-600',
     features: [
       'Crédito rápido e simplificado',
       'Documentação mínima',
@@ -22,7 +22,7 @@ const segments = [
     tier: 'Faixa B',
     title: 'Médio Produtor',
     range: 'R$ 500 mil a R$ 5M',
-    color: 'from-blue-500 to-blue-600',
+    color: 'from-brand-500 to-brand-700',
     features: [
       'Bancos + FIDC',
       'CPR e recebíveis',
@@ -35,7 +35,7 @@ const segments = [
     tier: 'Faixa C',
     title: 'Grande Produtor',
     range: 'R$ 5M a R$ 50M',
-    color: 'from-purple-500 to-purple-600',
+    color: 'from-brand-600 to-brand-800',
     features: [
       'FIDC estruturado',
       'CRA (Certificado de Recebíveis)',
@@ -48,7 +48,7 @@ const segments = [
     tier: 'Faixa D',
     title: 'Agroindústria',
     range: 'R$ 50M+',
-    color: 'from-amber-500 to-amber-600',
+    color: 'from-brand-700 to-brand-900',
     features: [
       'Mercado de capitais',
       'Estruturação complexa',
@@ -77,7 +77,7 @@ export function Segments() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="card hover:shadow-lg transition-shadow duration-300 group flex flex-col"
+              className="card card-hover group flex flex-col"
             >
               {/* Icon */}
               <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${segment.color} text-white`}>

@@ -2,65 +2,27 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { ArrowRight, Zap, Clock, Network, ShieldCheck, Star } from 'lucide-react';
 import { CreditSimulator } from './CreditSimulator';
 import { AgroBackground } from './AgroBackground';
 
-// ─── Inline SVGs ──────────────────────────────────────────────────────────────
-
-function ArrowSVG() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" className="ml-2 h-5 w-5" aria-hidden="true">
-      <path d="M4 10h12M12 6l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function TrendSVG() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-8 w-8 text-brand-500 mb-2" aria-hidden="true">
-      <polyline points="2,18 8,12 13,17 22,6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <polyline points="16,6 22,6 22,13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ShieldSVG() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-8 w-8 text-brand-500 mb-2" aria-hidden="true">
-      <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.5C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-      <path d="M9 12l2.5 2.5L15 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ZapSVG({ className = 'h-4 w-4' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ClockSVG() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-8 w-8 text-brand-500 mb-2" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-      <polyline points="12,7 12,12 15,15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
+const HIGHLIGHTS = [
+  { icon: Clock, value: '48h', label: 'Pré-análise' },
+  { icon: Network, value: 'Multi', label: 'Vários financiadores' },
+  { icon: ShieldCheck, value: '100%', label: 'Digital' },
+];
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pt-32 pb-0 sm:pt-40 mesh-glow">
-      {/* ── Animated Agro Background ── */}
+    <section className="relative overflow-hidden pt-28 pb-20 sm:pt-36 mesh-glow">
+      {/* Animated agro background */}
       <AgroBackground className="absolute inset-0 h-full w-full text-brand-600/10 dark:text-brand-400/10" />
 
       {/* Radial glows */}
-      <div className="pointer-events-none absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-[700px] h-[700px] bg-brand-500/8 rounded-full blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-[500px] h-[500px] bg-agro-gold/8 rounded-full blur-3xl" />
+      <div className="pointer-events-none absolute top-0 right-0 -translate-y-1/3 translate-x-1/4 w-[680px] h-[680px] bg-brand-500/10 rounded-full blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-[520px] h-[520px] bg-agro-gold/10 rounded-full blur-3xl" />
 
-      {/* Subtle dot grid */}
+      {/* Dot grid */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.025] dark:opacity-[0.04]"
         style={{
@@ -70,108 +32,106 @@ export function Hero() {
       />
 
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl text-center">
-
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8 inline-flex items-center gap-2 rounded-full bg-brand-500/10 px-4 py-2 text-sm font-medium text-brand-600 dark:text-brand-400 ring-1 ring-brand-500/20"
-          >
-            <ZapSVG />
-            Marketplace de Crédito Agro #1 do Brasil
-          </motion.div>
-
-          {/* Heading */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-6xl lg:text-7xl [text-wrap:balance]"
-          >
-            O crédito que o agro merece —{' '}
-            <span className="text-gradient-brand">
-              sem burocracia, sem balcão.
-            </span>
-          </motion.h1>
-
-          {/* Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400 sm:text-xl [text-wrap:pretty]"
-          >
-            Conectamos sua operação a bancos, cooperativas, FIDCs, securitizadoras
-            e ao mercado de capitais. Pré-análise em 48h, 100% digital —
-            do pequeno ao grande produtor.
-          </motion.p>
-
-          {/* CTAs */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
-          >
-            <Link
-              href="/register"
-              className="btn-primary text-base px-8 py-4 flex items-center shadow-lg shadow-brand-600/30 hover:shadow-xl hover:shadow-brand-600/40 hover:-translate-y-0.5 transition-all"
+        <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
+          {/* ── Left: copy ── */}
+          <div className="text-center lg:text-left">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 rounded-full bg-brand-500/10 px-4 py-1.5 text-sm font-semibold text-brand-700 dark:text-brand-400 ring-1 ring-brand-500/20"
             >
-              Buscar Crédito
-              <ArrowSVG />
-            </Link>
-            <Link
-              href="/register?plan=CORPORATE"
-              className="group inline-flex items-center justify-center rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm px-8 py-4 text-base font-semibold text-slate-700 dark:text-slate-200 shadow-sm transition-all hover:border-slate-400 dark:hover:border-slate-500 hover:-translate-y-0.5 hover:shadow-md"
+              <Zap className="h-3.5 w-3.5" />
+              Marketplace de Crédito Agro #1 do Brasil
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.08 }}
+              className="mt-6 text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl [text-wrap:balance]"
             >
-              Oferecer Crédito
-              <ArrowSVG />
-            </Link>
-          </motion.div>
+              O crédito que o agro merece —{' '}
+              <span className="text-gradient-brand">sem burocracia, sem balcão.</span>
+            </motion.h1>
 
-          {/* Trust line */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.45 }}
-            className="mt-5 text-xs text-gray-400 dark:text-gray-500"
-          >
-            Instituições financeiras entram{' '}
-            <span className="font-semibold text-emerald-500">gratuitamente</span>
-            {' '}· Pague com PIX, cartão ou boleto via ValsaPay ou Asaas
-          </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.16 }}
+              className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400 sm:text-xl max-w-xl mx-auto lg:mx-0 [text-wrap:pretty]"
+            >
+              Conectamos sua operação a bancos, cooperativas, FIDCs, securitizadoras e ao
+              mercado de capitais. Pré-análise em 48h, 100% digital.
+            </motion.p>
 
-          {/* Stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.24 }}
+              className="mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3"
+            >
+              <Link href="/register" className="btn-primary text-base px-7 py-3.5">
+                Simular meu crédito
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+              <Link
+                href="/register?plan=CORPORATE"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 dark:border-dark-border bg-white/70 dark:bg-dark-card/70 backdrop-blur-sm px-7 py-3.5 text-base font-semibold text-gray-700 dark:text-gray-200 transition-all hover:border-brand-400 hover:-translate-y-0.5"
+              >
+                Sou instituição financeira
+              </Link>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.34 }}
+              className="mt-5 flex items-center justify-center lg:justify-start gap-2 text-xs text-gray-500 dark:text-gray-400"
+            >
+              <span className="inline-flex items-center gap-0.5 text-agro-gold">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <Star key={i} className="h-3.5 w-3.5 fill-current" />
+                ))}
+              </span>
+              Instituições financeiras entram <span className="font-semibold text-brand-600 dark:text-brand-400">gratuitamente</span> · PIX, cartão ou boleto
+            </motion.div>
+
+            {/* Mini highlights */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.42 }}
+              className="mt-10 grid grid-cols-3 gap-3 max-w-md mx-auto lg:mx-0"
+            >
+              {HIGHLIGHTS.map(({ icon: Icon, value, label }) => (
+                <div
+                  key={label}
+                  className="rounded-2xl border border-gray-200 dark:border-dark-border bg-white/60 dark:bg-dark-card/60 backdrop-blur-sm px-3 py-3 text-center"
+                >
+                  <Icon className="h-5 w-5 mx-auto text-brand-600 dark:text-brand-400" />
+                  <p className="mt-1.5 text-lg font-extrabold text-gray-900 dark:text-white leading-none">{value}</p>
+                  <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400 leading-tight">{label}</p>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* ── Right: floating simulator ── */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8"
+            initial={{ opacity: 0, y: 30, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
+            className="relative"
           >
-            {[
-              { icon: <ClockSVG />, value: '48h', label: 'Pré-análise automática' },
-              { icon: <ShieldSVG />, value: 'Multi-parceiros', label: 'Sua operação enviada a vários financiadores' },
-              { icon: <TrendSVG />, value: '100% digital', label: 'Da CPR ao crédito, sem papelada' },
-            ].map((stat) => (
-              <div key={stat.value} className="flex flex-col items-center text-center">
-                {stat.icon}
-                <span className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {stat.value}
-                </span>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {stat.label}
-                </span>
-              </div>
-            ))}
+            {/* soft pedestal glow */}
+            <div className="pointer-events-none absolute -inset-4 rounded-[2rem] bg-gradient-to-tr from-brand-500/15 to-agro-gold/10 blur-2xl" />
+            <div className="relative">
+              <CreditSimulator embedded />
+            </div>
           </motion.div>
-
-          {/* Credit Simulator */}
-          <CreditSimulator />
         </div>
       </div>
     </section>
   );
 }
-

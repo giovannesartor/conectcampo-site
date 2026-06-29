@@ -2,6 +2,7 @@ import { Header } from '@/components/landing/Header';
 import { Hero } from '@/components/landing/Hero';
 import { SocialProof } from '@/components/landing/SocialProof';
 import { AudienceSplit } from '@/components/landing/AudienceSplit';
+import { ProductShowcase } from '@/components/landing/ProductShowcase';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { Segments } from '@/components/landing/Segments';
 import { Security } from '@/components/landing/Security';
@@ -74,6 +75,7 @@ export default function LandingPage() {
       <Hero />
       <SocialProof />
       <AudienceSplit />
+      <ProductShowcase />
       <HowItWorks />
       <Segments />
       <Security />
