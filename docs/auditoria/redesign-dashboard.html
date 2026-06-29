@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ConectCampo — Redesign Dashboard (Protótipo Premium)</title>
+<style>
+:root{
+  --brand-50:#f0fdf5;--brand-100:#d0f9e4;--brand-400:#29ce72;--brand-500:#00a03c;--brand-600:#008c3c;--brand-700:#006830;--brand-800:#003c28;--brand-900:#002818;--brand-950:#001410;
+  --gold:#b48c3c;--gold-light:#d9b86a;
+  --ink:#0a0f0c;--muted:#5b6b5e;--line:#e6ece7;--bg:#f6faf7;--card:#ffffff;
+  --shadow-sm:0 1px 2px rgba(0,40,24,.06);--shadow-md:0 10px 30px -12px rgba(0,60,40,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+.app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+/* SIDEBAR */
+.side{background:linear-gradient(180deg,var(--brand-900),var(--brand-950));color:#fff;display:flex;flex-direction:column;padding:18px 14px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;padding:6px 8px 18px}
+.brand .mk{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--brand-500),var(--brand-700));display:grid;place-items:center;font-weight:900;position:relative}
+.brand .mk::after{content:"";position:absolute;right:5px;top:5px;width:5px;height:5px;border-radius:50%;background:var(--gold-light)}
+.navgrp{margin-top:14px}
+.navgrp .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.4);padding:0 10px 8px;font-weight:700}
+.navitem{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;color:rgba(255,255,255,.8);font-size:14px;font-weight:550;cursor:pointer;transition:.15s;margin-bottom:2px}
+.navitem:hover{background:rgba(255,255,255,.08);color:#fff}
+.navitem.active{background:linear-gradient(90deg,var(--brand-600),rgba(0,140,60,.25));color:#fff;box-shadow:inset 3px 0 0 var(--gold-light)}
+.navitem .ic{width:18px;text-align:center}
+.navitem .badge{margin-left:auto;background:var(--gold);color:#1a1200;font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px}
+.side .foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-top:1px solid rgba(255,255,255,.1)}
+.side .foot .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--brand-400),var(--gold));display:grid;place-items:center;font-weight:800;font-size:13px}
+.side .foot b{font-size:13px;display:block}.side .foot span{font-size:11px;color:rgba(255,255,255,.5)}
+/* MAIN */
+.main{display:flex;flex-direction:column;min-width:0}
+.topbar{height:64px;background:rgba(246,250,247,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;padding:0 28px;position:sticky;top:0;z-index:10}
+.search{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:var(--muted);font-size:14px}
+.tb-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.iconbtn{width:38px;height:38px;border-radius:10px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;cursor:pointer;position:relative;font-size:16px}
+.iconbtn .nd{position:absolute;top:7px;right:8px;width:8px;height:8px;background:var(--gold);border-radius:50%;border:2px solid #fff}
+.content{padding:28px;max-width:1200px;width:100%}
+.pagehead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+.pagehead h1{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.pagehead p{color:var(--muted);font-size:14.5px;margin-top:4px}
+.btn{display:inline-flex;align-items:center;gap:8px;font-weight:650;font-size:14px;padding:10px 18px;border-radius:11px;cursor:pointer;border:1px solid transparent}
+.btn-primary{background:linear-gradient(135deg,var(--brand-500),var(--brand-700));color:#fff;box-shadow:0 8px 18px -8px rgba(0,140,60,.55)}
+.btn-ghost{background:#fff;border-color:var(--line)}
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
+@media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow-sm);transition:.2s}
+.kpi:hover{box-shadow:var(--shadow-md);transform:translateY(-3px)}
+.kpi .top{display:flex;align-items:center;justify-content:space-between}
+.kpi .ic{width:38px;height:38px;border-radius:10px;background:var(--brand-50);color:var(--brand-600);display:grid;place-items:center;font-size:17px}
+.kpi .delta{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px}
+.kpi .delta.up{background:var(--brand-50);color:var(--brand-700)}
+.kpi .delta.down{background:#fdecec;color:#c0392b}
+.kpi b{font-size:28px;font-weight:850;display:block;margin-top:12px;letter-spacing:-.02em}
+.kpi .lbl{font-size:13px;color:var(--muted)}
+.kpi .spark{display:flex;align-items:flex-end;gap:3px;height:30px;margin-top:10px}
+.kpi .spark i{flex:1;background:linear-gradient(180deg,var(--brand-400),var(--brand-700));border-radius:3px 3px 0 0;opacity:.85}
+/* GRID */
+.grid2{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:22px}
+@media(max-width:1000px){.grid2{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-sm)}
+.panel .ph{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)}
+.panel .ph h3{font-size:16px;font-weight:750}
+.panel .ph .lnk{font-size:13px;color:var(--brand-600);font-weight:650;cursor:pointer}
+.panel .pb{padding:20px}
+/* CHART */
+.chart{height:200px;display:flex;align-items:flex-end;gap:10px;padding-top:10px}
+.chart .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+.chart .col .bar{width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--brand-400),var(--brand-700));transition:.3s}
+.chart .col .bar:hover{filter:brightness(1.1)}
+.chart .col span{font-size:11px;color:var(--muted)}
+/* DONUT-ish legend */
+.leg{display:flex;flex-direction:column;gap:12px}
+.leg .it{display:flex;align-items:center;gap:10px;font-size:13.5px}
+.leg .it .d{width:11px;height:11px;border-radius:3px}
+.leg .it b{margin-left:auto;font-weight:750}
+.ring{width:140px;height:140px;border-radius:50%;margin:0 auto 18px;background:conic-gradient(var(--brand-600) 0 45%,var(--brand-400) 45% 70%,var(--gold) 70% 85%,#d4ddd6 85% 100%);display:grid;place-items:center}
+.ring .inner{width:96px;height:96px;border-radius:50%;background:#fff;display:grid;place-items:center;text-align:center}
+.ring .inner b{font-size:22px;font-weight:850}.ring .inner span{font-size:11px;color:var(--muted)}
+/* TABLE */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:0}
+.fchip{font-size:12.5px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:600;color:var(--muted)}
+.fchip.active{background:var(--brand-600);color:#fff;border-color:var(--brand-600)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:#9aa89d;font-weight:700;padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+th:hover{color:var(--brand-600)}
+td{padding:14px 16px;font-size:14px;border-bottom:1px solid var(--bg)}
+tbody tr{transition:.12s}
+tbody tr:hover{background:var(--brand-50)}
+.badge{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px}
+.b-approved{background:var(--brand-50);color:var(--brand-700)}
+.b-analysis{background:#fff7e6;color:#b8860b}
+.b-match{background:#eef4ff;color:#2563eb}
+.b-pending{background:#f3f0ff;color:#7c3aed}
+.score{display:inline-flex;align-items:center;gap:6px;font-weight:750}
+.score .ring2{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:11px;color:#fff;font-weight:800}
+.rowact{color:var(--muted);cursor:pointer;font-weight:700}
+.rowact:hover{color:var(--brand-600)}
+/* empty state demo */
+.note{font-size:12px;color:#9aa89d;text-align:center;padding:16px}
+@media(max-width:760px){.app{grid-template-columns:1fr}.side{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div class="brand"><span class="mk">C</span> ConectCampo</div>
+    <div class="navgrp">
+      <div class="lbl">Principal</div>
+      <div class="navitem active"><span class="ic">▦</span> Visão Geral</div>
+      <div class="navitem"><span class="ic">◷</span> Operações <span class="badge">3</span></div>
+      <div class="navitem"><span class="ic">⤬</span> Matching</div>
+      <div class="navitem"><span class="ic">★</span> Score</div>
+    </div>
+    <div class="navgrp">
+      <div class="lbl">Crédito & ESG</div>
+      <div class="navitem"><span class="ic">▤</span> Propostas</div>
+      <div class="navitem"><span class="ic">🗎</span> Documentos</div>
+      <div class="navitem"><span class="ic">🌱</span> Carbono</div>
+    </div>
+    <div class="navgrp">
+      <div class="lbl">Conta</div>
+      <div class="navitem"><span class="ic">▤</span> Assinatura</div>
+      <div class="navitem"><span class="ic">⚙</span> Configurações</div>
+    </div>
+    <div class="foot">
+      <div class="av">JM</div>
+      <div><b>João M.</b><span>Plano Empresa</span></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="search">🔎 Buscar operações, documentos, parceiros…</div>
+      <div class="tb-actions">
+        <div class="iconbtn">🌓</div>
+        <div class="iconbtn">🔔<span class="nd"></span></div>
+        <div class="iconbtn">JM</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="pagehead">
+        <div>
+          <h1>Boa tarde, João! 👋</h1>
+          <p>Aqui está o resumo da sua operação — atualizado em tempo real.</p>
+        </div>
+        <div style="display:flex;gap:10px">
+          <a class="btn btn-ghost">Exportar</a>
+          <a class="btn btn-primary">+ Nova operação</a>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpis">
+        <div class="kpi">
+          <div class="top"><div class="ic">◷</div><span class="delta up">↑ 3</span></div>
+          <b>12</b><div class="lbl">Operações ativas</div>
+          <div class="spark"><i style="height:40%"></i><i style="height:55%"></i><i style="height:45%"></i><i style="height:70%"></i><i style="height:60%"></i><i style="height:85%"></i></div>
+        </div>
+        <div class="kpi">
+          <div class="top"><div class="ic">★</div><span class="delta up">↑ 18 pts</span></div>
+          <b>742</b><div class="lbl">Score ConectCampo</div>
+          <div class="spark"><i style="height:50%"></i><i style="height:52%"></i><i style="height:58%"></i><i style="height:64%"></i><i style="height:72%"></i><i style="height:80%"></i></div>
+        </div>
+        <div class="kpi">
+          <div class="top"><div class="ic">▤</div><span class="delta up">↑ 24%</span></div>
+          <b>R$ 8,4M</b><div class="lbl">Em propostas</div>
+          <div class="spark"><i style="height:30%"></i><i style="height:48%"></i><i style="height:55%"></i><i style="height:50%"></i><i style="height:78%"></i><i style="height:92%"></i></div>
+        </div>
+        <div class="kpi">
+          <div class="top"><div class="ic">⤬</div><span class="delta down">↓ 2</span></div>
+          <b>27</b><div class="lbl">Matches gerados</div>
+          <div class="spark"><i style="height:70%"></i><i style="height:65%"></i><i style="height:60%"></i><i style="height:55%"></i><i style="height:50%"></i><i style="height:45%"></i></div>
+        </div>
+      </div>
+
+      <!-- CHART + DONUT -->
+      <div class="grid2">
+        <div class="panel">
+          <div class="ph"><h3>Volume de operações · últimos 7 meses</h3><span class="lnk">Ver detalhes →</span></div>
+          <div class="pb">
+            <div class="chart">
+              <div class="col"><div class="bar" style="height:90px"></div><span>Dez</span></div>
+              <div class="col"><div class="bar" style="height:120px"></div><span>Jan</span></div>
+              <div class="col"><div class="bar" style="height:100px"></div><span>Fev</span></div>
+              <div class="col"><div class="bar" style="height:150px"></div><span>Mar</span></div>
+              <div class="col"><div class="bar" style="height:130px"></div><span>Abr</span></div>
+              <div class="col"><div class="bar" style="height:175px"></div><span>Mai</span></div>
+              <div class="col"><div class="bar" style="height:160px"></div><span>Jun</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="ph"><h3>Status do portfólio</h3></div>
+          <div class="pb">
+            <div class="ring"><div class="inner"><div><b>12</b><span>operações</span></div></div></div>
+            <div class="leg">
+              <div class="it"><span class="d" style="background:var(--brand-600)"></span> Aprovadas <b>5</b></div>
+              <div class="it"><span class="d" style="background:var(--brand-400)"></span> Em análise <b>3</b></div>
+              <div class="it"><span class="d" style="background:var(--gold)"></span> Match enviado <b>3</b></div>
+              <div class="it"><span class="d" style="background:#d4ddd6"></span> Rascunho <b>1</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="panel">
+        <div class="ph">
+          <h3>Suas operações</h3>
+          <div class="toolbar">
+            <span class="fchip active">Todas</span>
+            <span class="fchip">Aprovadas</span>
+            <span class="fchip">Em análise</span>
+            <span class="fchip">Match</span>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>ID ⇅</th><th>Tipo</th><th>Valor ⇅</th><th>Prazo</th><th>Score</th><th>Status</th><th>Propostas</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>#OP-1042</td><td>Custeio</td><td><b>R$ 1.200.000</b></td><td>24m</td><td><span class="score"><span class="ring2" style="background:var(--brand-600)">A</span> 782</span></td><td><span class="badge b-approved">Aprovada</span></td><td>4</td><td><span class="rowact">⋯</span></td></tr>
+            <tr><td>#OP-1039</td><td>Investimento</td><td><b>R$ 3.500.000</b></td><td>48m</td><td><span class="score"><span class="ring2" style="background:var(--brand-500)">A</span> 741</span></td><td><span class="badge b-match">Match enviado</span></td><td>6</td><td><span class="rowact">⋯</span></td></tr>
+            <tr><td>#OP-1035</td><td>CPR Financeira</td><td><b>R$ 850.000</b></td><td>12m</td><td><span class="score"><span class="ring2" style="background:var(--gold)">B</span> 668</span></td><td><span class="badge b-analysis">Em análise</span></td><td>2</td><td><span class="rowact">⋯</span></td></tr>
+            <tr><td>#OP-1031</td><td>Capital de giro</td><td><b>R$ 500.000</b></td><td>18m</td><td><span class="score"><span class="ring2" style="background:var(--brand-500)">A</span> 755</span></td><td><span class="badge b-approved">Aprovada</span></td><td>3</td><td><span class="rowact">⋯</span></td></tr>
+            <tr><td>#OP-1028</td><td>Investimento</td><td><b>R$ 12.000.000</b></td><td>60m</td><td><span class="score"><span class="ring2" style="background:var(--gold)">B</span> 690</span></td><td><span class="badge b-pending">Rascunho</span></td><td>—</td><td><span class="rowact">⋯</span></td></tr>
+          </tbody>
+        </table>
+        <div class="note">Dados ilustrativos — na implementação real, alimentados por <code>GET /operations</code>.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

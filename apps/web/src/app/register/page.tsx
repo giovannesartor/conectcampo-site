@@ -261,9 +261,9 @@ function RegisterForm() {
         <div className="mt-4 text-center">
           <Link
             href="/"
-            className="text-sm text-gray-500 hover:text-brand-600 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-brand-600 transition-colors"
           >
-            ← Voltar ao início
+            <ArrowLeft className="h-4 w-4" /> Voltar ao início
           </Link>
         </div>
       </div>
@@ -569,9 +569,9 @@ function RegisterForm() {
           <div className="mt-6 text-center">
             <Link
               href="/"
-              className="text-sm text-gray-500 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+              className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
             >
-              ← Voltar ao início
+              <ArrowLeft className="h-4 w-4" /> Voltar ao início
             </Link>
           </div>
         </div>

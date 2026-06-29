@@ -323,9 +323,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
                     data-tour={TOUR_ATTR[item.href]}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                    className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
                       isActive(item.href)
-                        ? 'bg-brand-50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-400'
+                        ? 'bg-gradient-to-r from-brand-50 to-transparent dark:from-brand-950/40 text-brand-700 dark:text-brand-400 shadow-[inset_3px_0_0_0_theme(colors.brand.600)]'
                         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                     }`}
                     title={collapsed ? item.label : undefined}

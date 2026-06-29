@@ -52,7 +52,7 @@ function ClockSVG() {
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pt-32 pb-0 sm:pt-40">
+    <section className="relative overflow-hidden pt-32 pb-0 sm:pt-40 mesh-glow">
       {/* ── Animated Agro Background ── */}
       <AgroBackground className="absolute inset-0 h-full w-full text-brand-600/10 dark:text-brand-400/10" />
 
@@ -88,11 +88,11 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-6xl lg:text-7xl"
+            className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-6xl lg:text-7xl [text-wrap:balance]"
           >
-            Crédito certo para o{' '}
-            <span className="bg-gradient-to-r from-brand-500 to-agro-gold bg-clip-text text-transparent">
-              agro crescer
+            O crédito que o agro merece —{' '}
+            <span className="text-gradient-brand">
+              sem burocracia, sem balcão.
             </span>
           </motion.h1>
 
@@ -101,11 +101,11 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400 sm:text-xl"
+            className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400 sm:text-xl [text-wrap:pretty]"
           >
-            Conectamos produtores rurais e empresas do agronegócio a bancos,
-            cooperativas, FIDCs, securitizadoras e o mercado de capitais.
-            Do pequeno ao grande produtor.
+            Conectamos sua operação a bancos, cooperativas, FIDCs, securitizadoras
+            e ao mercado de capitais. Pré-análise em 48h, 100% digital —
+            do pequeno ao grande produtor.
           </motion.p>
 
           {/* CTAs */}

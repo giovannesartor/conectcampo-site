@@ -147,8 +147,8 @@ export function DashboardStart() {
             <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Limite de operações atingido</p>
             <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">O plano START permite até 2 operações. Faça upgrade para operações ilimitadas.</p>
           </div>
-          <Link href="/dashboard/subscription" className="flex-shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition-colors">
-            Fazer Upgrade →
+          <Link href="/dashboard/subscription" className="flex-shrink-0 inline-flex items-center gap-1 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition-colors">
+            Fazer Upgrade <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       )}
@@ -269,7 +269,7 @@ export function DashboardStart() {
                 { href: '/dashboard/operations/new', icon: <Plus className="h-4 w-4 text-blue-600" />,    label: 'Solicitar Crédito',  bg: 'bg-blue-50 dark:bg-blue-950/30',   disabled: atLimit },
                 { href: '/dashboard/documents',      icon: <FileText className="h-4 w-4 text-green-600" />,  label: 'Enviar Documentos', bg: 'bg-green-50 dark:bg-green-950/30' },
                 { href: '/dashboard/scoring',        icon: <BarChart3 className="h-4 w-4 text-purple-600" />, label: 'Ver Meu Score',    bg: 'bg-purple-50 dark:bg-purple-950/30' },
-                { href: '/dashboard/subscription',   icon: <Zap className="h-4 w-4 text-amber-600" />,      label: 'Fazer Upgrade →',   bg: 'bg-amber-50 dark:bg-amber-950/30' },
+                { href: '/dashboard/subscription',   icon: <Zap className="h-4 w-4 text-amber-600" />,      label: 'Fazer Upgrade',   bg: 'bg-amber-50 dark:bg-amber-950/30' },
               ].map((a) => (
                 <Link key={a.label} href={a.disabled ? '#' : a.href} className={`flex items-center gap-3 p-2.5 rounded-lg transition-colors ${a.disabled ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
                   <div className={`h-8 w-8 rounded-lg ${a.bg} flex items-center justify-center`}>{a.icon}</div>

@@ -231,9 +231,9 @@ export default function CarbonProjectDetailPage() {
                 <button
                   key={s}
                   onClick={() => handleUpdateStatus(s)}
-                  className="btn-secondary text-xs"
+                  className="btn-secondary text-xs inline-flex items-center gap-1"
                 >
-                  → {STATUS_CONFIG[s]?.label ?? s}
+                  <ChevronRight className="h-3.5 w-3.5" /> {STATUS_CONFIG[s]?.label ?? s}
                 </button>
               ))}
             </div>
@@ -462,7 +462,7 @@ export default function CarbonProjectDetailPage() {
                           <div key={tx.id} className="flex items-center gap-2 text-xs text-gray-400 pl-2 border-l-2 border-gray-100 dark:border-dark-border">
                             <span className="font-medium text-gray-600 dark:text-gray-400">{TX_LABELS[tx.type] ?? tx.type}</span>
                             <span>{Number(tx.quantity).toFixed(2)} tCO₂e</span>
-                            {tx.buyerName && <span>→ {tx.buyerName}</span>}
+                            {tx.buyerName && <span>para {tx.buyerName}</span>}
                             {tx.totalValue && <span>{formatCurrency(Number(tx.totalValue))}</span>}
                           </div>
                         ))}

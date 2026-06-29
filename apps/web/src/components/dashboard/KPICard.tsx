@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 interface KPICardProps {
   title: string;
@@ -21,7 +22,7 @@ const colorMap = {
 
 export function KPICard({ title, value, subtitle, icon, trend, color = 'brand' }: KPICardProps) {
   return (
-    <div className="card hover:shadow-md transition-shadow">
+    <div className="card card-hover">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{title}</p>
@@ -30,8 +31,19 @@ export function KPICard({ title, value, subtitle, icon, trend, color = 'brand' }
             <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 truncate">{subtitle}</p>
           )}
           {trend && (
-            <div className={`mt-2 inline-flex items-center text-xs font-medium ${trend.value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value)}% {trend.label}
+            <div
+              className={`mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                trend.value >= 0
+                  ? 'bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400'
+                  : 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400'
+              }`}
+            >
+              {trend.value >= 0 ? (
+                <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : (
+                <ArrowDownRight className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              {Math.abs(trend.value)}% {trend.label}
             </div>
           )}
         </div>
