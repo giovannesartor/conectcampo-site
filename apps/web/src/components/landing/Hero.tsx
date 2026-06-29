@@ -42,7 +42,7 @@ export function Hero() {
               className="inline-flex items-center gap-2 rounded-full bg-brand-500/10 px-4 py-1.5 text-sm font-semibold text-brand-700 dark:text-brand-400 ring-1 ring-brand-500/20"
             >
               <Zap className="h-3.5 w-3.5" />
-              Marketplace de Crédito Agro #1 do Brasil
+              Marketplace de crédito agro multi-financiador
             </motion.div>
 
             <motion.h1
