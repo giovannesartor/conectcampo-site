@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ScoringService } from './scoring.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AiService } from '../../common/ai/ai.service';
 import { NotFoundException } from '@nestjs/common';
 import { RiskProfile } from '@prisma/client';
 
@@ -24,6 +25,7 @@ describe('ScoringService', () => {
       providers: [
         ScoringService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: AiService, useValue: { isEnabled: () => false, complete: jest.fn(), parseJson: () => null } },
       ],
     }).compile();
 

@@ -3,10 +3,12 @@ import { BullModule } from '@nestjs/bull';
 import { ScoringService } from './scoring.service';
 import { ScoringController } from './scoring.controller';
 import { ScoringProcessor } from './scoring.processor';
+import { AiModule } from '../../common/ai/ai.module';
 
 @Module({
   imports: [
     BullModule.registerQueue({ name: 'scoring' }),
+    AiModule,
   ],
   controllers: [ScoringController],
   providers: [ScoringService, ScoringProcessor],

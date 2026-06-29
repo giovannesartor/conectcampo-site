@@ -1,19 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { BarChart3, Info, RefreshCw, ChevronDown } from 'lucide-react';
+import { BarChart3, Info, RefreshCw, ChevronDown, Sparkles, Lightbulb, TrendingUp, Loader2, CheckCircle2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
 
-const SCORE_FACTORS = [
-  { key: 'revenueScore', label: 'Receita e Faturamento', weight: 20, description: 'Baseado na receita anual declarada' },
-  { key: 'guaranteesScore', label: 'Garantias', weight: 20, description: 'Avalia garantias como imóveis, safra, maquinário' },
-  { key: 'productionHistoryScore', label: 'Histórico de Produção', weight: 15, description: 'Anos de atividade e consistência' },
-  { key: 'debtRatioScore', label: 'Endividamento', weight: 15, description: 'Relação dívida/receita atual' },
-  { key: 'cashFlowScore', label: 'Fluxo de Caixa', weight: 15, description: 'Regularidade e projeção de caixa' },
-  { key: 'creditHistoryScore', label: 'Histórico de Crédito', weight: 10, description: 'Histórico com instituições financeiras' },
-  { key: 'insuranceScore', label: 'Seguros', weight: 5, description: 'Cobertura de seguro agrícola' },
-];
+interface ScoreFactor {
+  name: string;
+  weight: number;
+  value: number;
+  maxValue: number;
+  description: string;
+}
+
+interface ScoreExplanation {
+  source: 'ai' | 'rules';
+  score: number;
+  profile: string;
+  summary: string;
+  strengths: string[];
+  improvements: { factor: string; action: string; potentialGain: number }[];
+  disclaimer: string;
+}
 
 function ScoreGauge({ score, label }: { score: number; label: string }) {
   const getColor = (s: number) => {
@@ -50,12 +58,15 @@ export default function ScoringPage() {
   const [loading, setLoading] = useState(true);
   const [loadingScore, setLoadingScore] = useState(false);
   const [calculating, setCalculating] = useState(false);
+  const [explanation, setExplanation] = useState<ScoreExplanation | null>(null);
+  const [explaining, setExplaining] = useState(false);
 
   useEffect(() => {
     loadOperations();
   }, []);
 
   useEffect(() => {
+    setExplanation(null);
     if (selectedOpId) loadScoring(selectedOpId);
     else setScoring(null);
   }, [selectedOpId]);
@@ -99,7 +110,21 @@ export default function ScoringPage() {
     }
   }
 
-  const totalScore = scoring?.totalScore || 0;
+  async function handleExplain() {
+    if (!selectedOpId) return;
+    setExplaining(true);
+    try {
+      const { data } = await api.get(`/scoring/${selectedOpId}/explain`);
+      setExplanation(data);
+    } catch {
+      toast.error('Não foi possível gerar a análise agora. Tente novamente.');
+    } finally {
+      setExplaining(false);
+    }
+  }
+
+  const totalScore = scoring?.score ?? scoring?.totalScore ?? 0;
+  const factors: ScoreFactor[] = Array.isArray(scoring?.factors) ? scoring.factors : [];
 
   const getScoreCategory = (s: number) => {
     if (s >= 80) return { label: 'Excelente', color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-950/30' };
@@ -204,16 +229,108 @@ export default function ScoringPage() {
           <div className="card lg:col-span-2">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Detalhamento do Score</h3>
             <div className="space-y-4">
-              {SCORE_FACTORS.map((factor) => (
-                <div key={factor.key}>
-                  <ScoreGauge
-                    score={scoring[factor.key] || 0}
-                    label={`${factor.label} (${factor.weight}%)`}
-                  />
-                  <p className="text-xs text-gray-400 mt-0.5">{factor.description}</p>
-                </div>
-              ))}
+              {factors.length > 0 ? (
+                factors.map((factor) => (
+                  <div key={factor.name}>
+                    <ScoreGauge
+                      score={(factor.value / (factor.maxValue || 100)) * 100}
+                      label={`${factor.name} (${Math.round(factor.weight * 100)}%)`}
+                    />
+                    <p className="text-xs text-gray-400 mt-0.5">{factor.description}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Detalhamento indisponível para este score.
+                </p>
+              )}
             </div>
+          </div>
+
+          {/* AI explanation */}
+          <div className="card lg:col-span-3 relative overflow-hidden">
+            <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-brand-500/10 blur-3xl" />
+            <div className="relative flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex items-start gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400">
+                  <Sparkles className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Análise por IA</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Entenda seu score em linguagem natural e veja como melhorá-lo.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleExplain}
+                disabled={explaining}
+                className="btn-primary text-sm disabled:opacity-50"
+              >
+                {explaining ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Analisando…</>
+                ) : (
+                  <><Sparkles className="h-4 w-4" /> {explanation ? 'Gerar novamente' : 'Explicar meu score'}</>
+                )}
+              </button>
+            </div>
+
+            {explanation && (
+              <div className="relative mt-5 space-y-5">
+                <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                  {explanation.summary}
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {explanation.strengths.length > 0 && (
+                    <div className="rounded-xl border border-green-200 dark:border-green-900/40 bg-green-50/60 dark:bg-green-950/20 p-4">
+                      <div className="flex items-center gap-2 mb-2 text-green-700 dark:text-green-400">
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span className="text-sm font-semibold">Pontos fortes</span>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {explanation.strengths.map((s, i) => (
+                          <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex gap-2">
+                            <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-green-500" />
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {explanation.improvements.length > 0 && (
+                    <div className="rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/60 dark:bg-amber-950/20 p-4">
+                      <div className="flex items-center gap-2 mb-2 text-amber-700 dark:text-amber-400">
+                        <Lightbulb className="h-4 w-4" />
+                        <span className="text-sm font-semibold">Como melhorar</span>
+                      </div>
+                      <ul className="space-y-2.5">
+                        {explanation.improvements.map((imp, i) => (
+                          <li key={i} className="text-sm text-gray-700 dark:text-gray-300">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-medium">{imp.factor}</span>
+                              <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 dark:bg-brand-950/40 px-2 py-0.5 text-xs font-semibold text-brand-700 dark:text-brand-400">
+                                <TrendingUp className="h-3 w-3" /> +{imp.potentialGain} pts
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{imp.action}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+                  <Info className="h-3 w-3 flex-shrink-0" />
+                  <span>
+                    {explanation.disclaimer}
+                    {explanation.source === 'rules' && ' (análise determinística — configure a IA para insights ainda mais personalizados)'}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Tips */}

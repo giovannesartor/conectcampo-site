@@ -1,6 +1,25 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RiskProfile, PartnerType, OperationStatus } from '@prisma/client';
+import { AiService } from '../../common/ai/ai.service';
+
+interface ScoreFactor {
+  name: string;
+  weight: number;
+  value: number;
+  maxValue: number;
+  description: string;
+}
+
+export interface ScoreExplanation {
+  source: 'ai' | 'rules';
+  score: number;
+  profile: string;
+  summary: string;
+  strengths: string[];
+  improvements: { factor: string; action: string; potentialGain: number }[];
+  disclaimer: string;
+}
 
 const SCORE_WEIGHTS = {
   annualRevenue: 0.20,
@@ -16,7 +35,10 @@ const SCORE_WEIGHTS = {
 export class ScoringService {
   private readonly logger = new Logger(ScoringService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly ai: AiService,
+  ) {}
 
   /**
    * Calcula o risk score para uma operação
@@ -231,5 +253,153 @@ export class ScoringService {
     });
 
     return eligibility;
+  }
+
+  // ── Explicação do score por IA (com fallback determinístico) ──────────────
+
+  async explainScore(operationId: string): Promise<ScoreExplanation> {
+    const riskScore = await this.prisma.riskScore.findUnique({
+      where: { operationId },
+    });
+    if (!riskScore) {
+      throw new NotFoundException('Score não calculado para esta operação.');
+    }
+
+    const factors = (riskScore.factors as unknown as ScoreFactor[]) ?? [];
+    const score = riskScore.score;
+    const profile = String(riskScore.profile);
+
+    // 1) Tenta IA real (se ANTHROPIC_API_KEY estiver setado)
+    if (this.ai.isEnabled()) {
+      const ai = await this.requestAiExplanation(score, profile, factors);
+      if (ai) return ai;
+    }
+
+    // 2) Fallback determinístico em regras (sempre funciona)
+    return this.buildRuleBasedExplanation(score, profile, factors);
+  }
+
+  private async requestAiExplanation(
+    score: number,
+    profile: string,
+    factors: ScoreFactor[],
+  ): Promise<ScoreExplanation | null> {
+    const system =
+      'Você é um analista de crédito rural sênior da ConectCampo. ' +
+      'Explique o score de crédito de um produtor em português do Brasil, de forma clara, ' +
+      'objetiva e acionável, sem jargão financeiro excessivo. Nunca prometa aprovação. ' +
+      'Responda SOMENTE com um objeto JSON válido, sem texto fora dele.';
+
+    const factorsText = factors
+      .map(
+        (f) =>
+          `- ${f.name}: ${Math.round(f.value)}/${f.maxValue} (peso ${Math.round(
+            f.weight * 100,
+          )}%) — ${f.description}`,
+      )
+      .join('\n');
+
+    const prompt = `Score total: ${score}/100 (perfil de risco: ${profile}).
+Fatores avaliados:
+${factorsText}
+
+Gere um JSON com este formato exato:
+{
+  "summary": "2 a 3 frases explicando o que esse score significa para o produtor e como os financiadores tendem a enxergá-lo",
+  "strengths": ["ponto forte 1", "ponto forte 2"],
+  "improvements": [
+    {"factor": "nome do fator", "action": "ação concreta para melhorar", "potentialGain": número estimado de pontos no score (1 a 25)}
+  ]
+}
+Foque as melhorias nos fatores com menor pontuação e maior peso. Máximo 4 melhorias.`;
+
+    const raw = await this.ai.complete({ system, prompt, maxTokens: 800 });
+    const parsed = this.ai.parseJson<{
+      summary?: string;
+      strengths?: string[];
+      improvements?: { factor?: string; action?: string; potentialGain?: number }[];
+    }>(raw);
+
+    if (!parsed || !parsed.summary) return null;
+
+    return {
+      source: 'ai',
+      score,
+      profile,
+      summary: parsed.summary,
+      strengths: Array.isArray(parsed.strengths) ? parsed.strengths.slice(0, 5) : [],
+      improvements: Array.isArray(parsed.improvements)
+        ? parsed.improvements.slice(0, 4).map((i) => ({
+            factor: i.factor ?? 'Fator',
+            action: i.action ?? '',
+            potentialGain: Math.max(1, Math.min(25, Math.round(i.potentialGain ?? 5))),
+          }))
+        : [],
+      disclaimer:
+        'Análise gerada por IA com base nos dados informados. Não constitui promessa de aprovação; cada instituição financeira aplica seus próprios critérios.',
+    };
+  }
+
+  private buildRuleBasedExplanation(
+    score: number,
+    profile: string,
+    factors: ScoreFactor[],
+  ): ScoreExplanation {
+    const category =
+      score >= 80 ? 'excelente' : score >= 60 ? 'bom' : score >= 40 ? 'regular' : 'baixo';
+
+    const sorted = [...factors].sort((a, b) => a.value / a.maxValue - b.value / b.maxValue);
+    const weak = sorted.filter((f) => f.value / f.maxValue < 0.6);
+    const strong = [...factors]
+      .filter((f) => f.value / f.maxValue >= 0.7)
+      .sort((a, b) => b.value / b.maxValue - a.value / a.maxValue);
+
+    const summary =
+      `Seu score é ${score}/100, considerado ${category} (perfil ${profile}). ` +
+      (score >= 60
+        ? 'Isso amplia seu acesso a bancos e fundos com melhores condições. '
+        : 'Há espaço claro de melhoria para destravar condições mais competitivas. ') +
+      (weak.length > 0
+        ? `O maior ganho potencial está em: ${weak
+            .slice(0, 2)
+            .map((f) => f.name.toLowerCase())
+            .join(' e ')}.`
+        : 'Os fatores estão bem equilibrados — mantenha a consistência.');
+
+    const strengths =
+      strong.length > 0
+        ? strong.slice(0, 3).map((f) => `${f.name}: ${f.description}`)
+        : ['Cadastro iniciado — complete os dados para fortalecer seu perfil.'];
+
+    const ACTIONS: Record<string, string> = {
+      'Receita Anual': 'Comprove receita com notas fiscais e contratos de venda recorrentes.',
+      Garantias: 'Aumente a cobertura de garantias (imóvel, safra, maquinário) frente ao valor pedido.',
+      'Histórico Produtivo': 'Registre safras anteriores e produtividade para evidenciar consistência.',
+      Endividamento: 'Reduza a relação dívida/receita quitando ou renegociando passivos.',
+      'Fluxo de Caixa': 'Anexe extratos e projeções que mostrem caixa regular e suficiente.',
+      'Histórico de Crédito': 'Regularize restrições e mantenha pagamentos em dia.',
+      Seguro: 'Contrate seguro rural — demonstra gestão de risco e melhora o rating.',
+    };
+
+    const improvements = weak.slice(0, 4).map((f) => {
+      const gapRatio = 1 - f.value / f.maxValue;
+      const potentialGain = Math.max(1, Math.round(gapRatio * f.weight * 100));
+      return {
+        factor: f.name,
+        action: ACTIONS[f.name] ?? `Melhore o fator "${f.name}" para elevar seu score.`,
+        potentialGain,
+      };
+    });
+
+    return {
+      source: 'rules',
+      score,
+      profile,
+      summary,
+      strengths,
+      improvements,
+      disclaimer:
+        'Análise automática baseada nos seus fatores de score. Não constitui promessa de aprovação; cada instituição financeira aplica seus próprios critérios.',
+    };
   }
 }

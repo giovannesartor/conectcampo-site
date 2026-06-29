@@ -24,4 +24,11 @@ export class ScoringController {
   async getScore(@Param('operationId') operationId: string) {
     return this.scoringService.getScoreByOperation(operationId);
   }
+
+  @Get(':operationId/explain')
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN, UserRole.CREDIT_ANALYST)
+  @ApiOperation({ summary: 'Explicação do score por IA (com fallback em regras)' })
+  async explainScore(@Param('operationId') operationId: string) {
+    return this.scoringService.explainScore(operationId);
+  }
 }
