@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   ScrollText,
   Plus,
@@ -65,12 +65,13 @@ interface CreateCprForm {
   produto: string;
   quantidade: string;
   unidade: string;
-  safraAno: string;
   precoUnitario: string;
   localEntrega: string;
   dataEntrega: string;
   dataVencimento: string;
-  prazoMeses: string;
+  prazoAnos: string;
+  carenciaAnos: string;
+  safras: string[];
   garantiaTipo: string;
   garantiaDescricao: string;
   garantiaValor: string;
@@ -100,9 +101,9 @@ const EMPTY_FORM: CreateCprForm = {
   type: 'FINANCEIRA',
   emitenteNome: '', emitenteCpfCnpj: '', emitenteCidade: '', emitenteEstado: '', emitenteCarNumero: '',
   credorNome: '', credorCpfCnpj: '', credorTipo: '',
-  produto: '', quantidade: '', unidade: 'sacas', safraAno: '', precoUnitario: '',
+  produto: '', quantidade: '', unidade: 'sacas', precoUnitario: '',
   localEntrega: '', dataEntrega: '',
-  dataVencimento: '', prazoMeses: '',
+  dataVencimento: '', prazoAnos: '', carenciaAnos: '', safras: [],
   garantiaTipo: '', garantiaDescricao: '', garantiaValor: '',
   finalidade: '', valorCaptacao: '',
   observacoes: '',
@@ -157,12 +158,13 @@ export default function CprPage() {
         produto: form.produto,
         quantidade: parseFloat(form.quantidade),
         unidade: form.unidade,
-        safraAno: form.safraAno || undefined,
+        safraAno: form.safras.length ? form.safras.join(', ') : undefined,
         precoUnitario: form.precoUnitario ? parseFloat(form.precoUnitario) : undefined,
         localEntrega: form.localEntrega || undefined,
         dataEntrega: form.dataEntrega || undefined,
         dataVencimento: form.dataVencimento,
-        prazoMeses: form.prazoMeses ? parseInt(form.prazoMeses) : undefined,
+        prazoMeses: form.prazoAnos ? parseInt(form.prazoAnos) * 12 : undefined,
+        carenciaMeses: form.carenciaAnos ? parseInt(form.carenciaAnos) * 12 : undefined,
         garantiaTipo: form.garantiaTipo || undefined,
         garantiaDescricao: form.garantiaDescricao || undefined,
         garantiaValor: form.garantiaValor ? parseFloat(form.garantiaValor) : undefined,
@@ -203,9 +205,43 @@ export default function CprPage() {
     }
   };
 
-  const f = (v: unknown) => form[v as keyof CreateCprForm];
   const set = (k: keyof CreateCprForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm(prev => ({ ...prev, [k]: e.target.value }));
+
+  // ─── Prazo / Safras / Carência ──────────────────────────────────────────────
+  const prazoAnosNum = form.prazoAnos ? parseInt(form.prazoAnos) : 0;
+  const carenciaMaxAnos = prazoAnosNum > 0 ? Math.min(5, prazoAnosNum) : 5;
+
+  // Safras candidatas: ano-safra corrente + próximos 15 anos
+  const SAFRA_OPTIONS = useMemo(() => {
+    const base = new Date().getFullYear();
+    return Array.from({ length: 16 }, (_, i) => `${base + i}/${base + i + 1}`);
+  }, []);
+
+  const onPrazoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const anos = e.target.value;
+    const n = anos ? parseInt(anos) : 0;
+    setForm(prev => ({
+      ...prev,
+      prazoAnos: anos,
+      // mantém no máximo `n` safras selecionadas
+      safras: n > 0 ? prev.safras.slice(0, n) : prev.safras,
+      // carência não pode exceder o prazo (máx. 5 anos)
+      carenciaAnos:
+        prev.carenciaAnos && parseInt(prev.carenciaAnos) > Math.min(5, n || 5)
+          ? String(Math.min(5, n || 5))
+          : prev.carenciaAnos,
+    }));
+  };
+
+  const toggleSafra = (s: string) =>
+    setForm(prev => {
+      if (prev.safras.includes(s)) {
+        return { ...prev, safras: prev.safras.filter(x => x !== s) };
+      }
+      if (prazoAnosNum > 0 && prev.safras.length >= prazoAnosNum) return prev; // respeita o limite do prazo
+      return { ...prev, safras: [...prev.safras, s].sort() };
+    });
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
@@ -406,8 +442,8 @@ export default function CprPage() {
                 <div className="mt-3">
                   <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Tipo de CPR</label>
                   <select value={form.type} onChange={set('type')} className={inputClass}>
-                    <option value="FINANCEIRA">Financeira (liquidação em dinheiro)</option>
-                    <option value="FISICA">Física (entrega do produto)</option>
+                    <option value="FINANCEIRA">CPR Financeira (liquidação em dinheiro)</option>
+                    <option value="FISICA">CPR Física (entrega do produto)</option>
                   </select>
                 </div>
               </section>
@@ -471,7 +507,6 @@ export default function CprPage() {
                       ))}
                     </select>
                   </div>
-                  <Field label="Safra" value={form.safraAno} onChange={set('safraAno')} placeholder="2025/2026" />
                   <Field label="Quantidade *" value={form.quantidade} onChange={set('quantidade')} required type="number" placeholder="0" />
                   <div>
                     <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Unidade *</label>
@@ -491,12 +526,70 @@ export default function CprPage() {
 
               <Divider />
 
-              {/* Vencimento */}
+              {/* Vencimento / Prazo / Carência / Safras */}
               <section>
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Vencimento</h3>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Prazo & Safras</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Data de vencimento *" value={form.dataVencimento} onChange={set('dataVencimento')} required type="date" />
-                  <Field label="Prazo (meses)" value={form.prazoMeses} onChange={set('prazoMeses')} type="number" placeholder="12" />
+                  <div>
+                    <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Prazo (até 15 anos)</label>
+                    <select value={form.prazoAnos} onChange={onPrazoChange} className={inputClass}>
+                      <option value="">Selecione...</option>
+                      {Array.from({ length: 15 }, (_, i) => i + 1).map(a => (
+                        <option key={a} value={a}>{a} {a === 1 ? 'ano' : 'anos'}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                      Carência (máx. {carenciaMaxAnos} {carenciaMaxAnos === 1 ? 'ano' : 'anos'})
+                    </label>
+                    <select value={form.carenciaAnos} onChange={set('carenciaAnos')} className={inputClass}>
+                      <option value="">Sem carência</option>
+                      {Array.from({ length: carenciaMaxAnos }, (_, i) => i + 1).map(a => (
+                        <option key={a} value={a}>{a} {a === 1 ? 'ano' : 'anos'}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Safras conforme o prazo */}
+                <div className="mt-3">
+                  <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1.5">
+                    Safras
+                    {prazoAnosNum > 0
+                      ? <span className="text-gray-400"> — selecione {prazoAnosNum} ({form.safras.length}/{prazoAnosNum})</span>
+                      : <span className="text-gray-400"> — selecione o prazo primeiro</span>}
+                  </label>
+                  {prazoAnosNum === 0 ? (
+                    <p className="text-xs text-gray-400 dark:text-gray-500 italic">
+                      Escolha o prazo acima para liberar a seleção de safras.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {SAFRA_OPTIONS.map(s => {
+                        const active = form.safras.includes(s);
+                        const full = !active && form.safras.length >= prazoAnosNum;
+                        return (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => toggleSafra(s)}
+                            disabled={full}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                              active
+                                ? 'bg-emerald-600 text-white border-emerald-600'
+                                : full
+                                  ? 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                                  : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-emerald-400'
+                            }`}
+                          >
+                            {s}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </section>
 
@@ -552,11 +645,28 @@ export default function CprPage() {
                 />
               </div>
 
-              {/* Fee info */}
-              {form.precoUnitario && form.quantidade && (
+              {/* Custo de emissão — CPR Física (pagamento único) */}
+              {form.purpose === 'EMISSAO' && form.type === 'FISICA' && (
                 <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3 text-sm">
-                  <p className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1.5"><DollarSign className="h-4 w-4" /> Valor estimado</p>
+                  <p className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1.5"><DollarSign className="h-4 w-4" /> Custo de emissão da CPR Física</p>
                   <p className="text-emerald-600 dark:text-emerald-500 mt-1">
+                    <strong>{formatCurrency(2500)}</strong> · pagamento único
+                  </p>
+                </div>
+              )}
+
+              {/* Emissão Financeira — custo a definir */}
+              {form.purpose === 'EMISSAO' && form.type === 'FINANCEIRA' && (
+                <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-sm">
+                  <p className="text-gray-600 dark:text-gray-300 flex items-center gap-1.5"><DollarSign className="h-4 w-4" /> Custo da emissão financeira: <strong>a definir</strong></p>
+                </div>
+              )}
+
+              {/* Captação — Fee ConectCampo 6% */}
+              {form.purpose === 'CAPTACAO' && form.precoUnitario && form.quantidade && (
+                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm">
+                  <p className="text-amber-700 dark:text-amber-400 font-medium flex items-center gap-1.5"><DollarSign className="h-4 w-4" /> Valor estimado</p>
+                  <p className="text-amber-600 dark:text-amber-500 mt-1">
                     Total: <strong>{formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario))}</strong>
                     {' '}· Fee ConectCampo (6%): <strong>{formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario) * 0.06)}</strong>
                   </p>

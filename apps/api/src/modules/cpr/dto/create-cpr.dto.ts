@@ -126,11 +126,17 @@ export class CreateCprDto {
   @IsDateString()
   dataVencimento: string;
 
-  @ApiPropertyOptional({ description: 'Prazo em meses' })
+  @ApiPropertyOptional({ description: 'Prazo em meses (até 180 = 15 anos)' })
   @IsOptional()
   @IsNumber()
   @Type(() => Number)
   prazoMeses?: number;
+
+  @ApiPropertyOptional({ description: 'Carência em meses (até 60 = 5 anos)' })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  carenciaMeses?: number;
 
   // ─── Garantia ────────────────────────────────────────────────────────────────
 

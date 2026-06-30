@@ -1058,6 +1058,7 @@ model CprDocument {
   // Vencimento
   dataVencimento      DateTime
   prazoMeses          Int?
+  carenciaMeses       Int?        // carência (máx. 60 meses / 5 anos)
 
   // Garantia adicional (para captação)
   garantiaTipo        String?     // imovel, penhor safra, aval, etc.
@@ -1077,9 +1078,12 @@ model CprDocument {
   pdfKey              String?     // S3 key
   pdfUrl              String?
 
-  // ConectCampo fee (6% sobre valor total)
+  // ConectCampo fee (6% sobre valor total — aplicado apenas na Captação)
   conectcampoFeeRate  Decimal     @db.Decimal(5, 4)   @default(0.06)
   conectcampoFeeValue Decimal?    @db.Decimal(15, 2)
+
+  // Custo de emissão (pagamento único). CPR Física = R$ 2.500
+  custoEmissao        Decimal?    @db.Decimal(15, 2)
 
   observacoes         String?
 

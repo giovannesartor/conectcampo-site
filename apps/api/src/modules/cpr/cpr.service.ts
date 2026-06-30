@@ -10,7 +10,8 @@ import { CreateCprDto } from './dto/create-cpr.dto';
 import { UpdateCprDto } from './dto/update-cpr.dto';
 import { UserRole } from '@prisma/client';
 
-const CONECTCAMPO_FEE_RATE = 0.06; // 6%
+const CONECTCAMPO_FEE_RATE = 0.06; // 6% — aplicado apenas na Captação
+const CUSTO_EMISSAO_CPR_FISICA = 2500; // R$ 2.500 (pagamento único) na emissão de CPR Física
 
 @Injectable()
 export class CprService {
@@ -50,8 +51,16 @@ export class CprService {
         ? dto.quantidade * dto.precoUnitario
         : null;
 
+    const isEmissao = dto.purpose === 'EMISSAO';
+    const isFisica = (dto.type ?? 'FINANCEIRA') === 'FISICA';
+
+    // Fee de 6% aplica-se apenas na Captação de Crédito.
     const conectcampoFeeValue =
-      valorTotal != null ? valorTotal * CONECTCAMPO_FEE_RATE : null;
+      !isEmissao && valorTotal != null ? valorTotal * CONECTCAMPO_FEE_RATE : null;
+
+    // Custo de emissão (pagamento único): CPR Física = R$ 2.500.
+    // CPR Financeira: a definir (sem custo fixo por enquanto).
+    const custoEmissao = isEmissao && isFisica ? CUSTO_EMISSAO_CPR_FISICA : null;
 
     const cpr = await this.prisma.cprDocument.create({
       data: {
@@ -87,6 +96,7 @@ export class CprService {
         // Vencimento
         dataVencimento: new Date(dto.dataVencimento),
         prazoMeses: dto.prazoMeses,
+        carenciaMeses: dto.carenciaMeses,
 
         // Garantia
         garantiaTipo: dto.garantiaTipo,
@@ -97,9 +107,10 @@ export class CprService {
         finalidade: dto.finalidade,
         valorCaptacao: dto.valorCaptacao,
 
-        // ConectCampo fee
+        // ConectCampo fee (6% — só Captação) e custo de emissão (R$2.500 — CPR Física)
         conectcampoFeeRate: CONECTCAMPO_FEE_RATE,
         conectcampoFeeValue,
+        custoEmissao,
 
         observacoes: dto.observacoes,
       },
