@@ -353,6 +353,29 @@ export class CprService {
     };
   }
 
+  /** Retorna o link do PDF assinado (busca link fresco na ZapSign, que expira em 60min). */
+  async getSignedFileUrl(cprId: string, userId: string, role: string) {
+    const cpr = await this.assertOwner(cprId, userId, role);
+
+    if (cpr.signatureProvider === 'zapsign' && cpr.zapsignDocToken) {
+      const doc = await this.zapsign.getDocument(cpr.zapsignDocToken);
+      if (doc?.signedFile) {
+        // Atualiza o cache do link (mesmo expirando, registra o último conhecido)
+        await this.prisma.cprDocument.update({
+          where: { id: cpr.id },
+          data: { signedFileUrl: doc.signedFile },
+        });
+        return { url: doc.signedFile, status: doc.status ?? cpr.signatureStatus };
+      }
+    }
+
+    if (cpr.signedFileUrl) {
+      return { url: cpr.signedFileUrl, status: cpr.signatureStatus };
+    }
+
+    throw new BadRequestException('PDF assinado ainda não disponível para esta CPR.');
+  }
+
   /** Webhook da ZapSign (evento doc_signed). */
   async handleZapSignWebhook(payload: any) {
     if (!payload || payload.event_type !== 'doc_signed') {

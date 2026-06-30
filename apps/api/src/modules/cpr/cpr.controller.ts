@@ -158,6 +158,17 @@ export class CprController {
     return this.service.getSignatureStatus(id, userId, role);
   }
 
+  @Get(':id/signed-file')
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Link do PDF assinado da CPR' })
+  async signedFile(
+    @Param('id') id: string,
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    return this.service.getSignedFileUrl(id, userId, role);
+  }
+
   @Post(':id/register')
   @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
   @ApiOperation({ summary: 'Registrar CPR em cartório' })

@@ -106,4 +106,23 @@ export class ZapSignService {
       return null;
     }
   }
+
+  /**
+   * Detalha um documento na ZapSign para obter o link (temporário) do arquivo
+   * assinado mais recente. Retorna null em caso de falha.
+   */
+  async getDocument(docToken: string): Promise<{ status?: string; signedFile?: string } | null> {
+    if (!this.isEnabled() || !docToken) return null;
+    try {
+      const { data } = await axios.get(`${this.baseUrl}/docs/${docToken}/`, {
+        headers: { Authorization: `Bearer ${this.apiKey}` },
+        timeout: 20000,
+      });
+      return { status: data?.status, signedFile: data?.signed_file ?? undefined };
+    } catch (err) {
+      const e = err as { response?: { status?: number }; message?: string };
+      this.logger.warn(`ZapSign: falha ao detalhar documento (${e?.response?.status ?? e?.message})`);
+      return null;
+    }
+  }
 }

@@ -5,10 +5,12 @@ import {
   IsNumber,
   IsDateString,
   IsPositive,
+  IsEmail,
   MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { IsCpfOrCnpj } from '../../../common/validators/is-cpf-or-cnpj.validator';
 
 export enum CprPurpose {
   EMISSAO = 'EMISSAO',
@@ -42,6 +44,7 @@ export class CreateCprDto {
   @ApiProperty({ description: 'CPF ou CNPJ do emitente' })
   @IsString()
   @MaxLength(20)
+  @IsCpfOrCnpj({ message: 'CPF/CNPJ do emitente inválido' })
   emitenteCpfCnpj: string;
 
   @ApiPropertyOptional()
@@ -66,7 +69,7 @@ export class CreateCprDto {
 
   @ApiPropertyOptional({ description: 'E-mail do emitente (envio automático do link de assinatura)' })
   @IsOptional()
-  @IsString()
+  @IsEmail({}, { message: 'E-mail do emitente inválido' })
   emitenteEmail?: string;
 
   @ApiPropertyOptional({ description: 'Telefone do emitente (DDD + número)' })
@@ -84,6 +87,7 @@ export class CreateCprDto {
   @ApiProperty({ description: 'CPF ou CNPJ do credor' })
   @IsString()
   @MaxLength(20)
+  @IsCpfOrCnpj({ message: 'CPF/CNPJ do credor inválido' })
   credorCpfCnpj: string;
 
   @ApiPropertyOptional({ description: 'Tipo do credor: banco, cooperativa, pessoa_fisica, etc.' })
@@ -93,7 +97,7 @@ export class CreateCprDto {
 
   @ApiPropertyOptional({ description: 'E-mail do credor (envio automático do link de assinatura)' })
   @IsOptional()
-  @IsString()
+  @IsEmail({}, { message: 'E-mail do credor inválido' })
   credorEmail?: string;
 
   @ApiPropertyOptional({ description: 'Telefone do credor (DDD + número)' })

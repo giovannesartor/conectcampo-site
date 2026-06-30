@@ -133,6 +133,31 @@ const EMPTY_FORM: CreateCprForm = {
   observacoes: '',
 };
 
+// ─── Máscaras ─────────────────────────────────────────────────────────────────
+
+function maskCpfCnpj(v: string): string {
+  const d = v.replace(/\D/g, '').slice(0, 14);
+  if (d.length <= 11) {
+    return d
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  }
+  return d
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+}
+
+function maskPhone(v: string): string {
+  const d = v.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 10) {
+    return d.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d{1,4})$/, '$1-$2');
+  }
+  return d.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d{1,4})$/, '$1-$2');
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function CprPage() {
@@ -287,6 +312,16 @@ export default function CprPage() {
     }
   };
 
+  const downloadSigned = async (cprId: string) => {
+    try {
+      const { data } = await api.get(`/cpr/${cprId}/signed-file`);
+      if (data?.url) window.open(data.url, '_blank');
+      else alert('PDF assinado ainda não disponível.');
+    } catch {
+      alert('PDF assinado ainda não disponível.');
+    }
+  };
+
   const partyUrl = (party: SignatureParty) =>
     party.signUrl ||
     (party.token ? `${typeof window !== 'undefined' ? window.location.origin : ''}/cpr/assinar/${party.token}` : '');
@@ -301,6 +336,11 @@ export default function CprPage() {
 
   const set = (k: keyof CreateCprForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm(prev => ({ ...prev, [k]: e.target.value }));
+
+  // Setter com máscara (CPF/CNPJ, telefone)
+  const setMasked = (k: keyof CreateCprForm, mask: (v: string) => string) =>
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setForm(prev => ({ ...prev, [k]: mask(e.target.value) }));
 
   // ─── Prazo / Safras / Carência ──────────────────────────────────────────────
   const prazoAnosNum = form.prazoAnos ? parseInt(form.prazoAnos) : 0;
@@ -576,10 +616,10 @@ export default function CprPage() {
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Emitente (Produtor Rural)</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2"><Field label="Nome completo *" value={form.emitenteNome} onChange={set('emitenteNome')} required /></div>
-                  <Field label="CPF / CNPJ *" value={form.emitenteCpfCnpj} onChange={set('emitenteCpfCnpj')} required placeholder="000.000.000-00" />
+                  <Field label="CPF / CNPJ *" value={form.emitenteCpfCnpj} onChange={setMasked('emitenteCpfCnpj', maskCpfCnpj)} required placeholder="000.000.000-00" inputMode="numeric" />
                   <Field label="Número CAR" value={form.emitenteCarNumero} onChange={set('emitenteCarNumero')} placeholder="SP-XXXXXXX-XXXX..." />
                   <Field label="E-mail (p/ assinatura)" value={form.emitenteEmail} onChange={set('emitenteEmail')} type="email" placeholder="email@exemplo.com" />
-                  <Field label="Telefone / WhatsApp" value={form.emitenteTelefone} onChange={set('emitenteTelefone')} placeholder="(11) 99999-9999" />
+                  <Field label="Telefone / WhatsApp" value={form.emitenteTelefone} onChange={setMasked('emitenteTelefone', maskPhone)} placeholder="(11) 99999-9999" inputMode="tel" />
                   <Field label="Cidade" value={form.emitenteCidade} onChange={set('emitenteCidade')} />
                   <div>
                     <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Estado</label>
@@ -600,7 +640,7 @@ export default function CprPage() {
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Credor</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2"><Field label="Nome *" value={form.credorNome} onChange={set('credorNome')} required /></div>
-                  <Field label="CPF / CNPJ *" value={form.credorCpfCnpj} onChange={set('credorCpfCnpj')} required />
+                  <Field label="CPF / CNPJ *" value={form.credorCpfCnpj} onChange={setMasked('credorCpfCnpj', maskCpfCnpj)} required placeholder="00.000.000/0000-00" inputMode="numeric" />
                   <div>
                     <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Tipo</label>
                     <select value={form.credorTipo} onChange={set('credorTipo')} className={inputClass}>
@@ -898,8 +938,16 @@ export default function CprPage() {
               ))}
 
               {signModal.info.signatureStatus === 'ASSINADA' && (
-                <div className="rounded-xl bg-teal-50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800 p-3 text-sm text-teal-700 dark:text-teal-400 flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" /> CPR totalmente assinada.
+                <div className="rounded-xl bg-teal-50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800 p-3 text-sm text-teal-700 dark:text-teal-400">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4" /> CPR totalmente assinada.
+                  </div>
+                  <button
+                    onClick={() => downloadSigned(signModal.cpr.id)}
+                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white rounded-lg px-3 py-2"
+                  >
+                    <FileText className="h-3.5 w-3.5" /> Baixar PDF assinado
+                  </button>
                 </div>
               )}
 
@@ -937,7 +985,7 @@ const inputClass =
   'w-full text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-colors';
 
 function Field({
-  label, value, onChange, required, type = 'text', placeholder,
+  label, value, onChange, required, type = 'text', placeholder, inputMode,
 }: {
   label: string;
   value: string;
@@ -945,6 +993,7 @@ function Field({
   required?: boolean;
   type?: string;
   placeholder?: string;
+  inputMode?: 'text' | 'numeric' | 'tel' | 'email' | 'decimal' | 'search' | 'url' | 'none';
 }) {
   return (
     <div>
@@ -955,6 +1004,7 @@ function Field({
         onChange={onChange}
         required={required}
         placeholder={placeholder}
+        inputMode={inputMode}
         step={type === 'number' ? 'any' : undefined}
         className={inputClass}
       />
