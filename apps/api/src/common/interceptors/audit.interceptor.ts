@@ -35,7 +35,9 @@ export class AuditInterceptor implements NestInterceptor {
           if (!action || !userId) return; // só mutações de usuários autenticados
 
           const path: string = req.route?.path ?? req.originalUrl ?? req.url ?? '';
-          if (path.includes('/auth/')) return; // tratado explicitamente no AuthService
+          // Eventos de auth e ações admin (role/status) são registrados explicitamente
+          // (com diff) nos respectivos services — evita duplicidade.
+          if (path.includes('/auth/') || path.includes('/admin/')) return;
 
           // entidade = primeiro segmento significativo da rota
           const segments = String(req.originalUrl || path)

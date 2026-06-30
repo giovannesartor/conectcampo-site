@@ -10,12 +10,15 @@ import {
   Body,
   Header,
   Res,
+  Ip,
+  Headers,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '@prisma/client';
 import { AdminService } from './admin.service';
 
@@ -49,8 +52,13 @@ export class AdminController {
   @Patch('users/:id/toggle-active')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Ativar/desativar usuário' })
-  async toggleUserActive(@Param('id') id: string) {
-    return this.adminService.toggleUserActive(id);
+  async toggleUserActive(
+    @Param('id') id: string,
+    @CurrentUser('sub') actorId: string,
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent: string,
+  ) {
+    return this.adminService.toggleUserActive(id, { actorId, ip, userAgent });
   }
 
   @Patch('users/:id/role')
@@ -59,8 +67,11 @@ export class AdminController {
   async changeUserRole(
     @Param('id') id: string,
     @Body('role') role: UserRole,
+    @CurrentUser('sub') actorId: string,
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent: string,
   ) {
-    return this.adminService.changeUserRole(id, role);
+    return this.adminService.changeUserRole(id, role, { actorId, ip, userAgent });
   }
 
   // ─── Operations ─────────────────────────────────────────────────────

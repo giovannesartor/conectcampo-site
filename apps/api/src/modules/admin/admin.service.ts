@@ -3,6 +3,12 @@ import { UserRole, OperationStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService, AuditFilters } from '../audit/audit.service';
 
+export interface AdminActionMeta {
+  actorId?: string;
+  ip?: string;
+  userAgent?: string;
+}
+
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
@@ -158,7 +164,7 @@ export class AdminService {
     };
   }
 
-  async toggleUserActive(id: string) {
+  async toggleUserActive(id: string, meta?: AdminActionMeta) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('Usuário não encontrado');
 
@@ -168,17 +174,46 @@ export class AdminService {
       select: { id: true, name: true, isActive: true },
     });
 
+    void this.auditService.log({
+      userId: meta?.actorId ?? id,
+      action: 'STATUS_CHANGE',
+      entity: 'user',
+      entityId: id,
+      oldValue: { isActive: user.isActive },
+      newValue: { isActive: updated.isActive },
+      ipAddress: meta?.ip,
+      userAgent: meta?.userAgent,
+    });
+
     this.logger.log(`User ${updated.name} ${updated.isActive ? 'activated' : 'deactivated'}`);
     return updated;
   }
 
-  async changeUserRole(id: string, role: UserRole) {
+  async changeUserRole(id: string, role: UserRole, meta?: AdminActionMeta) {
+    const before = await this.prisma.user.findUnique({
+      where: { id },
+      select: { role: true },
+    });
+    if (!before) throw new NotFoundException('Usuário não encontrado');
+
     const updated = await this.prisma.user.update({
       where: { id },
       data: { role },
       select: { id: true, name: true, role: true },
     });
-    this.logger.log(`User ${updated.name} role changed to ${role}`);
+
+    void this.auditService.log({
+      userId: meta?.actorId ?? id,
+      action: 'ROLE_CHANGE',
+      entity: 'user',
+      entityId: id,
+      oldValue: { role: before.role },
+      newValue: { role: updated.role },
+      ipAddress: meta?.ip,
+      userAgent: meta?.userAgent,
+    });
+
+    this.logger.log(`User ${updated.name} role changed: ${before.role} -> ${role}`);
     return updated;
   }
 
