@@ -136,6 +136,28 @@ export class CprController {
     return this.service.emit(id, userId, role);
   }
 
+  @Post(':id/signature/request')
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Solicitar assinatura eletrônica (gera links de emitente e credor)' })
+  async requestSignature(
+    @Param('id') id: string,
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    return this.service.requestSignature(id, userId, role);
+  }
+
+  @Get(':id/signature')
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Status da assinatura da CPR' })
+  async signatureStatus(
+    @Param('id') id: string,
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    return this.service.getSignatureStatus(id, userId, role);
+  }
+
   @Post(':id/register')
   @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
   @ApiOperation({ summary: 'Registrar CPR em cartório' })

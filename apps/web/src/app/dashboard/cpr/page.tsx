@@ -14,6 +14,8 @@ import {
   X,
   Loader2,
   DollarSign,
+  PenLine,
+  Copy,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
@@ -48,7 +50,15 @@ interface CprItem {
   safraAno: string | null;
   pdfUrl: string | null;
   conectcampoFeeValue: number | null;
+  signatureStatus: string | null;
   createdAt: string;
+}
+
+interface SignatureInfo {
+  signatureStatus: string;
+  documentHash: string | null;
+  emitente: { nome: string; signedAt: string | null; token: string | null };
+  credor: { nome: string; signedAt: string | null; token: string | null };
 }
 
 interface CreateCprForm {
@@ -120,6 +130,8 @@ export default function CprPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [signModal, setSignModal] = useState<{ cpr: CprItem; info: SignatureInfo } | null>(null);
+  const [copied, setCopied] = useState<string>('');
 
   const load = async () => {
     try {
@@ -222,6 +234,50 @@ export default function CprPage() {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const openSignature = async (cpr: CprItem) => {
+    if (cpr.status === 'RASCUNHO') {
+      alert('Emita a CPR antes de solicitar assinaturas.');
+      return;
+    }
+    setActionLoading(cpr.id);
+    try {
+      if (!cpr.signatureStatus || cpr.signatureStatus === 'NAO_INICIADA') {
+        await api.post(`/cpr/${cpr.id}/signature/request`);
+      }
+      const { data } = await api.get<SignatureInfo>(`/cpr/${cpr.id}/signature`);
+      setSignModal({ cpr, info: data });
+      await load();
+    } catch {
+      alert('Não foi possível abrir a assinatura agora.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const resetSignature = async (cprId: string) => {
+    if (!confirm('Gerar novos links invalida as assinaturas já coletadas. Continuar?')) return;
+    setActionLoading(cprId);
+    try {
+      await api.post(`/cpr/${cprId}/signature/request`);
+      const { data } = await api.get<SignatureInfo>(`/cpr/${cprId}/signature`);
+      setSignModal(prev => (prev ? { ...prev, info: data } : prev));
+      await load();
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const signUrl = (token: string | null) =>
+    token ? `${typeof window !== 'undefined' ? window.location.origin : ''}/cpr/assinar/${token}` : '';
+
+  const copyLink = (token: string | null, who: string) => {
+    const url = signUrl(token);
+    if (!url) return;
+    navigator.clipboard?.writeText(url);
+    setCopied(who);
+    setTimeout(() => setCopied(''), 1800);
   };
 
   const set = (k: keyof CreateCprForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
@@ -386,6 +442,25 @@ export default function CprPage() {
                           >
                             <FileText className="h-3.5 w-3.5" /> Documento
                           </button>
+                          {cpr.status !== 'RASCUNHO' && (
+                            <button
+                              onClick={() => openSignature(cpr)}
+                              disabled={isLoading}
+                              className={`text-xs font-medium disabled:opacity-50 flex items-center gap-1 ${
+                                cpr.signatureStatus === 'ASSINADA'
+                                  ? 'text-teal-600 hover:text-teal-800 dark:text-teal-400'
+                                  : 'text-violet-600 hover:text-violet-800 dark:text-violet-400'
+                              }`}
+                              title="Assinatura eletrônica"
+                            >
+                              <PenLine className="h-3.5 w-3.5" />
+                              {cpr.signatureStatus === 'ASSINADA'
+                                ? 'Assinada'
+                                : cpr.signatureStatus === 'PARCIAL'
+                                  ? 'Assinar (1/2)'
+                                  : 'Assinar'}
+                            </button>
+                          )}
                           {cpr.status === 'RASCUNHO' && (
                             <button
                               onClick={() => handleEmit(cpr.id)}
@@ -726,6 +801,95 @@ export default function CprPage() {
               </div>
 
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de assinatura eletrônica */}
+      {signModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={() => setSignModal(null)}>
+          <div className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <PenLine className="h-5 w-5 text-violet-600" />
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Assinatura eletrônica</h2>
+              </div>
+              <button onClick={() => setSignModal(null)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Compartilhe cada link com a parte correspondente. Ao assinar, registramos data, IP e o
+                hash do documento como trilha de auditoria.
+              </p>
+
+              {([
+                { who: 'emitente', label: 'Emitente', party: signModal.info.emitente },
+                { who: 'credor', label: 'Credor', party: signModal.info.credor },
+              ] as const).map(({ who, label, party }) => (
+                <div key={who} className="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{label}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{party.nome}</p>
+                    </div>
+                    {party.signedAt ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 dark:text-teal-400">
+                        <CheckCircle2 className="h-4 w-4" /> Assinado em {new Date(party.signedAt).toLocaleDateString('pt-BR')}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                        <Clock className="h-4 w-4" /> Pendente
+                      </span>
+                    )}
+                  </div>
+                  {!party.signedAt && (
+                    <div className="flex items-center gap-2">
+                      <input
+                        readOnly
+                        value={signUrl(party.token)}
+                        className="flex-1 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-2 text-gray-600 dark:text-gray-300 truncate"
+                      />
+                      <button
+                        onClick={() => copyLink(party.token, who)}
+                        className="flex items-center gap-1 text-xs font-medium bg-violet-600 hover:bg-violet-700 text-white rounded-lg px-3 py-2"
+                      >
+                        <Copy className="h-3.5 w-3.5" /> {copied === who ? 'Copiado!' : 'Copiar'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {signModal.info.signatureStatus === 'ASSINADA' && (
+                <div className="rounded-xl bg-teal-50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800 p-3 text-sm text-teal-700 dark:text-teal-400 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" /> CPR totalmente assinada.
+                </div>
+              )}
+
+              {signModal.info.documentHash && (
+                <p className="text-[11px] text-gray-400 dark:text-gray-500 break-all">
+                  Hash SHA-256: {signModal.info.documentHash}
+                </p>
+              )}
+
+              <div className="flex justify-between items-center pt-1">
+                <button
+                  onClick={() => resetSignature(signModal.cpr.id)}
+                  className="text-xs text-gray-500 hover:text-red-600"
+                >
+                  Gerar novos links
+                </button>
+                <button
+                  onClick={() => setSignModal(null)}
+                  className="text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

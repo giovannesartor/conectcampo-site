@@ -1085,6 +1085,19 @@ model CprDocument {
   // Custo de emissão (pagamento único). CPR Física = R$ 2.500
   custoEmissao        Decimal?    @db.Decimal(15, 2)
 
+  // Assinatura eletrônica (simples, com trilha de auditoria)
+  signatureStatus     String?     @default("NAO_INICIADA") // NAO_INICIADA | PENDENTE | PARCIAL | ASSINADA
+  signatureProvider   String?     // interno | clicksign | d4sign
+  documentHash        String?     // SHA-256 do snapshot assinado
+  signedSnapshot      String?     // HTML imutável capturado no momento da solicitação
+  signedAt            DateTime?   // quando totalmente assinada
+  emitenteSignToken   String?     @unique
+  emitenteSignedAt    DateTime?
+  emitenteSignIp      String?
+  credorSignToken     String?     @unique
+  credorSignedAt      DateTime?
+  credorSignIp        String?
+
   observacoes         String?
 
   deletedAt           DateTime?

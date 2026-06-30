@@ -5,6 +5,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { createHash, randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCprDto } from './dto/create-cpr.dto';
 import { UpdateCprDto } from './dto/update-cpr.dto';
@@ -120,6 +121,165 @@ export class CprService {
     return cpr;
   }
 
+  // ─── Assinatura eletrônica (simples, com trilha de auditoria) ────────────────
+
+  /**
+   * Solicita assinatura: captura um snapshot imutável da minuta, calcula o hash
+   * SHA-256 e gera tokens de assinatura para emitente e credor.
+   */
+  async requestSignature(cprId: string, userId: string, role: string) {
+    const cpr = await this.assertOwner(cprId, userId, role);
+
+    if (cpr.status === 'RASCUNHO') {
+      throw new BadRequestException('Emita a CPR antes de solicitar assinaturas.');
+    }
+    if (cpr.signatureStatus === 'ASSINADA') {
+      throw new BadRequestException('Esta CPR já está totalmente assinada.');
+    }
+
+    const snapshot = this.renderCprHtml(cpr);
+    const documentHash = createHash('sha256').update(snapshot).digest('hex');
+    const emitenteSignToken = cpr.emitenteSignToken ?? randomUUID();
+    const credorSignToken = cpr.credorSignToken ?? randomUUID();
+
+    const updated = await this.prisma.cprDocument.update({
+      where: { id: cprId },
+      data: {
+        signatureProvider: 'interno',
+        signatureStatus: 'PENDENTE',
+        signedSnapshot: snapshot,
+        documentHash,
+        emitenteSignToken,
+        credorSignToken,
+        // zera assinaturas anteriores (novo snapshot)
+        emitenteSignedAt: null,
+        emitenteSignIp: null,
+        credorSignedAt: null,
+        credorSignIp: null,
+        signedAt: null,
+      },
+    });
+
+    this.logger.log(`Assinatura solicitada para CPR ${cprId} (hash ${documentHash.slice(0, 12)}…)`);
+
+    return {
+      signatureStatus: updated.signatureStatus,
+      documentHash,
+      emitenteSignToken,
+      credorSignToken,
+    };
+  }
+
+  /** Status de assinatura (para o dono acompanhar). */
+  async getSignatureStatus(cprId: string, userId: string, role: string) {
+    const cpr = await this.assertOwner(cprId, userId, role);
+    return {
+      signatureStatus: cpr.signatureStatus ?? 'NAO_INICIADA',
+      documentHash: cpr.documentHash,
+      emitente: {
+        nome: cpr.emitenteNome,
+        signedAt: cpr.emitenteSignedAt,
+        token: cpr.emitenteSignToken,
+      },
+      credor: {
+        nome: cpr.credorNome,
+        signedAt: cpr.credorSignedAt,
+        token: cpr.credorSignToken,
+      },
+    };
+  }
+
+  /** View pública da assinatura (acesso por token, sem login). */
+  async getSignView(token: string) {
+    const cpr = await this.findBySignToken(token);
+    const party = cpr.emitenteSignToken === token ? 'emitente' : 'credor';
+    const signedAt = party === 'emitente' ? cpr.emitenteSignedAt : cpr.credorSignedAt;
+
+    return {
+      party,
+      partyName: party === 'emitente' ? cpr.emitenteNome : cpr.credorNome,
+      counterpartyName: party === 'emitente' ? cpr.credorNome : cpr.emitenteNome,
+      numeroCpr: cpr.numeroCpr,
+      signatureStatus: cpr.signatureStatus ?? 'NAO_INICIADA',
+      documentHash: cpr.documentHash,
+      alreadySigned: !!signedAt,
+      signedAt,
+      html: cpr.signedSnapshot ?? this.renderCprHtml(cpr),
+    };
+  }
+
+  /** Registra a assinatura de uma das partes (público, por token). */
+  async sign(token: string, ip: string, nomeConfirmacao?: string) {
+    const cpr = await this.findBySignToken(token);
+    const party = cpr.emitenteSignToken === token ? 'emitente' : 'credor';
+    const expectedName = party === 'emitente' ? cpr.emitenteNome : cpr.credorNome;
+    const alreadySigned = party === 'emitente' ? cpr.emitenteSignedAt : cpr.credorSignedAt;
+
+    if (alreadySigned) {
+      return { ok: true, alreadySigned: true, signatureStatus: cpr.signatureStatus };
+    }
+
+    // Confirmação simples de identidade pelo nome (assinatura eletrônica simples).
+    if (nomeConfirmacao && !this.namesMatch(nomeConfirmacao, expectedName)) {
+      throw new BadRequestException('O nome digitado não confere com o da parte.');
+    }
+
+    const now = new Date();
+    const otherSigned =
+      party === 'emitente' ? cpr.credorSignedAt : cpr.emitenteSignedAt;
+    const fullySigned = !!otherSigned;
+
+    const updated = await this.prisma.cprDocument.update({
+      where: { id: cpr.id },
+      data:
+        party === 'emitente'
+          ? {
+              emitenteSignedAt: now,
+              emitenteSignIp: ip,
+              signatureStatus: fullySigned ? 'ASSINADA' : 'PARCIAL',
+              ...(fullySigned && { signedAt: now }),
+            }
+          : {
+              credorSignedAt: now,
+              credorSignIp: ip,
+              signatureStatus: fullySigned ? 'ASSINADA' : 'PARCIAL',
+              ...(fullySigned && { signedAt: now }),
+            },
+    });
+
+    this.logger.log(`CPR ${cpr.id} assinada por ${party} (IP ${ip}) — status ${updated.signatureStatus}`);
+
+    return {
+      ok: true,
+      party,
+      signatureStatus: updated.signatureStatus,
+      fullySigned,
+    };
+  }
+
+  private async findBySignToken(token: string) {
+    const cpr = await this.prisma.cprDocument.findFirst({
+      where: {
+        deletedAt: null,
+        OR: [{ emitenteSignToken: token }, { credorSignToken: token }],
+      },
+    });
+    if (!cpr) throw new NotFoundException('Link de assinatura inválido ou expirado.');
+    return cpr;
+  }
+
+  private namesMatch(a: string, b: string) {
+    const accents = new RegExp('[\\u0300-\\u036f]', 'g');
+    const norm = (s: string) =>
+      s
+        .normalize('NFD')
+        .replace(accents, '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+    return norm(a) === norm(b);
+  }
+
   async findAll(userId: string, role: string, page = 1, perPage = 10) {
     const skip = (page - 1) * perPage;
     const where =
@@ -149,6 +309,7 @@ export class CprService {
           safraAno: true,
           pdfUrl: true,
           conectcampoFeeValue: true,
+          signatureStatus: true,
           createdAt: true,
         },
       }),
@@ -318,6 +479,20 @@ export class CprService {
   </section>
 
   ${c.observacoes ? `<section><h2>Observações</h2><div>${esc(c.observacoes)}</div></section>` : ''}
+
+  ${
+    c.signatureStatus && c.signatureStatus !== 'NAO_INICIADA'
+      ? `<section class="totais">
+          <h2>Assinatura Eletrônica</h2>
+          <table>
+            ${row('Situação', esc(c.signatureStatus))}
+            ${row('Emitente', `${esc(c.emitenteNome)} — ${c.emitenteSignedAt ? 'assinou em ' + date(c.emitenteSignedAt) + (c.emitenteSignIp ? ' (IP ' + esc(c.emitenteSignIp) + ')' : '') : 'pendente'}`)}
+            ${row('Credor', `${esc(c.credorNome)} — ${c.credorSignedAt ? 'assinou em ' + date(c.credorSignedAt) + (c.credorSignIp ? ' (IP ' + esc(c.credorSignIp) + ')' : '') : 'pendente'}`)}
+            ${c.documentHash ? row('Hash do documento (SHA-256)', `<span style="font-family:monospace;font-size:10px;word-break:break-all">${esc(c.documentHash)}</span>`) : ''}
+          </table>
+        </section>`
+      : ''
+  }
 
   <div class="sign">
     <div>Emitente<br/><span style="color:#5b6b5e">${esc(c.emitenteNome)}</span></div>
