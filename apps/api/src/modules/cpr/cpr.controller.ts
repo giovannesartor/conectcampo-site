@@ -86,6 +86,17 @@ export class CprController {
     return this.service.findOne(id, userId, role);
   }
 
+  @Get(':id/document')
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Gerar minuta imprimível da CPR (HTML)' })
+  async getDocument(
+    @Param('id') id: string,
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    return this.service.getDocumentHtml(id, userId, role);
+  }
+
   @Patch(':id')
   @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
   @ApiOperation({ summary: 'Atualizar CPR (apenas rascunhos)' })

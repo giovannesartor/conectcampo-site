@@ -205,6 +205,25 @@ export default function CprPage() {
     }
   };
 
+  const handleDocument = async (id: string) => {
+    setActionLoading(id);
+    try {
+      const { data } = await api.get(`/cpr/${id}/document`);
+      const w = window.open('', '_blank');
+      if (w) {
+        w.document.open();
+        w.document.write(data.html);
+        w.document.close();
+      } else {
+        alert('Permita pop-ups para abrir a minuta da CPR.');
+      }
+    } catch {
+      alert('Não foi possível gerar a minuta agora.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const set = (k: keyof CreateCprForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm(prev => ({ ...prev, [k]: e.target.value }));
 
@@ -359,6 +378,14 @@ export default function CprPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleDocument(cpr.id)}
+                            disabled={isLoading}
+                            className="text-xs text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 font-medium disabled:opacity-50 flex items-center gap-1"
+                            title="Ver / imprimir minuta"
+                          >
+                            <FileText className="h-3.5 w-3.5" /> Documento
+                          </button>
                           {cpr.status === 'RASCUNHO' && (
                             <button
                               onClick={() => handleEmit(cpr.id)}
