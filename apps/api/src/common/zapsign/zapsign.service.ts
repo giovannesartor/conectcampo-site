@@ -5,6 +5,10 @@ export interface ZapSignSignerInput {
   name: string;
   externalId: string; // 'emitente' | 'credor'
   email?: string;
+  phoneCountry?: string;
+  phoneNumber?: string;
+  sendAutomaticEmail?: boolean;
+  sendAutomaticWhatsapp?: boolean;
 }
 
 export interface ZapSignCreatedSigner {
@@ -35,13 +39,16 @@ export class ZapSignService {
   }
 
   /**
-   * Cria um documento na ZapSign a partir de markdown e retorna os links de
-   * assinatura por signatário. Retorna null em caso de falha (para fallback).
+   * Cria um documento na ZapSign (a partir de um PDF base64 ou de markdown) e
+   * retorna os links de assinatura por signatário. Retorna null em caso de falha.
    */
-  async createDocumentFromMarkdown(params: {
+  async createDocument(params: {
     name: string;
-    markdownText: string;
+    base64Pdf?: string;
+    markdownText?: string;
     externalId: string;
+    brandLogo?: string;
+    brandPrimaryColor?: string;
     signers: ZapSignSignerInput[];
   }): Promise<ZapSignCreatedDoc | null> {
     if (!this.isEnabled()) return null;
@@ -51,14 +58,22 @@ export class ZapSignService {
         `${this.baseUrl}/docs/`,
         {
           name: params.name,
-          markdown_text: params.markdownText,
+          ...(params.base64Pdf
+            ? { base64_pdf: params.base64Pdf }
+            : { markdown_text: params.markdownText ?? '' }),
           external_id: params.externalId,
           lang: 'pt-br',
+          ...(params.brandLogo ? { brand_logo: params.brandLogo } : {}),
+          ...(params.brandPrimaryColor ? { brand_primary_color: params.brandPrimaryColor } : {}),
           signers: params.signers.map((s) => ({
             name: s.name,
             external_id: s.externalId,
             auth_mode: 'assinaturaTela',
-            ...(s.email ? { email: s.email, send_automatic_email: true } : {}),
+            ...(s.email ? { email: s.email } : {}),
+            ...(s.phoneCountry ? { phone_country: s.phoneCountry } : {}),
+            ...(s.phoneNumber ? { phone_number: s.phoneNumber } : {}),
+            ...(s.sendAutomaticEmail && s.email ? { send_automatic_email: true } : {}),
+            ...(s.sendAutomaticWhatsapp && s.phoneNumber ? { send_automatic_whatsapp: true } : {}),
           })),
         },
         {

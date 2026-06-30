@@ -11,9 +11,14 @@ import { CreateCprDto } from './dto/create-cpr.dto';
 import { UpdateCprDto } from './dto/update-cpr.dto';
 import { UserRole } from '@prisma/client';
 import { ZapSignService } from '../../common/zapsign/zapsign.service';
+import { renderCprPdf } from '../../common/zapsign/cpr-pdf';
+
+const ZAPSIGN_BRAND_LOGO = process.env.ZAPSIGN_BRAND_LOGO || 'https://conectcampo.digital/logo.png';
+const ZAPSIGN_BRAND_COLOR = '#008c3c';
 
 const CONECTCAMPO_FEE_RATE = 0.06; // 6% — aplicado apenas na Captação
 const CUSTO_EMISSAO_CPR_FISICA = 2500; // R$ 2.500 (pagamento único) na emissão de CPR Física
+const CUSTO_EMISSAO_CPR_FINANCEIRA_RATE = 0.03; // 3% sobre o valor total na emissão de CPR Financeira
 
 @Injectable()
 export class CprService {
@@ -63,9 +68,15 @@ export class CprService {
     const conectcampoFeeValue =
       !isEmissao && valorTotal != null ? valorTotal * CONECTCAMPO_FEE_RATE : null;
 
-    // Custo de emissão (pagamento único): CPR Física = R$ 2.500.
-    // CPR Financeira: a definir (sem custo fixo por enquanto).
-    const custoEmissao = isEmissao && isFisica ? CUSTO_EMISSAO_CPR_FISICA : null;
+    // Custo de emissão: CPR Física = R$ 2.500 (pagamento único);
+    // CPR Financeira = 3% sobre o valor total da CPR.
+    const custoEmissao = isEmissao
+      ? isFisica
+        ? CUSTO_EMISSAO_CPR_FISICA
+        : valorTotal != null
+          ? valorTotal * CUSTO_EMISSAO_CPR_FINANCEIRA_RATE
+          : null
+      : null;
 
     const cpr = await this.prisma.cprDocument.create({
       data: {
@@ -82,11 +93,15 @@ export class CprService {
         emitenteCidade: dto.emitenteCidade,
         emitenteEstado: dto.emitenteEstado as import('@prisma/client').BrazilianState | undefined,
         emitenteCarNumero: dto.emitenteCarNumero,
+        emitenteEmail: dto.emitenteEmail,
+        emitenteTelefone: dto.emitenteTelefone,
 
         // Credor
         credorNome: dto.credorNome,
         credorCpfCnpj: dto.credorCpfCnpj,
         credorTipo: dto.credorTipo,
+        credorEmail: dto.credorEmail,
+        credorTelefone: dto.credorTelefone,
 
         // Produto
         produto: dto.produto,
@@ -170,6 +185,9 @@ export class CprService {
       c.purpose === 'EMISSAO' && c.type === 'FISICA'
         ? `Custo de emissão (CPR Física): ${brl(c.custoEmissao ?? 2500)} (pagamento único)  `
         : '',
+      c.purpose === 'EMISSAO' && c.type === 'FINANCEIRA' && c.custoEmissao != null
+        ? `Custo de emissão (CPR Financeira): ${brl(c.custoEmissao)} (3% do valor total)  `
+        : '',
       c.purpose === 'CAPTACAO' ? `Valor a captar: ${brl(c.valorCaptacao)}  ` : '',
       c.purpose === 'CAPTACAO' ? `Fee ConectCampo (6%): ${brl(c.conectcampoFeeValue)}  ` : '',
       c.observacoes ? `\n## Observações\n${c.observacoes}` : '',
@@ -202,13 +220,41 @@ export class CprService {
 
     // ── ZapSign (assinatura automática) — se habilitado ──
     if (this.zapsign.isEnabled()) {
-      const doc = await this.zapsign.createDocumentFromMarkdown({
+      // Gera o PDF profissional (com logo); se falhar, usa markdown como fallback.
+      let base64Pdf: string | undefined;
+      try {
+        const pdf = await renderCprPdf(cpr);
+        base64Pdf = pdf.toString('base64');
+      } catch (e) {
+        this.logger.warn(`Falha ao gerar PDF da CPR ${cprId} — enviando markdown. (${(e as Error).message})`);
+      }
+
+      const phone = (v: string | null) => (v ? v.replace(/\D/g, '') : undefined);
+
+      const doc = await this.zapsign.createDocument({
         name: `CPR ${cpr.numeroCpr ?? cpr.id.slice(0, 8)}`,
-        markdownText: this.renderCprMarkdown(cpr),
+        base64Pdf,
+        markdownText: base64Pdf ? undefined : this.renderCprMarkdown(cpr),
         externalId: cpr.id,
+        brandLogo: ZAPSIGN_BRAND_LOGO,
+        brandPrimaryColor: ZAPSIGN_BRAND_COLOR,
         signers: [
-          { name: cpr.emitenteNome, externalId: 'emitente' },
-          { name: cpr.credorNome, externalId: 'credor' },
+          {
+            name: cpr.emitenteNome,
+            externalId: 'emitente',
+            email: cpr.emitenteEmail ?? undefined,
+            phoneCountry: cpr.emitenteTelefone ? '55' : undefined,
+            phoneNumber: phone(cpr.emitenteTelefone),
+            sendAutomaticEmail: true,
+          },
+          {
+            name: cpr.credorNome,
+            externalId: 'credor',
+            email: cpr.credorEmail ?? undefined,
+            phoneCountry: cpr.credorTelefone ? '55' : undefined,
+            phoneNumber: phone(cpr.credorTelefone),
+            sendAutomaticEmail: true,
+          },
         ],
       });
 
@@ -632,7 +678,9 @@ export class CprService {
       ${
         c.purpose === 'EMISSAO' && c.type === 'FISICA'
           ? row('Custo de emissão (CPR Física)', `${brl(c.custoEmissao ?? 2500)} · pagamento único`)
-          : ''
+          : c.purpose === 'EMISSAO' && c.type === 'FINANCEIRA' && c.custoEmissao != null
+            ? row('Custo de emissão (CPR Financeira)', `${brl(c.custoEmissao)} · 3% do valor total`)
+            : ''
       }
       ${
         c.purpose === 'CAPTACAO'

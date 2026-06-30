@@ -64,6 +64,16 @@ export class CreateCprDto {
   @IsString()
   emitenteCarNumero?: string;
 
+  @ApiPropertyOptional({ description: 'E-mail do emitente (envio automático do link de assinatura)' })
+  @IsOptional()
+  @IsString()
+  emitenteEmail?: string;
+
+  @ApiPropertyOptional({ description: 'Telefone do emitente (DDD + número)' })
+  @IsOptional()
+  @IsString()
+  emitenteTelefone?: string;
+
   // ─── Credor ──────────────────────────────────────────────────────────────────
 
   @ApiProperty({ description: 'Nome do credor (banco, cooperativa ou pessoa)' })
@@ -80,6 +90,16 @@ export class CreateCprDto {
   @IsOptional()
   @IsString()
   credorTipo?: string;
+
+  @ApiPropertyOptional({ description: 'E-mail do credor (envio automático do link de assinatura)' })
+  @IsOptional()
+  @IsString()
+  credorEmail?: string;
+
+  @ApiPropertyOptional({ description: 'Telefone do credor (DDD + número)' })
+  @IsOptional()
+  @IsString()
+  credorTelefone?: string;
 
   // ─── Produto ─────────────────────────────────────────────────────────────────
 

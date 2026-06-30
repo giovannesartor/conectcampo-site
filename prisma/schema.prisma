@@ -1039,11 +1039,15 @@ model CprDocument {
   emitenteCidade      String?
   emitenteEstado      BrazilianState?
   emitenteCarNumero   String?     // número CAR
+  emitenteEmail       String?     // para envio automático do link (ZapSign)
+  emitenteTelefone    String?     // DDD + número, p/ WhatsApp (ZapSign)
 
   // Credor (instituição financeira ou pessoa que recebe)
   credorNome          String
   credorCpfCnpj       String
   credorTipo          String?     // banco, cooperativa, pessoa fisica, etc.
+  credorEmail         String?
+  credorTelefone      String?
 
   // Produto / garantia
   produto             String      // soja, milho, boi gordo, etc.

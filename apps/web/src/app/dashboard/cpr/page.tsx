@@ -78,9 +78,13 @@ interface CreateCprForm {
   emitenteCidade: string;
   emitenteEstado: string;
   emitenteCarNumero: string;
+  emitenteEmail: string;
+  emitenteTelefone: string;
   credorNome: string;
   credorCpfCnpj: string;
   credorTipo: string;
+  credorEmail: string;
+  credorTelefone: string;
   produto: string;
   quantidade: string;
   unidade: string;
@@ -119,7 +123,8 @@ const EMPTY_FORM: CreateCprForm = {
   purpose: 'EMISSAO',
   type: 'FINANCEIRA',
   emitenteNome: '', emitenteCpfCnpj: '', emitenteCidade: '', emitenteEstado: '', emitenteCarNumero: '',
-  credorNome: '', credorCpfCnpj: '', credorTipo: '',
+  emitenteEmail: '', emitenteTelefone: '',
+  credorNome: '', credorCpfCnpj: '', credorTipo: '', credorEmail: '', credorTelefone: '',
   produto: '', quantidade: '', unidade: 'sacas', precoUnitario: '',
   localEntrega: '', dataEntrega: '',
   dataVencimento: '', prazoAnos: '', carenciaAnos: '', safras: [],
@@ -173,9 +178,13 @@ export default function CprPage() {
         emitenteCidade: form.emitenteCidade || undefined,
         emitenteEstado: form.emitenteEstado || undefined,
         emitenteCarNumero: form.emitenteCarNumero || undefined,
+        emitenteEmail: form.emitenteEmail || undefined,
+        emitenteTelefone: form.emitenteTelefone || undefined,
         credorNome: form.credorNome,
         credorCpfCnpj: form.credorCpfCnpj,
         credorTipo: form.credorTipo || undefined,
+        credorEmail: form.credorEmail || undefined,
+        credorTelefone: form.credorTelefone || undefined,
         produto: form.produto,
         quantidade: parseFloat(form.quantidade),
         unidade: form.unidade,
@@ -569,6 +578,8 @@ export default function CprPage() {
                   <div className="col-span-2"><Field label="Nome completo *" value={form.emitenteNome} onChange={set('emitenteNome')} required /></div>
                   <Field label="CPF / CNPJ *" value={form.emitenteCpfCnpj} onChange={set('emitenteCpfCnpj')} required placeholder="000.000.000-00" />
                   <Field label="Número CAR" value={form.emitenteCarNumero} onChange={set('emitenteCarNumero')} placeholder="SP-XXXXXXX-XXXX..." />
+                  <Field label="E-mail (p/ assinatura)" value={form.emitenteEmail} onChange={set('emitenteEmail')} type="email" placeholder="email@exemplo.com" />
+                  <Field label="Telefone / WhatsApp" value={form.emitenteTelefone} onChange={set('emitenteTelefone')} placeholder="(11) 99999-9999" />
                   <Field label="Cidade" value={form.emitenteCidade} onChange={set('emitenteCidade')} />
                   <div>
                     <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Estado</label>
@@ -601,6 +612,8 @@ export default function CprPage() {
                       <option value="fundo">Fundo de Investimento</option>
                     </select>
                   </div>
+                  <Field label="E-mail (p/ assinatura)" value={form.credorEmail} onChange={set('credorEmail')} type="email" placeholder="email@exemplo.com" />
+                  <Field label="Telefone / WhatsApp" value={form.credorTelefone} onChange={set('credorTelefone')} placeholder="(11) 99999-9999" />
                 </div>
               </section>
 
@@ -767,10 +780,18 @@ export default function CprPage() {
                 </div>
               )}
 
-              {/* Emissão Financeira — custo a definir */}
+              {/* Emissão Financeira — 3% sobre o valor total */}
               {form.purpose === 'EMISSAO' && form.type === 'FINANCEIRA' && (
-                <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-sm">
-                  <p className="text-gray-600 dark:text-gray-300 flex items-center gap-1.5"><DollarSign className="h-4 w-4" /> Custo da emissão financeira: <strong>a definir</strong></p>
+                <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3 text-sm">
+                  <p className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1.5"><DollarSign className="h-4 w-4" /> Custo de emissão da CPR Financeira</p>
+                  {form.precoUnitario && form.quantidade ? (
+                    <p className="text-emerald-600 dark:text-emerald-500 mt-1">
+                      <strong>{formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario) * 0.03)}</strong>
+                      {' '}· 3% do valor total ({formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario))})
+                    </p>
+                  ) : (
+                    <p className="text-emerald-600 dark:text-emerald-500 mt-1">3% sobre o valor total da CPR · informe quantidade e preço unitário para calcular</p>
+                  )}
                 </div>
               )}
 
