@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
+import toast from 'react-hot-toast';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -171,6 +172,12 @@ export default function CprPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [signModal, setSignModal] = useState<{ cpr: CprItem; info: SignatureInfo } | null>(null);
   const [copied, setCopied] = useState<string>('');
+  // Preços vêm da fonte única (/pricing); defaults como fallback
+  const [pricing, setPricing] = useState({ fisicaFlat: 2500, financeiraRatePct: 3, captacaoFeeRatePct: 6 });
+
+  useEffect(() => {
+    api.get('/pricing').then(r => { if (r.data?.cpr) setPricing(r.data.cpr); }).catch(() => {});
+  }, []);
 
   const load = async () => {
     try {
@@ -270,10 +277,10 @@ export default function CprPage() {
         w.document.write(data.html);
         w.document.close();
       } else {
-        alert('Permita pop-ups para abrir a minuta da CPR.');
+        toast.error('Permita pop-ups para abrir a minuta da CPR.');
       }
     } catch {
-      alert('Não foi possível gerar a minuta agora.');
+      toast.error('Não foi possível gerar a minuta agora.');
     } finally {
       setActionLoading(null);
     }
@@ -281,7 +288,7 @@ export default function CprPage() {
 
   const openSignature = async (cpr: CprItem) => {
     if (cpr.status === 'RASCUNHO') {
-      alert('Emita a CPR antes de solicitar assinaturas.');
+      toast('Emita a CPR antes de solicitar assinaturas.');
       return;
     }
     setActionLoading(cpr.id);
@@ -293,7 +300,7 @@ export default function CprPage() {
       setSignModal({ cpr, info: data });
       await load();
     } catch {
-      alert('Não foi possível abrir a assinatura agora.');
+      toast.error('Não foi possível abrir a assinatura agora.');
     } finally {
       setActionLoading(null);
     }
@@ -316,9 +323,9 @@ export default function CprPage() {
     try {
       const { data } = await api.get(`/cpr/${cprId}/signed-file`);
       if (data?.url) window.open(data.url, '_blank');
-      else alert('PDF assinado ainda não disponível.');
+      else toast.error('PDF assinado ainda não disponível.');
     } catch {
-      alert('PDF assinado ainda não disponível.');
+      toast.error('PDF assinado ainda não disponível.');
     }
   };
 
@@ -815,7 +822,7 @@ export default function CprPage() {
                 <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3 text-sm">
                   <p className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1.5"><DollarSign className="h-4 w-4" /> Custo de emissão da CPR Física</p>
                   <p className="text-emerald-600 dark:text-emerald-500 mt-1">
-                    <strong>{formatCurrency(2500)}</strong> · pagamento único
+                    <strong>{formatCurrency(pricing.fisicaFlat)}</strong> · pagamento único
                   </p>
                 </div>
               )}
@@ -826,11 +833,11 @@ export default function CprPage() {
                   <p className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1.5"><DollarSign className="h-4 w-4" /> Custo de emissão da CPR Financeira</p>
                   {form.precoUnitario && form.quantidade ? (
                     <p className="text-emerald-600 dark:text-emerald-500 mt-1">
-                      <strong>{formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario) * 0.03)}</strong>
-                      {' '}· 3% do valor total ({formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario))})
+                      <strong>{formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario) * (pricing.financeiraRatePct / 100))}</strong>
+                      {' '}· {pricing.financeiraRatePct}% do valor total ({formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario))})
                     </p>
                   ) : (
-                    <p className="text-emerald-600 dark:text-emerald-500 mt-1">3% sobre o valor total da CPR · informe quantidade e preço unitário para calcular</p>
+                    <p className="text-emerald-600 dark:text-emerald-500 mt-1">{pricing.financeiraRatePct}% sobre o valor total da CPR · informe quantidade e preço unitário para calcular</p>
                   )}
                 </div>
               )}
@@ -841,7 +848,7 @@ export default function CprPage() {
                   <p className="text-amber-700 dark:text-amber-400 font-medium flex items-center gap-1.5"><DollarSign className="h-4 w-4" /> Valor estimado</p>
                   <p className="text-amber-600 dark:text-amber-500 mt-1">
                     Total: <strong>{formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario))}</strong>
-                    {' '}· Fee ConectCampo (6%): <strong>{formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario) * 0.06)}</strong>
+                    {' '}· Fee ConectCampo ({pricing.captacaoFeeRatePct}%): <strong>{formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario) * (pricing.captacaoFeeRatePct / 100))}</strong>
                   </p>
                 </div>
               )}

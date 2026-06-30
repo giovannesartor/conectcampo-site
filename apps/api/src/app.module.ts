@@ -23,6 +23,7 @@ import { WebhookModule } from './modules/webhooks/webhook.module';
 import { QuantovaleModule } from './modules/quantovale/quantovale.module';
 import { CarbonCreditsModule } from './modules/carbon-credits/carbon-credits.module';
 import { CprModule } from './modules/cpr/cpr.module';
+import { PricingModule } from './common/pricing/pricing.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 
@@ -67,6 +68,7 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     QuantovaleModule,
     CarbonCreditsModule,
     CprModule,
+    PricingModule,
   ],
   providers: [
     {

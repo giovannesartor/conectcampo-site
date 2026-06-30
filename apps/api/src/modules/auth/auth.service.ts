@@ -253,7 +253,29 @@ export class AuthService {
       include: { user: true },
     });
 
-    if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
+    if (!stored) {
+      throw new UnauthorizedException('Refresh token inválido ou expirado');
+    }
+
+    // Detecção de reuso: um token já revogado (rotacionado) sendo reapresentado
+    // indica possível roubo → revoga TODA a família de tokens do usuário.
+    if (stored.revokedAt) {
+      await this.prisma.refreshToken.updateMany({
+        where: { userId: stored.userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+      this.logger.warn(`Reuso de refresh token detectado — família revogada (user ${stored.userId})`);
+      void this.auditService.log({
+        userId: stored.userId,
+        action: 'STATUS_CHANGE',
+        entity: 'auth',
+        entityId: stored.userId,
+        newValue: { event: 'refresh_token_reuse_detected' },
+      });
+      throw new UnauthorizedException('Sessão expirada por segurança. Faça login novamente.');
+    }
+
+    if (stored.expiresAt < new Date()) {
       throw new UnauthorizedException('Refresh token inválido ou expirado');
     }
 

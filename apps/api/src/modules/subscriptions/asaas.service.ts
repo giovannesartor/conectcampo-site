@@ -4,22 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { SubscriptionPlan, PaymentStatus } from '@prisma/client';
 import axios, { AxiosInstance } from 'axios';
 import * as crypto from 'crypto';
-
-// ─── Plan config ──────────────────────────────────────────────────────────────
-
-const PLAN_PRICES: Record<string, number> = {
-  START: 299.0,       // Produtor Rural
-  PRO: 799.0,         // Empresa
-  COOPERATIVE: 2890.0, // Cooperativa
-  CORPORATE: 0,       // Instituição Financeira (grátis)
-};
-
-const PLAN_LABELS: Record<string, string> = {
-  START: 'Plano Produtor Rural',
-  PRO: 'Plano Empresa',
-  COOPERATIVE: 'Plano Cooperativa',
-  CORPORATE: 'Instituição Financeira (Grátis)',
-};
+import { PLAN_PRICES, PLAN_LABELS } from '../../common/pricing/pricing';
 
 // ─── Asaas DTO interfaces ─────────────────────────────────────────────────────
 

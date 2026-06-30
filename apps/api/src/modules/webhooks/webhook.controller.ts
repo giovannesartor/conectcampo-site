@@ -45,14 +45,37 @@ export class WebhookController {
       throw new UnauthorizedException('Token inválido');
     }
 
-    const body = req.body as { event: string; [k: string]: any };
+    const body = req.body as { event: string; id?: string; payment?: { id?: string }; subscription?: { id?: string }; [k: string]: any };
     this.logger.log(`Asaas webhook received: ${body.event}`);
 
+    const externalId = body.id ?? body.payment?.id ?? body.subscription?.id;
+    if (await this.isDuplicate('ASAAS', externalId)) {
+      this.logger.warn(`Asaas webhook duplicado ignorado (${externalId})`);
+      return { received: true, deduped: true };
+    }
+
     const { userId } = await this.asaasService.handleWebhook(body.event, body);
+    await this.markProcessed('ASAAS', externalId, body.event);
 
     await this.notifyUser(userId);
 
     return { received: true };
+  }
+
+  /** Idempotência: true se o evento já foi processado. */
+  private async isDuplicate(provider: string, externalId?: string): Promise<boolean> {
+    if (!externalId) return false;
+    const found = await this.prisma.webhookEvent.findUnique({
+      where: { provider_externalId: { provider, externalId } },
+    });
+    return !!found;
+  }
+
+  private async markProcessed(provider: string, externalId?: string, type?: string): Promise<void> {
+    if (!externalId) return;
+    await this.prisma.webhookEvent
+      .create({ data: { provider, externalId, type } })
+      .catch(() => null); // corrida: ignora se já existe
   }
 
   // ─── Valsa – POST /webhook/valsapay ──────────────────────────────────────
@@ -80,7 +103,14 @@ export class WebhookController {
     }
     this.logger.log(`Valsa webhook received: ${payload?.event}`);
 
+    const externalId = payload?.id ?? payload?.transactionId ?? payload?.paymentId;
+    if (await this.isDuplicate('VALSA', externalId)) {
+      this.logger.warn(`Valsa webhook duplicado ignorado (${externalId})`);
+      return { success: true, deduped: true };
+    }
+
     const { userId } = await this.valsaService.handleWebhook(payload);
+    await this.markProcessed('VALSA', externalId, payload?.event);
 
     await this.notifyUser(userId);
 

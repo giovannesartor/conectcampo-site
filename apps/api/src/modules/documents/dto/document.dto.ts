@@ -4,10 +4,28 @@ import {
   IsNumber,
   IsOptional,
   IsUUID,
+  IsIn,
   Min,
+  Max,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DocumentType } from '@prisma/client';
+
+// Tipos de arquivo permitidos no data room
+export const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+  'text/csv',
+];
+
+// Tamanho máximo: 25 MB
+export const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
 export class CreateDocumentDto {
   @ApiPropertyOptional({ description: 'ID da operação associada' })
@@ -31,13 +49,15 @@ export class CreateDocumentDto {
   @IsString()
   fileUrl: string;
 
-  @ApiProperty({ example: 1048576, description: 'Tamanho em bytes' })
+  @ApiProperty({ example: 1048576, description: 'Tamanho em bytes (máx. 25 MB)' })
   @IsNumber()
   @Min(1, { message: 'Tamanho do arquivo inválido' })
+  @Max(MAX_FILE_SIZE, { message: 'Arquivo excede o limite de 25 MB' })
   fileSize: number;
 
   @ApiProperty({ example: 'application/pdf' })
   @IsString()
+  @IsIn(ALLOWED_MIME_TYPES, { message: 'Tipo de arquivo não permitido' })
   mimeType: string;
 
   @ApiPropertyOptional({ example: 'sha256:abc123...', description: 'Checksum SHA-256' })
@@ -53,6 +73,7 @@ export class RequestPresignedUrlDto {
 
   @ApiProperty({ example: 'application/pdf' })
   @IsString()
+  @IsIn(ALLOWED_MIME_TYPES, { message: 'Tipo de arquivo não permitido' })
   mimeType: string;
 
   @ApiPropertyOptional({ description: 'ID da operação associada' })

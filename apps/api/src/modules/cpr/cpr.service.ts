@@ -12,13 +12,14 @@ import { UpdateCprDto } from './dto/update-cpr.dto';
 import { UserRole } from '@prisma/client';
 import { ZapSignService } from '../../common/zapsign/zapsign.service';
 import { renderCprPdf } from '../../common/zapsign/cpr-pdf';
+import { CPR_PRICING } from '../../common/pricing/pricing';
 
 const ZAPSIGN_BRAND_LOGO = process.env.ZAPSIGN_BRAND_LOGO || 'https://conectcampo.digital/logo.png';
 const ZAPSIGN_BRAND_COLOR = '#008c3c';
 
-const CONECTCAMPO_FEE_RATE = 0.06; // 6% — aplicado apenas na Captação
-const CUSTO_EMISSAO_CPR_FISICA = 2500; // R$ 2.500 (pagamento único) na emissão de CPR Física
-const CUSTO_EMISSAO_CPR_FINANCEIRA_RATE = 0.03; // 3% sobre o valor total na emissão de CPR Financeira
+const CONECTCAMPO_FEE_RATE = CPR_PRICING.captacaoFeeRate; // 6% — aplicado apenas na Captação
+const CUSTO_EMISSAO_CPR_FISICA = CPR_PRICING.fisicaFlat; // R$ 2.500 (pagamento único) na emissão de CPR Física
+const CUSTO_EMISSAO_CPR_FINANCEIRA_RATE = CPR_PRICING.financeiraRate; // 3% sobre o valor total
 
 @Injectable()
 export class CprService {
@@ -381,6 +382,19 @@ export class CprService {
     if (!payload || payload.event_type !== 'doc_signed') {
       return { ignored: true };
     }
+
+    // Idempotência: cada assinatura gera um evento; dedup por (doc, signatário, timestamp)
+    const externalId = `${payload.token}:${payload.signer_who_signed?.token ?? ''}:${payload.last_update_at ?? payload.status ?? ''}`;
+    const dup = await this.prisma.webhookEvent.findUnique({
+      where: { provider_externalId: { provider: 'ZAPSIGN', externalId } },
+    });
+    if (dup) {
+      this.logger.warn(`ZapSign webhook duplicado ignorado (${externalId})`);
+      return { deduped: true };
+    }
+    await this.prisma.webhookEvent
+      .create({ data: { provider: 'ZAPSIGN', externalId, type: 'doc_signed' } })
+      .catch(() => null);
 
     const cpr = await this.prisma.cprDocument.findFirst({
       where: {

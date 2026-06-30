@@ -1021,6 +1021,18 @@ model CarbonDocument {
 // CPR — CÉDULA DE PRODUTO RURAL
 // ──────────────────────────────────────────────
 
+model WebhookEvent {
+  id          String   @id @default(uuid())
+  provider    String   // ASAAS | VALSA | ZAPSIGN
+  externalId  String   // id do evento no provedor (para idempotência)
+  type        String?
+  createdAt   DateTime @default(now())
+
+  @@unique([provider, externalId])
+  @@index([provider, createdAt])
+  @@map("webhook_events")
+}
+
 model CprDocument {
   id                  String      @id @default(uuid())
   userId              String
