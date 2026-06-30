@@ -19,6 +19,12 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UserRole, SubscriptionPlan } from '@prisma/client';
+import { AuditService } from '../audit/audit.service';
+
+export interface AuthAuditMeta {
+  ip?: string;
+  userAgent?: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -32,6 +38,7 @@ export class AuthService {
     private readonly asaasService: AsaasService,
     private readonly valsaService: ValsaService,
     private readonly subscriptionsService: SubscriptionsService,
+    private readonly auditService: AuditService,
   ) {}
 
   // Admin emails resolved from environment
@@ -46,7 +53,7 @@ export class AuthService {
     return this.adminEmails.includes(email.toLowerCase()) ? UserRole.ADMIN : requested;
   }
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, meta: AuthAuditMeta = {}) {
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -101,6 +108,16 @@ export class AuthService {
       }
       throw err;
     }
+
+    void this.auditService.log({
+      userId: user.id,
+      action: 'CREATE',
+      entity: 'user',
+      entityId: user.id,
+      newValue: { email: user.email, name: user.name, role: user.role },
+      ipAddress: meta.ip,
+      userAgent: meta.userAgent,
+    });
 
     // ── Plano gratuito (Instituição Financeira) ──────────────────────────────
     if (isFree) {
@@ -167,7 +184,7 @@ export class AuthService {
     };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, meta: AuthAuditMeta = {}) {
     try {
       this.logger.log(`Login attempt for: ${dto.email}`);
 
@@ -202,6 +219,15 @@ export class AuthService {
       const tokens = await this.generateTokens(user.id, user.email, user.role);
 
       this.logger.log(`User logged in: ${user.email}`);
+
+      void this.auditService.log({
+        userId: user.id,
+        action: 'LOGIN',
+        entity: 'auth',
+        entityId: user.id,
+        ipAddress: meta.ip,
+        userAgent: meta.userAgent,
+      });
 
       return {
         user: {
@@ -246,11 +272,20 @@ export class AuthService {
     return tokens;
   }
 
-  async logout(userId: string) {
+  async logout(userId: string, meta: AuthAuditMeta = {}) {
     // Revoke all refresh tokens
     await this.prisma.refreshToken.updateMany({
       where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },
+    });
+
+    void this.auditService.log({
+      userId,
+      action: 'LOGOUT',
+      entity: 'auth',
+      entityId: userId,
+      ipAddress: meta.ip,
+      userAgent: meta.userAgent,
     });
 
     return { message: 'Logout realizado com sucesso' };
@@ -282,7 +317,7 @@ export class AuthService {
     return { message: 'Se o e-mail estiver cadastrado, você receberá as instruções em breve.' };
   }
 
-  async resetPassword(dto: ResetPasswordDto) {
+  async resetPassword(dto: ResetPasswordDto, meta: AuthAuditMeta = {}) {
     const record = await this.prisma.passwordResetToken.findUnique({
       where: { token: dto.token },
       include: { user: true },
@@ -314,12 +349,21 @@ export class AuthService {
 
     this.logger.log(`Password reset for: ${record.user.email}`);
 
+    void this.auditService.log({
+      userId: record.userId,
+      action: 'PASSWORD_RESET',
+      entity: 'auth',
+      entityId: record.userId,
+      ipAddress: meta.ip,
+      userAgent: meta.userAgent,
+    });
+
     return { message: 'Senha redefinida com sucesso. Faça login com a nova senha.' };
   }
 
   // ─── Email Verification ───────────────────────────────────────────────────────
 
-  async verifyEmail(token: string) {
+  async verifyEmail(token: string, meta: AuthAuditMeta = {}) {
     const record = await this.prisma.emailVerificationToken.findUnique({
       where: { token },
       include: { user: true },
@@ -341,6 +385,15 @@ export class AuthService {
     ]);
 
     this.logger.log(`Email verified: ${record.user.email}`);
+
+    void this.auditService.log({
+      userId: record.userId,
+      action: 'EMAIL_VERIFICATION',
+      entity: 'auth',
+      entityId: record.userId,
+      ipAddress: meta.ip,
+      userAgent: meta.userAgent,
+    });
 
     return { message: 'E-mail confirmado com sucesso!' };
   }

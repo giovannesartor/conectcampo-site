@@ -5,7 +5,9 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from '../mail/mail.service';
 import { AsaasService } from '../subscriptions/asaas.service';
+import { ValsaService } from '../subscriptions/valsa.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { AuditService } from '../audit/audit.service';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { UserRole, SubscriptionPlan } from '@prisma/client';
@@ -84,7 +86,9 @@ describe('AuthService', () => {
         { provide: ConfigService, useValue: mockConfigService },
         { provide: MailService, useValue: mockMailService },
         { provide: AsaasService, useValue: mockAsaasService },
+        { provide: ValsaService, useValue: { createCustomerAndSubscription: jest.fn(), verifyWebhookSignature: jest.fn() } },
         { provide: SubscriptionsService, useValue: mockSubscriptionsService },
+        { provide: AuditService, useValue: { log: jest.fn() } },
       ],
     }).compile();
 
