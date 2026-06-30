@@ -54,11 +54,20 @@ interface CprItem {
   createdAt: string;
 }
 
+interface SignatureParty {
+  nome: string;
+  signedAt: string | null;
+  token: string | null;
+  signUrl?: string | null;
+}
+
 interface SignatureInfo {
+  provider?: string;
   signatureStatus: string;
   documentHash: string | null;
-  emitente: { nome: string; signedAt: string | null; token: string | null };
-  credor: { nome: string; signedAt: string | null; token: string | null };
+  signedFileUrl?: string | null;
+  emitente: SignatureParty;
+  credor: SignatureParty;
 }
 
 interface CreateCprForm {
@@ -269,11 +278,12 @@ export default function CprPage() {
     }
   };
 
-  const signUrl = (token: string | null) =>
-    token ? `${typeof window !== 'undefined' ? window.location.origin : ''}/cpr/assinar/${token}` : '';
+  const partyUrl = (party: SignatureParty) =>
+    party.signUrl ||
+    (party.token ? `${typeof window !== 'undefined' ? window.location.origin : ''}/cpr/assinar/${party.token}` : '');
 
-  const copyLink = (token: string | null, who: string) => {
-    const url = signUrl(token);
+  const copyLink = (party: SignatureParty, who: string) => {
+    const url = partyUrl(party);
     if (!url) return;
     navigator.clipboard?.writeText(url);
     setCopied(who);
@@ -824,6 +834,9 @@ export default function CprPage() {
                 Compartilhe cada link com a parte correspondente. Ao assinar, registramos data, IP e o
                 hash do documento como trilha de auditoria.
               </p>
+              <div className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                {signModal.info.provider === 'zapsign' ? 'Assinatura via ZapSign' : 'Assinatura interna'}
+              </div>
 
               {([
                 { who: 'emitente', label: 'Emitente', party: signModal.info.emitente },
@@ -849,11 +862,11 @@ export default function CprPage() {
                     <div className="flex items-center gap-2">
                       <input
                         readOnly
-                        value={signUrl(party.token)}
+                        value={partyUrl(party)}
                         className="flex-1 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-2 text-gray-600 dark:text-gray-300 truncate"
                       />
                       <button
-                        onClick={() => copyLink(party.token, who)}
+                        onClick={() => copyLink(party, who)}
                         className="flex items-center gap-1 text-xs font-medium bg-violet-600 hover:bg-violet-700 text-white rounded-lg px-3 py-2"
                       >
                         <Copy className="h-3.5 w-3.5" /> {copied === who ? 'Copiado!' : 'Copiar'}

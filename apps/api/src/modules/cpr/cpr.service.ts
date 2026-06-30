@@ -10,6 +10,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCprDto } from './dto/create-cpr.dto';
 import { UpdateCprDto } from './dto/update-cpr.dto';
 import { UserRole } from '@prisma/client';
+import { ZapSignService } from '../../common/zapsign/zapsign.service';
 
 const CONECTCAMPO_FEE_RATE = 0.06; // 6% — aplicado apenas na Captação
 const CUSTO_EMISSAO_CPR_FISICA = 2500; // R$ 2.500 (pagamento único) na emissão de CPR Física
@@ -18,7 +19,10 @@ const CUSTO_EMISSAO_CPR_FISICA = 2500; // R$ 2.500 (pagamento único) na emissã
 export class CprService {
   private readonly logger = new Logger(CprService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly zapsign: ZapSignService,
+  ) {}
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -121,6 +125,62 @@ export class CprService {
     return cpr;
   }
 
+  /** Versão em Markdown da CPR (usada pela ZapSign para gerar o documento). */
+  private renderCprMarkdown(c: any): string {
+    const brl = (v: unknown) =>
+      v == null || v === '' ? '—' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const date = (v: unknown) => (v ? new Date(v as string).toLocaleDateString('pt-BR') : '—');
+    const meses = (m: number | null | undefined) => {
+      if (m == null) return '—';
+      const anos = Math.floor(m / 12);
+      const r = m % 12;
+      const parts: string[] = [];
+      if (anos > 0) parts.push(`${anos} ${anos === 1 ? 'ano' : 'anos'}`);
+      if (r > 0) parts.push(`${r} ${r === 1 ? 'mês' : 'meses'}`);
+      return parts.length ? parts.join(' e ') : `${m} meses`;
+    };
+    const tipo = c.type === 'FISICA' ? 'CPR Física' : 'CPR Financeira';
+    const purpose = c.purpose === 'EMISSAO' ? 'Emissão de CPR' : 'Captação de Crédito';
+
+    return [
+      `# Cédula de Produto Rural — ${tipo}`,
+      ``,
+      `**Número:** ${c.numeroCpr ?? '—'}  `,
+      `**Finalidade:** ${purpose}  `,
+      `**Produto:** ${c.produto} — ${Number(c.quantidade).toLocaleString('pt-BR')} ${c.unidade}  `,
+      c.safraAno ? `**Safra(s):** ${c.safraAno}  ` : '',
+      ``,
+      `## Emitente (Produtor Rural)`,
+      `Nome: ${c.emitenteNome}  `,
+      `CPF/CNPJ: ${c.emitenteCpfCnpj}  `,
+      `Cidade/UF: ${c.emitenteCidade ?? '—'} ${c.emitenteEstado ? '/ ' + c.emitenteEstado : ''}  `,
+      c.emitenteCarNumero ? `CAR: ${c.emitenteCarNumero}  ` : '',
+      ``,
+      `## Credor`,
+      `Nome: ${c.credorNome}  `,
+      `CPF/CNPJ: ${c.credorCpfCnpj}  `,
+      ``,
+      `## Prazo, Carência e Vencimento`,
+      `Prazo total: ${meses(c.prazoMeses)}  `,
+      `Carência: ${meses(c.carenciaMeses)}  `,
+      `Vencimento: ${date(c.dataVencimento)}  `,
+      ``,
+      `## Valores`,
+      `Valor total da CPR: ${brl(c.valorTotal)}  `,
+      c.purpose === 'EMISSAO' && c.type === 'FISICA'
+        ? `Custo de emissão (CPR Física): ${brl(c.custoEmissao ?? 2500)} (pagamento único)  `
+        : '',
+      c.purpose === 'CAPTACAO' ? `Valor a captar: ${brl(c.valorCaptacao)}  ` : '',
+      c.purpose === 'CAPTACAO' ? `Fee ConectCampo (6%): ${brl(c.conectcampoFeeValue)}  ` : '',
+      c.observacoes ? `\n## Observações\n${c.observacoes}` : '',
+      ``,
+      `---`,
+      `_Documento gerado pela plataforma ConectCampo. A eficácia plena da Cédula de Produto Rural depende de emissão e, quando aplicável, registro no cartório competente (Lei nº 8.929/1994 e Lei nº 13.986/2020)._`,
+    ]
+      .filter((l) => l !== '')
+      .join('\n');
+  }
+
   // ─── Assinatura eletrônica (simples, com trilha de auditoria) ────────────────
 
   /**
@@ -139,8 +199,59 @@ export class CprService {
 
     const snapshot = this.renderCprHtml(cpr);
     const documentHash = createHash('sha256').update(snapshot).digest('hex');
-    const emitenteSignToken = cpr.emitenteSignToken ?? randomUUID();
-    const credorSignToken = cpr.credorSignToken ?? randomUUID();
+
+    // ── ZapSign (assinatura automática) — se habilitado ──
+    if (this.zapsign.isEnabled()) {
+      const doc = await this.zapsign.createDocumentFromMarkdown({
+        name: `CPR ${cpr.numeroCpr ?? cpr.id.slice(0, 8)}`,
+        markdownText: this.renderCprMarkdown(cpr),
+        externalId: cpr.id,
+        signers: [
+          { name: cpr.emitenteNome, externalId: 'emitente' },
+          { name: cpr.credorNome, externalId: 'credor' },
+        ],
+      });
+
+      if (doc) {
+        const emitente = doc.signers.find((s) => s.externalId === 'emitente') ?? doc.signers[0];
+        const credor = doc.signers.find((s) => s.externalId === 'credor') ?? doc.signers[1];
+
+        const updated = await this.prisma.cprDocument.update({
+          where: { id: cprId },
+          data: {
+            signatureProvider: 'zapsign',
+            signatureStatus: 'PENDENTE',
+            signedSnapshot: snapshot,
+            documentHash,
+            zapsignDocToken: doc.docToken,
+            emitenteSignToken: emitente?.token ?? null,
+            emitenteSignUrl: emitente?.signUrl ?? null,
+            credorSignToken: credor?.token ?? null,
+            credorSignUrl: credor?.signUrl ?? null,
+            emitenteSignedAt: null,
+            emitenteSignIp: null,
+            credorSignedAt: null,
+            credorSignIp: null,
+            signedAt: null,
+          },
+        });
+
+        this.logger.log(`Assinatura ZapSign solicitada para CPR ${cprId} (doc ${doc.docToken})`);
+        return {
+          provider: 'zapsign',
+          signatureStatus: updated.signatureStatus,
+          documentHash,
+          emitenteSignToken: emitente?.token,
+          credorSignToken: credor?.token,
+        };
+      }
+      // Se a ZapSign falhar, cai no fluxo interno abaixo.
+      this.logger.warn(`ZapSign indisponível — usando fluxo interno para CPR ${cprId}`);
+    }
+
+    // ── Fluxo interno (fallback) ──
+    const emitenteSignToken = randomUUID();
+    const credorSignToken = randomUUID();
 
     const updated = await this.prisma.cprDocument.update({
       where: { id: cprId },
@@ -149,9 +260,11 @@ export class CprService {
         signatureStatus: 'PENDENTE',
         signedSnapshot: snapshot,
         documentHash,
+        zapsignDocToken: null,
         emitenteSignToken,
+        emitenteSignUrl: null,
         credorSignToken,
-        // zera assinaturas anteriores (novo snapshot)
+        credorSignUrl: null,
         emitenteSignedAt: null,
         emitenteSignIp: null,
         credorSignedAt: null,
@@ -160,9 +273,10 @@ export class CprService {
       },
     });
 
-    this.logger.log(`Assinatura solicitada para CPR ${cprId} (hash ${documentHash.slice(0, 12)}…)`);
+    this.logger.log(`Assinatura interna solicitada para CPR ${cprId} (hash ${documentHash.slice(0, 12)}…)`);
 
     return {
+      provider: 'interno',
       signatureStatus: updated.signatureStatus,
       documentHash,
       emitenteSignToken,
@@ -174,19 +288,69 @@ export class CprService {
   async getSignatureStatus(cprId: string, userId: string, role: string) {
     const cpr = await this.assertOwner(cprId, userId, role);
     return {
+      provider: cpr.signatureProvider ?? 'interno',
       signatureStatus: cpr.signatureStatus ?? 'NAO_INICIADA',
       documentHash: cpr.documentHash,
+      signedFileUrl: cpr.signedFileUrl,
       emitente: {
         nome: cpr.emitenteNome,
         signedAt: cpr.emitenteSignedAt,
         token: cpr.emitenteSignToken,
+        signUrl: cpr.emitenteSignUrl,
       },
       credor: {
         nome: cpr.credorNome,
         signedAt: cpr.credorSignedAt,
         token: cpr.credorSignToken,
+        signUrl: cpr.credorSignUrl,
       },
     };
+  }
+
+  /** Webhook da ZapSign (evento doc_signed). */
+  async handleZapSignWebhook(payload: any) {
+    if (!payload || payload.event_type !== 'doc_signed') {
+      return { ignored: true };
+    }
+
+    const cpr = await this.prisma.cprDocument.findFirst({
+      where: {
+        deletedAt: null,
+        OR: [
+          { zapsignDocToken: payload.token },
+          { id: payload.external_id },
+        ],
+      },
+    });
+    if (!cpr) {
+      this.logger.warn(`ZapSign webhook: CPR não encontrada (doc ${payload.token})`);
+      return { ignored: true };
+    }
+
+    const data: Record<string, unknown> = {};
+    for (const s of payload.signers ?? []) {
+      const isSigned = s.status === 'signed' && s.signed_at;
+      if (!isSigned) continue;
+      const geo = s.geo_latitude ? `geo:${s.geo_latitude},${s.geo_longitude}` : 'zapsign';
+      if (s.external_id === 'emitente' || s.token === cpr.emitenteSignToken) {
+        data.emitenteSignedAt = new Date(s.signed_at);
+        data.emitenteSignIp = geo;
+      } else if (s.external_id === 'credor' || s.token === cpr.credorSignToken) {
+        data.credorSignedAt = new Date(s.signed_at);
+        data.credorSignIp = geo;
+      }
+    }
+
+    const fullySigned = payload.status === 'signed';
+    data.signatureStatus = fullySigned ? 'ASSINADA' : 'PARCIAL';
+    if (fullySigned) {
+      data.signedAt = new Date();
+      if (payload.signed_file) data.signedFileUrl = payload.signed_file;
+    }
+
+    await this.prisma.cprDocument.update({ where: { id: cpr.id }, data });
+    this.logger.log(`ZapSign webhook: CPR ${cpr.id} -> ${data.signatureStatus}`);
+    return { ok: true, signatureStatus: data.signatureStatus };
   }
 
   /** View pública da assinatura (acesso por token, sem login). */

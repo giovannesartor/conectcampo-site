@@ -13,6 +13,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: appLogger, rawBody: true });
   const logger = new Logger('Bootstrap');
 
+  // Trust proxy (Railway) — captura o IP real do cliente via X-Forwarded-For
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
+
   // Security — Helmet com CSP explícita
   app.use(
     helmet({

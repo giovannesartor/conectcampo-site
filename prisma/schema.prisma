@@ -1087,16 +1087,20 @@ model CprDocument {
 
   // Assinatura eletrônica (simples, com trilha de auditoria)
   signatureStatus     String?     @default("NAO_INICIADA") // NAO_INICIADA | PENDENTE | PARCIAL | ASSINADA
-  signatureProvider   String?     // interno | clicksign | d4sign
+  signatureProvider   String?     // interno | zapsign
   documentHash        String?     // SHA-256 do snapshot assinado
   signedSnapshot      String?     // HTML imutável capturado no momento da solicitação
   signedAt            DateTime?   // quando totalmente assinada
   emitenteSignToken   String?     @unique
   emitenteSignedAt    DateTime?
   emitenteSignIp      String?
+  emitenteSignUrl     String?     // URL de assinatura (ZapSign)
   credorSignToken     String?     @unique
   credorSignedAt      DateTime?
   credorSignIp        String?
+  credorSignUrl       String?     // URL de assinatura (ZapSign)
+  zapsignDocToken     String?     // token do documento na ZapSign
+  signedFileUrl       String?     // PDF assinado (ZapSign)
 
   observacoes         String?
 
