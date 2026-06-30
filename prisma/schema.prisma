@@ -221,6 +221,7 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   quantovaleConnection QuantovaleConnection?
   cprDocuments         CprDocument[]
+  apiKeys              ApiKey[]
 
   @@index([email])
   @@index([role])
@@ -1020,6 +1021,23 @@ model CarbonDocument {
 // ──────────────────────────────────────────────
 // CPR — CÉDULA DE PRODUTO RURAL
 // ──────────────────────────────────────────────
+
+model ApiKey {
+  id          String    @id @default(uuid())
+  userId      String
+  name        String
+  prefix      String    // primeiros caracteres da chave (exibição)
+  keyHash     String    @unique // SHA-256 da chave (nunca guardamos o segredo)
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([keyHash])
+  @@map("api_keys")
+}
 
 model WebhookEvent {
   id          String   @id @default(uuid())

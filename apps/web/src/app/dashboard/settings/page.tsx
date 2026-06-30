@@ -2,13 +2,15 @@
 
 import { useAuth } from '@/lib/auth-context';
 import { useState } from 'react';
-import { User, Lock, Bell, Save, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Bell, Save, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { ApiKeysPanel } from '@/components/dashboard/ApiKeysPanel';
 
 export default function SettingsPage() {
   const { user } = useAuth();
-  const [tab, setTab] = useState<'profile' | 'password' | 'notifications'>('profile');
+  const [tab, setTab] = useState<'profile' | 'password' | 'notifications' | 'apikeys'>('profile');
+  const canUseApiKeys = user?.role === 'FINANCIAL_INSTITUTION' || user?.role === 'ADMIN';
   const [saving, setSaving] = useState(false);
 
   // Profile form
@@ -79,7 +81,8 @@ export default function SettingsPage() {
     { key: 'profile', label: 'Perfil', icon: User },
     { key: 'password', label: 'Senha', icon: Lock },
     { key: 'notifications', label: 'Notificações', icon: Bell },
-  ] as const;
+    ...(canUseApiKeys ? [{ key: 'apikeys', label: 'API Keys', icon: KeyRound }] : []),
+  ] as { key: 'profile' | 'password' | 'notifications' | 'apikeys'; label: string; icon: typeof User }[];
 
   const NOTIFICATION_ITEMS = [
     { label: 'Novas propostas', desc: 'Receber email quando uma proposta for recebida', key: 'proposals' as const },
@@ -258,6 +261,9 @@ export default function SettingsPage() {
           ))}
         </div>
       )}
+
+      {/* API Keys tab */}
+      {tab === 'apikeys' && canUseApiKeys && <ApiKeysPanel />}
     </div>
   );
 }
