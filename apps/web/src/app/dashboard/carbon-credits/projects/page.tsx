@@ -14,6 +14,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { EmptyState } from '@/components/dashboard/EmptyState';
 
 interface Project {
   id: string;
@@ -117,16 +118,13 @@ export default function CarbonProjectsPage() {
           ))}
         </div>
       ) : projects.length === 0 ? (
-        <div className="card text-center py-16">
-          <TreePine className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Nenhum projeto ainda</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
-            Cadastre seu primeiro projeto de carbono para começar a medir suas reduções de CO₂ e emitir créditos.
-          </p>
-          <Link href="/dashboard/carbon-credits/projects/new" className="btn-primary text-sm inline-flex">
-            <Plus className="h-4 w-4 mr-2" /> Criar Primeiro Projeto
-          </Link>
-        </div>
+        <EmptyState
+          icon={TreePine}
+          title="Nenhum projeto ainda"
+          description="Cadastre seu primeiro projeto de carbono para medir reduções de CO₂ e emitir créditos."
+          actionLabel="Criar primeiro projeto"
+          onAction={() => router.push('/dashboard/carbon-credits/projects/new')}
+        />
       ) : (
         <div className="space-y-3">
           {projects.map((p) => (

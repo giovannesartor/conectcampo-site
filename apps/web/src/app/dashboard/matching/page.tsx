@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
+import { EmptyState } from '@/components/dashboard/EmptyState';
 import Link from 'next/link';
 
 const CROPS = ['Todos', 'Soja', 'Milho', 'Café', 'Algodão', 'Arroz', 'Trigo', 'Cana-de-açúcar', 'Feijão', 'Pecuária (Corte)', 'Outro'];
@@ -169,15 +170,15 @@ export default function MatchingPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="card text-center py-16">
-          <TrendingUp className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto" />
-          <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">Nenhuma oportunidade encontrada</h3>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            {search || cropFilter !== 'Todos' || statusFilter !== 'Todos'
+        <EmptyState
+          icon={TrendingUp}
+          title="Nenhuma oportunidade encontrada"
+          description={
+            search || cropFilter !== 'Todos' || statusFilter !== 'Todos'
               ? 'Tente ajustar os filtros acima.'
-              : 'Novas operações aparecerão aqui quando submetidas pelos produtores.'}
-          </p>
-        </div>
+              : 'Novas operações aparecerão aqui quando submetidas pelos produtores.'
+          }
+        />
       ) : (
         <div className="space-y-4">
           {filtered.map((op) => (

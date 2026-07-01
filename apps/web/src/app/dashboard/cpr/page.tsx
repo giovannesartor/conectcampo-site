@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
+import { EmptyState } from '@/components/dashboard/EmptyState';
 import toast from 'react-hot-toast';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -448,11 +449,13 @@ export default function CprPage() {
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" /></div>
       ) : cprs.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 border border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-12 text-center">
-          <ScrollText className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400 font-medium">Nenhuma CPR criada ainda</p>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Clique em "Nova CPR" para emitir ou usar uma CPR para captação</p>
-        </div>
+        <EmptyState
+          icon={ScrollText}
+          title="Nenhuma CPR criada ainda"
+          description="Emita uma Cédula de Produto Rural ou use uma CPR para captar crédito."
+          actionLabel="Nova CPR"
+          onAction={() => { setShowForm(true); setError(''); }}
+        />
       ) : (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
