@@ -5,6 +5,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import axios from 'axios';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AsaasService } from '../subscriptions/asaas.service';
 import { CreateCarbonProjectDto } from './dto/create-carbon-project.dto';
@@ -509,19 +510,134 @@ export class CarbonCreditsService {
     });
   }
 
-  // ─── Market price reference (mock) ────────────────────────────────────────
-  async getMarketPrices() {
-    // Referências de mercado (dados ilustrativos — em produção integrar com API externa)
+  // ─── Preços de mercado (dados reais via Carbonmark + câmbio) ───────────────
+  async getMarketPrices(): Promise<MarketPricesResult> {
+    if (marketCache && Date.now() - marketCache.at < MARKET_TTL_MS) {
+      return marketCache.data;
+    }
+
+    try {
+      const fx = await this.getUsdBrl();
+
+      // Categorias relevantes (mercado voluntário on-chain, endpoint público sem chave)
+      const CATEGORIES = [
+        'Renewable Energy',
+        'Forestry and Land Use',
+        'Agriculture',
+        'Waste Management',
+        'Energy Efficiency',
+      ];
+      const responses = await Promise.allSettled(
+        CATEGORIES.map((category) =>
+          axios.get('https://api.carbonmark.com/carbonProjects', {
+            params: { country: 'Brazil', category },
+            headers: { Accept: 'application/json' },
+            timeout: 10000,
+          }),
+        ),
+      );
+
+      // Agrega por categoria, apenas projetos com preço e oferta ativa
+      const byCat = new Map<string, { registry: string; sum: number; n: number; min: number }>();
+      for (const r of responses) {
+        if (r.status !== 'fulfilled') continue;
+        const items: any[] = r.value.data?.items ?? (Array.isArray(r.value.data) ? r.value.data : []);
+        for (const p of items) {
+          const price = parseFloat(p?.price);
+          if (!price || price <= 0 || !p?.hasSupply) continue;
+          const cat = p?.methodologies?.[0]?.category || 'Outros';
+          const cur = byCat.get(cat) ?? { registry: p?.registry || 'VCS', sum: 0, n: 0, min: price };
+          cur.sum += price;
+          cur.n += 1;
+          cur.min = Math.min(cur.min, price);
+          byCat.set(cat, cur);
+        }
+      }
+
+      const CAT_PT: Record<string, string> = {
+        'Renewable Energy': 'Energia Renovável',
+        'Forestry and Land Use': 'Florestas e Uso da Terra',
+        Agriculture: 'Agricultura',
+        'Waste Management': 'Resíduos',
+        'Energy Efficiency': 'Eficiência Energética',
+      };
+
+      const prices = Array.from(byCat.entries())
+        .map(([type, v]) => {
+          const usd = v.sum / v.n;
+          return {
+            standard: v.registry,
+            type: CAT_PT[type] ?? type,
+            priceUSD: Number(usd.toFixed(2)),
+            priceBRL: Number((usd * fx).toFixed(2)),
+            projects: v.n,
+          };
+        })
+        .sort((a, b) => b.projects - a.projects)
+        .slice(0, 8);
+
+      if (prices.length === 0) throw new Error('nenhum projeto com preço/oferta');
+
+      const result = {
+        source: 'Carbonmark — mercado voluntário (projetos no Brasil)',
+        updatedAt: new Date().toISOString(),
+        usdBrl: Number(fx.toFixed(4)),
+        note:
+          'Preços reais de listagens/pools de créditos tokenizados (Carbonmark), projetos localizados no Brasil, ' +
+          'com câmbio USD→BRL em tempo real. Créditos premium OTC/registro direto podem ter valores diferentes.',
+        prices,
+      };
+      marketCache = { at: Date.now(), data: result };
+      this.logger.log(`Preços de carbono atualizados (Carbonmark): ${prices.length} categorias, USD/BRL ${fx.toFixed(2)}`);
+      return result;
+    } catch (e) {
+      this.logger.warn(`Falha ao obter preços reais de carbono — usando referência. (${(e as Error).message})`);
+      if (marketCache) return marketCache.data; // último sucesso conhecido
+      return this.referenceMarketPrices();
+    }
+  }
+
+  /** Câmbio USD→BRL em tempo real (fonte pública gratuita), com fallback. */
+  private async getUsdBrl(): Promise<number> {
+    const fallback = Number(process.env.CARBON_USD_BRL) || 5.4;
+    try {
+      const { data } = await axios.get('https://open.er-api.com/v6/latest/USD', { timeout: 8000 });
+      const brl = data?.rates?.BRL;
+      return typeof brl === 'number' && brl > 0 ? brl : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  /** Fallback ilustrativo quando a fonte externa está indisponível. */
+  private referenceMarketPrices(): MarketPricesResult {
     return {
+      source: 'Referência ilustrativa (fonte externa indisponível)',
       updatedAt: new Date().toISOString(),
-      note: 'Preços de referência ilustrativos. Integre com Verra, Gold Standard ou B3 para dados reais.',
+      note: 'Não foi possível obter preços reais agora — exibindo referência ilustrativa.',
       prices: [
         { standard: 'VERRA_VCS', type: 'Agricultura/Pastagem', priceUSD: 12, priceBRL: 60 },
         { standard: 'VERRA_VCS', type: 'Floresta/REDD+', priceUSD: 18, priceBRL: 90 },
         { standard: 'GOLD_STANDARD', type: 'Energia Renovável', priceUSD: 25, priceBRL: 125 },
-        { standard: 'CERRADO_PROTOCOL', type: 'Cerrado', priceUSD: 15, priceBRL: 75 },
-        { standard: 'ABC_PLUS', type: 'Baixo Carbono Agro', priceUSD: 10, priceBRL: 50 },
       ],
     };
   }
 }
+
+// Tipos e cache dos preços de mercado (TTL 6h)
+export interface MarketPriceRow {
+  standard: string;
+  type: string;
+  priceUSD: number;
+  priceBRL: number;
+  projects?: number;
+}
+export interface MarketPricesResult {
+  source: string;
+  updatedAt: string;
+  usdBrl?: number;
+  note: string;
+  prices: MarketPriceRow[];
+}
+let marketCache: { at: number; data: MarketPricesResult } | null = null;
+const MARKET_TTL_MS = 6 * 60 * 60 * 1000;

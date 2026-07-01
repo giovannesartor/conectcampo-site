@@ -10,11 +10,14 @@ interface PriceEntry {
   type: string;
   priceUSD: number;
   priceBRL: number;
+  projects?: number;
 }
 
 interface MarketData {
   updatedAt: string;
   note: string;
+  source?: string;
+  usdBrl?: number;
   prices: PriceEntry[];
 }
 
@@ -125,7 +128,9 @@ export default function MercadoCarbonoPage() {
 
         {market?.updatedAt && (
           <p className="text-xs text-gray-400 mt-3">
+            {market.source ? `Fonte: ${market.source} · ` : ''}
             Atualizado em {new Date(market.updatedAt).toLocaleDateString('pt-BR')}
+            {market.usdBrl ? ` · câmbio USD→BRL ${market.usdBrl.toFixed(2)}` : ''}
           </p>
         )}
       </div>
