@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Providers } from './providers';
 import { WebVitals } from '@/components/WebVitals';
+import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -79,6 +80,15 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://conectcampo.digital',
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'ConectCampo',
+  },
+};
+
+export const viewport = {
+  themeColor: '#008c3c',
 };
 
 export default function RootLayout({
@@ -112,6 +122,7 @@ export default function RootLayout({
         />
         <Providers>{children}</Providers>
         <WebVitals />
+        <ServiceWorkerRegister />
       </body>
     </html>
   );
