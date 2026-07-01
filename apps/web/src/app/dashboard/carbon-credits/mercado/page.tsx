@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Globe, ChevronRight, TrendingUp, Info, ExternalLink, Leaf } from 'lucide-react';
+import { Globe, ChevronRight, TrendingUp, ExternalLink, Leaf, Radio, Layers, MapPin, DollarSign } from 'lucide-react';
 import { api } from '@/lib/api';
 
 interface PriceEntry {
@@ -10,7 +10,18 @@ interface PriceEntry {
   type: string;
   priceUSD: number;
   priceBRL: number;
+  minUSD?: number;
+  maxUSD?: number;
   projects?: number;
+  brazil?: number;
+}
+
+interface MarketSummary {
+  categories: number;
+  projects: number;
+  brazilProjects: number;
+  avgUSD: number;
+  avgBRL: number;
 }
 
 interface MarketData {
@@ -18,6 +29,7 @@ interface MarketData {
   note: string;
   source?: string;
   usdBrl?: number;
+  summary?: MarketSummary;
   prices: PriceEntry[];
 }
 
@@ -69,26 +81,47 @@ export default function MercadoCarbonoPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mercado de Carbono</h1>
         </div>
         <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-          Referências de preço, padrões e recursos para comercialização de créditos.
+          Preços reais do mercado voluntário, atualizados automaticamente.
         </p>
       </div>
 
-      {/* Aviso */}
-      <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex gap-3">
-        <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Dados Ilustrativos</p>
-          <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
-            Os preços abaixo são referências de mercado para fins de planejamento. Para negociações reais, consulte registros oficiais (Verra, Gold Standard) e corretoras especializadas.
-          </p>
-        </div>
+      {/* Badge de dados ao vivo */}
+      <div className="flex items-center gap-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/20 px-4 py-2.5">
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+        </span>
+        <Radio className="h-4 w-4 text-emerald-600" />
+        <span className="text-sm font-medium text-emerald-800 dark:text-emerald-300">Dados de mercado ao vivo</span>
+        <span className="text-xs text-emerald-600/80 dark:text-emerald-500 ml-auto">
+          {market?.source ?? 'Carbonmark'}
+          {market?.usdBrl ? ` · USD→BRL ${market.usdBrl.toFixed(2)}` : ''}
+        </span>
       </div>
+
+      {/* Resumo (KPIs) */}
+      {market?.summary && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { icon: Layers, label: 'Categorias', value: String(market.summary.categories) },
+            { icon: Globe, label: 'Projetos com oferta', value: market.summary.projects.toLocaleString('pt-BR') },
+            { icon: MapPin, label: 'Projetos no Brasil', value: market.summary.brazilProjects.toLocaleString('pt-BR') },
+            { icon: DollarSign, label: 'Preço médio', value: `R$ ${market.summary.avgBRL.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` },
+          ].map((k) => (
+            <div key={k.label} className="card card-hover">
+              <k.icon className="h-5 w-5 text-emerald-600" />
+              <p className="mt-2 text-xl font-extrabold text-gray-900 dark:text-white">{k.value}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{k.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Tabela de Preços */}
       <div className="card">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="h-5 w-5 text-emerald-600" />
-          <h2 className="font-semibold text-gray-900 dark:text-white">Preços de Referência por Padrão</h2>
+          <h2 className="font-semibold text-gray-900 dark:text-white">Preço médio por categoria (tCO₂e)</h2>
         </div>
 
         {loading ? (
@@ -97,15 +130,21 @@ export default function MercadoCarbonoPage() {
               <div key={i} className="animate-pulse h-14 bg-gray-100 dark:bg-gray-800 rounded-lg" />
             ))}
           </div>
+        ) : (market?.prices?.length ?? 0) === 0 ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400 py-6 text-center">
+            Sem cotações disponíveis no momento. Tente novamente em instantes.
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 dark:border-dark-border">
                   <th className="text-left py-2 px-3 text-xs font-medium text-gray-500">Padrão</th>
-                  <th className="text-left py-2 px-3 text-xs font-medium text-gray-500">Tipo de Projeto</th>
-                  <th className="text-right py-2 px-3 text-xs font-medium text-gray-500">USD/tCO₂e</th>
-                  <th className="text-right py-2 px-3 text-xs font-medium text-gray-500">BRL/tCO₂e</th>
+                  <th className="text-left py-2 px-3 text-xs font-medium text-gray-500">Categoria</th>
+                  <th className="text-right py-2 px-3 text-xs font-medium text-gray-500">USD/t (médio)</th>
+                  <th className="text-right py-2 px-3 text-xs font-medium text-gray-500">Faixa USD/t</th>
+                  <th className="text-right py-2 px-3 text-xs font-medium text-gray-500">BRL/t</th>
+                  <th className="text-right py-2 px-3 text-xs font-medium text-gray-500">Projetos</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-dark-border">
@@ -116,8 +155,21 @@ export default function MercadoCarbonoPage() {
                     <td className="py-3 px-3 text-right font-medium text-emerald-600">
                       $ {row.priceUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
+                    <td className="py-3 px-3 text-right text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                      {row.minUSD != null && row.maxUSD != null
+                        ? `$${row.minUSD.toFixed(2)} – $${row.maxUSD.toFixed(2)}`
+                        : '—'}
+                    </td>
                     <td className="py-3 px-3 text-right font-bold text-gray-900 dark:text-white">
                       R$ {row.priceBRL.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-3 px-3 text-right text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                      {row.projects ?? '—'}
+                      {row.brazil ? (
+                        <span className="ml-1 inline-flex items-center rounded-full bg-brand-50 dark:bg-brand-950/30 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700 dark:text-brand-400">
+                          {row.brazil} BR
+                        </span>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -213,7 +265,7 @@ function QuickCalc({ marketPrices }: { marketPrices: PriceEntry[] }) {
               >
                 <option value="" disabled>Ref.</option>
                 {marketPrices.map((p, i) => (
-                  <option key={i} value={p.priceBRL}>{p.standard.slice(0, 10)} R${p.priceBRL}</option>
+                  <option key={i} value={p.priceBRL}>{p.type} · R${p.priceBRL}</option>
                 ))}
               </select>
             )}

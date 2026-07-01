@@ -519,76 +519,108 @@ export class CarbonCreditsService {
     try {
       const fx = await this.getUsdBrl();
 
-      // Categorias relevantes (mercado voluntário on-chain, endpoint público sem chave)
-      const CATEGORIES = [
-        'Renewable Energy',
-        'Forestry and Land Use',
-        'Agriculture',
-        'Waste Management',
-        'Energy Efficiency',
-      ];
+      // Categorias reais do Carbonmark (mercado voluntário on-chain, endpoint público sem chave)
+      const CAT_PT: Record<string, string> = {
+        'Renewable Energy': 'Energia Renovável',
+        Forestry: 'Florestas / REDD+',
+        Agriculture: 'Agricultura',
+        'Blue Carbon': 'Carbono Azul',
+        Biochar: 'Biochar',
+        'Energy Efficiency': 'Eficiência Energética',
+        'Waste Disposal': 'Resíduos',
+        'Industrial Processing': 'Processos Industriais',
+        Other: 'Outros',
+      };
+      const CATEGORIES = Object.keys(CAT_PT);
+
+      // Busca global por categoria (mercado completo). Só precisamos de price/registry/country/supply.
       const responses = await Promise.allSettled(
         CATEGORIES.map((category) =>
           axios.get('https://api.carbonmark.com/carbonProjects', {
-            params: { country: 'Brazil', category },
+            params: { category, limit: 500 },
             headers: { Accept: 'application/json' },
-            timeout: 10000,
+            timeout: 20000,
           }),
         ),
       );
 
-      // Agrega por categoria, apenas projetos com preço e oferta ativa
-      const byCat = new Map<string, { registry: string; sum: number; n: number; min: number }>();
-      for (const r of responses) {
-        if (r.status !== 'fulfilled') continue;
+      interface Agg {
+        registryCount: Record<string, number>;
+        sum: number;
+        n: number;
+        min: number;
+        max: number;
+        brazil: number;
+      }
+      const byCat = new Map<string, Agg>();
+      let totalProjects = 0;
+
+      CATEGORIES.forEach((category, i) => {
+        const r = responses[i];
+        if (r.status !== 'fulfilled') return;
         const items: any[] = r.value.data?.items ?? (Array.isArray(r.value.data) ? r.value.data : []);
         for (const p of items) {
           const price = parseFloat(p?.price);
           if (!price || price <= 0 || !p?.hasSupply) continue;
-          const cat = p?.methodologies?.[0]?.category || 'Outros';
-          const cur = byCat.get(cat) ?? { registry: p?.registry || 'VCS', sum: 0, n: 0, min: price };
+          const cur =
+            byCat.get(category) ??
+            ({ registryCount: {}, sum: 0, n: 0, min: price, max: price, brazil: 0 } as Agg);
+          const reg = p?.registry || 'VCS';
+          cur.registryCount[reg] = (cur.registryCount[reg] ?? 0) + 1;
           cur.sum += price;
           cur.n += 1;
           cur.min = Math.min(cur.min, price);
-          byCat.set(cat, cur);
+          cur.max = Math.max(cur.max, price);
+          if (p?.country === 'Brazil') cur.brazil += 1;
+          byCat.set(category, cur);
+          totalProjects += 1;
         }
-      }
-
-      const CAT_PT: Record<string, string> = {
-        'Renewable Energy': 'Energia Renovável',
-        'Forestry and Land Use': 'Florestas e Uso da Terra',
-        Agriculture: 'Agricultura',
-        'Waste Management': 'Resíduos',
-        'Energy Efficiency': 'Eficiência Energética',
-      };
+      });
 
       const prices = Array.from(byCat.entries())
-        .map(([type, v]) => {
+        .map(([category, v]) => {
           const usd = v.sum / v.n;
+          const registry =
+            Object.entries(v.registryCount).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'VCS';
           return {
-            standard: v.registry,
-            type: CAT_PT[type] ?? type,
+            standard: registry,
+            type: CAT_PT[category] ?? category,
             priceUSD: Number(usd.toFixed(2)),
             priceBRL: Number((usd * fx).toFixed(2)),
+            minUSD: Number(v.min.toFixed(2)),
+            maxUSD: Number(v.max.toFixed(2)),
             projects: v.n,
+            brazil: v.brazil,
           };
         })
-        .sort((a, b) => b.projects - a.projects)
-        .slice(0, 8);
+        .sort((a, b) => b.projects - a.projects);
 
       if (prices.length === 0) throw new Error('nenhum projeto com preço/oferta');
 
-      const result = {
-        source: 'Carbonmark — mercado voluntário (projetos no Brasil)',
+      const avgUsd = prices.reduce((s, p) => s + p.priceUSD * p.projects, 0) / totalProjects;
+      const brazilTotal = prices.reduce((s, p) => s + p.brazil, 0);
+
+      const result: MarketPricesResult = {
+        source: 'Carbonmark — mercado voluntário',
         updatedAt: new Date().toISOString(),
         usdBrl: Number(fx.toFixed(4)),
+        summary: {
+          categories: prices.length,
+          projects: totalProjects,
+          brazilProjects: brazilTotal,
+          avgUSD: Number(avgUsd.toFixed(2)),
+          avgBRL: Number((avgUsd * fx).toFixed(2)),
+        },
         note:
-          'Preços reais de listagens/pools de créditos tokenizados (Carbonmark), projetos localizados no Brasil, ' +
-          'com câmbio USD→BRL em tempo real. Créditos premium OTC/registro direto podem ter valores diferentes.',
+          'Preços reais de créditos com oferta ativa no mercado voluntário on-chain (Carbonmark), ' +
+          'agregados por categoria, com câmbio USD→BRL em tempo real. Créditos premium negociados em ' +
+          'balcão (OTC) ou direto no registro podem ter valores superiores.',
         prices,
       };
       marketCache = { at: Date.now(), data: result };
-      this.logger.log(`Preços de carbono atualizados (Carbonmark): ${prices.length} categorias, USD/BRL ${fx.toFixed(2)}`);
+      this.logger.log(
+        `Preços de carbono atualizados (Carbonmark): ${prices.length} categorias, ${totalProjects} projetos, USD/BRL ${fx.toFixed(2)}`,
+      );
       return result;
     } catch (e) {
       this.logger.warn(`Falha ao obter preços reais de carbono — usando referência. (${(e as Error).message})`);
@@ -630,13 +662,23 @@ export interface MarketPriceRow {
   type: string;
   priceUSD: number;
   priceBRL: number;
+  minUSD?: number;
+  maxUSD?: number;
   projects?: number;
+  brazil?: number;
 }
 export interface MarketPricesResult {
   source: string;
   updatedAt: string;
   usdBrl?: number;
   note: string;
+  summary?: {
+    categories: number;
+    projects: number;
+    brazilProjects: number;
+    avgUSD: number;
+    avgBRL: number;
+  };
   prices: MarketPriceRow[];
 }
 let marketCache: { at: number; data: MarketPricesResult } | null = null;
