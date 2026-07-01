@@ -2,10 +2,14 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from '../../prisma/prisma.service';
 import { OperationStatus, PartnerType, ProposalStatus } from '@prisma/client';
 import { CreateProposalDto } from './dto/create-proposal.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class OperationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async create(userId: string, data: any) {
     const profile = await this.prisma.producerProfile.findUnique({
@@ -56,6 +60,7 @@ export class OperationsService {
 
     const operation = await this.prisma.operationRequest.findFirst({
       where: { id: dto.operationId, deletedAt: null },
+      include: { producerProfile: { select: { userId: true } } },
     });
     if (!operation) throw new NotFoundException('Operação não encontrada');
 
@@ -87,6 +92,18 @@ export class OperationsService {
       await this.prisma.operationRequest.update({
         where: { id: operation.id },
         data: { status: OperationStatus.PROPOSALS_RECEIVED },
+      });
+    }
+
+    // Notifica o produtor dono da operação (tempo real via SSE)
+    const ownerId = operation.producerProfile?.userId;
+    if (ownerId) {
+      void this.notifications.create({
+        userId: ownerId,
+        type: 'success',
+        title: 'Nova proposta recebida',
+        message: `${partner.name} enviou uma proposta para sua operação.`,
+        link: '/dashboard/proposals',
       });
     }
 

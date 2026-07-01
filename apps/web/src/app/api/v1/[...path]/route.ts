@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 function getBackendUrl(): string {
   return (
     process.env.API_INTERNAL_URL ||
@@ -47,6 +50,18 @@ async function proxyRequest(
     // Remove headers that cause issues when proxied
     responseHeaders.delete('transfer-encoding');
     responseHeaders.delete('content-encoding');
+
+    // SSE (text/event-stream): repassa o corpo em streaming, sem bufferizar.
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('text/event-stream') && response.body) {
+      responseHeaders.set('content-type', 'text/event-stream');
+      responseHeaders.set('cache-control', 'no-cache, no-transform');
+      responseHeaders.set('connection', 'keep-alive');
+      return new NextResponse(response.body, {
+        status: response.status,
+        headers: responseHeaders,
+      });
+    }
 
     const body = await response.arrayBuffer();
 

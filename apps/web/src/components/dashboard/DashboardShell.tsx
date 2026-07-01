@@ -37,6 +37,7 @@ import { useAuth } from '@/lib/auth-context';
 import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationsDropdown } from './NotificationsDropdown';
+import { RealtimeNotifications } from './RealtimeNotifications';
 import { OnboardingTour } from './OnboardingTour';
 import { api } from '@/lib/api';
 import { usePreview } from '@/lib/preview-context';
@@ -438,6 +439,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       </div>
 
       <OnboardingTour />
+      <RealtimeNotifications />
     </div>
   );
 }

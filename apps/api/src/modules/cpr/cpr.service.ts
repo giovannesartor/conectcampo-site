@@ -13,6 +13,7 @@ import { UserRole } from '@prisma/client';
 import { ZapSignService } from '../../common/zapsign/zapsign.service';
 import { renderCprPdf } from '../../common/zapsign/cpr-pdf';
 import { CPR_PRICING } from '../../common/pricing/pricing';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const ZAPSIGN_BRAND_LOGO = process.env.ZAPSIGN_BRAND_LOGO || 'https://conectcampo.digital/logo.png';
 const ZAPSIGN_BRAND_COLOR = '#008c3c';
@@ -28,6 +29,7 @@ export class CprService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly zapsign: ZapSignService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -432,6 +434,17 @@ export class CprService {
     }
 
     await this.prisma.cprDocument.update({ where: { id: cpr.id }, data });
+
+    if (fullySigned) {
+      void this.notifications.create({
+        userId: cpr.userId,
+        type: 'success',
+        title: 'CPR assinada',
+        message: `A CPR ${cpr.numeroCpr ?? ''} foi assinada por todas as partes.`.trim(),
+        link: '/dashboard/cpr',
+      });
+    }
+
     this.logger.log(`ZapSign webhook: CPR ${cpr.id} -> ${data.signatureStatus}`);
     return { ok: true, signatureStatus: data.signatureStatus };
   }
@@ -495,6 +508,16 @@ export class CprService {
     });
 
     this.logger.log(`CPR ${cpr.id} assinada por ${party} (IP ${ip}) — status ${updated.signatureStatus}`);
+
+    if (fullySigned) {
+      void this.notifications.create({
+        userId: cpr.userId,
+        type: 'success',
+        title: 'CPR assinada',
+        message: `A CPR ${cpr.numeroCpr ?? ''} foi assinada por todas as partes.`.trim(),
+        link: '/dashboard/cpr',
+      });
+    }
 
     return {
       ok: true,

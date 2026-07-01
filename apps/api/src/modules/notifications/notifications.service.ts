@@ -1,11 +1,30 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Subject, Observable } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 import { PrismaService } from '../../prisma/prisma.service';
+
+interface NotificationEvent {
+  userId: string;
+  data: Record<string, unknown>;
+}
 
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
+  // Event bus em memória para push em tempo real (SSE).
+  // Para múltiplas instâncias, trocar por Redis pub/sub.
+  private readonly events$ = new Subject<NotificationEvent>();
+
   constructor(private readonly prisma: PrismaService) {}
+
+  /** Stream de notificações de um usuário (para SSE). */
+  streamFor(userId: string): Observable<Record<string, unknown>> {
+    return this.events$.asObservable().pipe(
+      filter((e) => e.userId === userId),
+      map((e) => e.data),
+    );
+  }
 
   async findByUser(userId: string, page = 1, perPage = 20) {
     const where = { userId };
@@ -92,6 +111,19 @@ export class NotificationsService {
         title: params.title,
         message: params.message,
         link: params.link,
+      },
+    });
+
+    // Push em tempo real (SSE)
+    this.events$.next({
+      userId: params.userId,
+      data: {
+        id: notification.id,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        link: notification.link,
+        createdAt: notification.createdAt,
       },
     });
 

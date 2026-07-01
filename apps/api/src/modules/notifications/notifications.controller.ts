@@ -8,11 +8,17 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Sse,
+  MessageEvent,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { JwtService } from '@nestjs/jwt';
+import { Observable, merge, interval, EMPTY } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { NotificationsService } from './notifications.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
@@ -21,7 +27,37 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,
+    private readonly jwtService: JwtService,
   ) {}
+
+  /**
+   * Stream em tempo real (SSE). EventSource não envia header Authorization,
+   * então o token vai na query. Validado manualmente aqui.
+   */
+  @Public()
+  @Sse('stream')
+  @ApiOperation({ summary: 'Stream de notificações em tempo real (SSE)' })
+  stream(@Query('token') token: string): Observable<MessageEvent> {
+    let userId: string | null = null;
+    try {
+      const payload = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+      userId = payload?.sub ?? null;
+    } catch {
+      userId = null;
+    }
+    if (!userId) return EMPTY; // token inválido → encerra o stream
+
+    const notifications$ = this.notificationsService
+      .streamFor(userId)
+      .pipe(map((data): MessageEvent => ({ type: 'notification', data })));
+
+    // heartbeat a cada 25s para manter a conexão viva atrás de proxies
+    const heartbeat$ = interval(25000).pipe(
+      map((): MessageEvent => ({ type: 'ping', data: { t: Date.now() } })),
+    );
+
+    return merge(notifications$, heartbeat$);
+  }
 
   @Get()
   @ApiOperation({ summary: 'Listar minhas notificações' })

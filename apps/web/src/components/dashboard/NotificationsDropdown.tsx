@@ -60,9 +60,15 @@ export function NotificationsDropdown() {
 
   useEffect(() => {
     fetchNotifications();
-    // Poll every 30s
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
+    // Poll de segurança a cada 60s (o tempo real via SSE cobre o resto)
+    const interval = setInterval(fetchNotifications, 60000);
+    // Atualiza na hora quando chega notificação em tempo real
+    const onRealtime = () => fetchNotifications();
+    window.addEventListener('cc:notification', onRealtime);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('cc:notification', onRealtime);
+    };
   }, [fetchNotifications]);
 
   useEffect(() => {
