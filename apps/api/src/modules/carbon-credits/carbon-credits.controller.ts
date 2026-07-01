@@ -53,6 +53,12 @@ export class CarbonCreditsController {
     return this.service.getMarketPrices();
   }
 
+  @Get('featured-projects')
+  @ApiOperation({ summary: 'Projetos brasileiros em destaque (com imagem de satélite)' })
+  async getFeaturedProjects() {
+    return this.service.getFeaturedProjects();
+  }
+
   // ─── Projects ─────────────────────────────────────────────────────────────
 
   @Post('projects')

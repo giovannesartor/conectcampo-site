@@ -56,15 +56,31 @@ const RESOURCES = [
   { label: 'Programa ABC+ – MAPA', url: 'https://www.gov.br/agricultura/pt-br/assuntos/sustentabilidade/recuperacao-de-areas-degradadas/programa-abc' },
 ];
 
+interface FeaturedProject {
+  key: string;
+  name: string;
+  registry: string;
+  category: string;
+  region: string | null;
+  image: string;
+  url: string | null;
+  priceUSD: number | null;
+  hasSupply: boolean;
+}
+
 export default function MercadoCarbonoPage() {
   const [market, setMarket] = useState<MarketData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [featured, setFeatured] = useState<FeaturedProject[]>([]);
 
   useEffect(() => {
     api.get('/carbon-credits/market-prices')
       .then((r) => setMarket(r.data))
       .catch(() => setMarket(null))
       .finally(() => setLoading(false));
+    api.get('/carbon-credits/featured-projects')
+      .then((r) => setFeatured(r.data?.projects ?? []))
+      .catch(() => setFeatured([]));
   }, []);
 
   return (
@@ -186,6 +202,41 @@ export default function MercadoCarbonoPage() {
           </p>
         )}
       </div>
+
+      {/* Projetos em destaque no Brasil (com satélite) */}
+      {featured.length > 0 && (
+        <div className="card">
+          <div className="flex items-center gap-2 mb-4">
+            <MapPin className="h-5 w-5 text-emerald-600" />
+            <h2 className="font-semibold text-gray-900 dark:text-white">Projetos de carbono no Brasil</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {featured.map((p) => (
+              <a
+                key={p.key}
+                href={p.url ?? '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group rounded-xl overflow-hidden border border-gray-100 dark:border-dark-border hover:shadow-md transition-shadow"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.image} alt={p.name} className="h-32 w-full object-cover" loading="lazy" />
+                <div className="p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-600">{p.registry}</span>
+                    {p.priceUSD != null && (
+                      <span className="text-xs font-bold text-gray-900 dark:text-white">$ {p.priceUSD.toFixed(2)}/t</span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white line-clamp-2">{p.name}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{p.category}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 mt-3">Imagens de satélite dos projetos · fonte Carbonmark/Mapbox.</p>
+        </div>
+      )}
 
       {/* Calculadora rápida */}
       <div className="card">

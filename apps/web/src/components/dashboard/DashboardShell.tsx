@@ -38,6 +38,7 @@ import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationsDropdown } from './NotificationsDropdown';
 import { RealtimeNotifications } from './RealtimeNotifications';
+import { CommandPalette } from './CommandPalette';
 import { OnboardingTour } from './OnboardingTour';
 import { api } from '@/lib/api';
 import { usePreview } from '@/lib/preview-context';
@@ -440,6 +441,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
       <OnboardingTour />
       <RealtimeNotifications />
+      <CommandPalette />
     </div>
   );
 }

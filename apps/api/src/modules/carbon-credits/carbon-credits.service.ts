@@ -629,6 +629,41 @@ export class CarbonCreditsService {
     }
   }
 
+  /** Projetos brasileiros em destaque com imagem de satélite (Carbonmark). */
+  async getFeaturedProjects() {
+    if (featuredCache && Date.now() - featuredCache.at < MARKET_TTL_MS) {
+      return featuredCache.data;
+    }
+    try {
+      const { data } = await axios.get('https://api.carbonmark.com/carbonProjects', {
+        params: { country: 'Brazil', limit: 60 },
+        headers: { Accept: 'application/json' },
+        timeout: 15000,
+      });
+      const items: any[] = data?.items ?? (Array.isArray(data) ? data : []);
+      const projects = items
+        .filter((p) => p?.satelliteImage?.url)
+        .slice(0, 6)
+        .map((p) => ({
+          key: p.key,
+          name: p.name,
+          registry: p.registry ?? 'VCS',
+          category: p?.methodologies?.[0]?.category ?? '—',
+          region: p.region ?? null,
+          image: p.satelliteImage.url as string,
+          url: p.url ?? null,
+          priceUSD: parseFloat(p.price) > 0 ? Number(parseFloat(p.price).toFixed(2)) : null,
+          hasSupply: !!p.hasSupply,
+        }));
+      const result = { updatedAt: new Date().toISOString(), projects };
+      featuredCache = { at: Date.now(), data: result };
+      return result;
+    } catch (e) {
+      this.logger.warn(`Falha ao buscar projetos em destaque: ${(e as Error).message}`);
+      return featuredCache?.data ?? { updatedAt: new Date().toISOString(), projects: [] };
+    }
+  }
+
   /** Câmbio USD→BRL em tempo real (fonte pública gratuita), com fallback. */
   private async getUsdBrl(): Promise<number> {
     const fallback = Number(process.env.CARBON_USD_BRL) || 5.4;
@@ -682,4 +717,5 @@ export interface MarketPricesResult {
   prices: MarketPriceRow[];
 }
 let marketCache: { at: number; data: MarketPricesResult } | null = null;
+let featuredCache: { at: number; data: { updatedAt: string; projects: unknown[] } } | null = null;
 const MARKET_TTL_MS = 6 * 60 * 60 * 1000;
