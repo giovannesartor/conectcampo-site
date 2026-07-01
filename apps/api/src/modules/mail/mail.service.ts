@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 import * as nodemailer from 'nodemailer';
 
 @Injectable()
@@ -7,7 +9,10 @@ export class MailService {
   private readonly logger = new Logger(MailService.name);
   private transporter: nodemailer.Transporter;
 
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    @InjectQueue('email') private readonly emailQueue: Queue,
+  ) {
     this.transporter = nodemailer.createTransport({
       host: this.config.get<string>('SMTP_HOST', 'smtp.gmail.com'),
       port: this.config.get<number>('SMTP_PORT', 587),
@@ -19,9 +24,25 @@ export class MailService {
     });
   }
 
-  // ─── Internal send ──────────────────────────────────────────────────────────
+  // ─── Envio ────────────────────────────────────────────────────────────────
+  // send() enfileira (fila Redis) para não bloquear o request; se a fila
+  // estiver indisponível, envia direto como fallback.
 
   private async send(to: string, subject: string, html: string): Promise<void> {
+    try {
+      await this.emailQueue.add(
+        'send',
+        { to, subject, html },
+        { attempts: 3, backoff: { type: 'exponential', delay: 5000 }, removeOnComplete: true, removeOnFail: 100 },
+      );
+    } catch (err) {
+      this.logger.warn(`Fila de e-mail indisponível — enviando direto. (${(err as Error).message})`);
+      await this.deliver(to, subject, html);
+    }
+  }
+
+  /** Envio real (chamado pelo processor da fila ou pelo fallback). */
+  async deliver(to: string, subject: string, html: string): Promise<void> {
     const from = `"ConectCampo" <${this.config.get<string>('MAIL_FROM', 'conectcampodigital@gmail.com')}>`;
     try {
       await this.transporter.sendMail({ from, to, subject, html });

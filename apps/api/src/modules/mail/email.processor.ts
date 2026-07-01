@@ -9,6 +9,12 @@ export class EmailProcessor {
 
   constructor(private readonly mailService: MailService) {}
 
+  /** Envio genérico enfileirado por MailService.send(). */
+  @Process('send')
+  async handleSend(job: Job<{ to: string; subject: string; html: string }>) {
+    await this.mailService.deliver(job.data.to, job.data.subject, job.data.html);
+  }
+
   @Process('welcome')
   async handleWelcome(job: Job<{ email: string; name: string }>) {
     this.logger.log(`Sending welcome email to ${job.data.email}`);
