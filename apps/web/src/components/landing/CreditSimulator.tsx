@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Calculator, TrendingDown, Clock, DollarSign } from 'lucide-react';
+import { Calculator, TrendingDown, Clock, DollarSign, Check } from 'lucide-react';
 
 const TERM_OPTIONS = [
   { value: 6, label: '6 meses' },
@@ -25,6 +25,27 @@ function formatBRL(value: number) {
 export function CreditSimulator({ embedded = false }: { embedded?: boolean }) {
   const [amount, setAmount] = useState(500000);
   const [term, setTerm] = useState(24);
+  const [leadEmail, setLeadEmail] = useState('');
+  const [leadSending, setLeadSending] = useState(false);
+  const [leadSent, setLeadSent] = useState(false);
+
+  async function submitLead(e: React.FormEvent) {
+    e.preventDefault();
+    setLeadSending(true);
+    try {
+      await fetch('/api/v1/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: leadEmail, amount, termMonths: term, source: 'simulador' }),
+      });
+      setLeadSent(true);
+    } catch {
+      // silencioso — não bloquear a landing
+      setLeadSent(true);
+    } finally {
+      setLeadSending(false);
+    }
+  }
 
   const result = useMemo(() => {
     const annualRate = 0.12; // 12% a.a. (taxa média crédito rural)
@@ -132,6 +153,40 @@ export function CreditSimulator({ embedded = false }: { embedded?: boolean }) {
             <p className="text-xs text-gray-500 dark:text-gray-400">Total a pagar</p>
           </div>
         </div>
+
+        {/* Captura de lead */}
+        {leadSent ? (
+          <div className="mt-5 rounded-xl border border-brand-200 dark:border-brand-800 bg-brand-50 dark:bg-brand-950/20 p-4 text-center">
+            <Check className="h-5 w-5 text-brand-600 mx-auto mb-1" />
+            <p className="text-sm font-semibold text-brand-700 dark:text-brand-400">Recebemos seu contato!</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              Em breve você recebe as melhores oportunidades de crédito para sua operação.
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={submitLead} className="mt-5">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white text-center mb-2">
+              Receba propostas reais para essa simulação
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="email"
+                required
+                value={leadEmail}
+                onChange={(e) => setLeadEmail(e.target.value)}
+                placeholder="Seu melhor e-mail"
+                className="flex-1 rounded-lg border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-bg px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              />
+              <button
+                type="submit"
+                disabled={leadSending}
+                className="btn-primary text-sm whitespace-nowrap disabled:opacity-60"
+              >
+                {leadSending ? 'Enviando…' : 'Quero propostas'}
+              </button>
+            </div>
+          </form>
+        )}
 
         <p className="mt-4 text-center text-xs text-gray-400">
           * Simulação ilustrativa. O banco parceiro também pode analisar seu cadastro e a taxa de

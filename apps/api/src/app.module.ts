@@ -24,6 +24,9 @@ import { QuantovaleModule } from './modules/quantovale/quantovale.module';
 import { CarbonCreditsModule } from './modules/carbon-credits/carbon-credits.module';
 import { CprModule } from './modules/cpr/cpr.module';
 import { ApiKeysModule } from './modules/api-keys/api-keys.module';
+import { LeadsModule } from './modules/leads/leads.module';
+import { EnrichmentModule } from './modules/enrichment/enrichment.module';
+import { MetricsModule } from './modules/metrics/metrics.module';
 import { PricingModule } from './common/pricing/pricing.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
@@ -70,6 +73,9 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     CarbonCreditsModule,
     CprModule,
     ApiKeysModule,
+    LeadsModule,
+    EnrichmentModule,
+    MetricsModule,
     PricingModule,
   ],
   providers: [

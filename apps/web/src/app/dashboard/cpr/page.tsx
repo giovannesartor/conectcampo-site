@@ -350,6 +350,35 @@ export default function CprPage() {
     (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm(prev => ({ ...prev, [k]: mask(e.target.value) }));
 
+  // Auto-preenchimento por CNPJ (Receita via BrasilAPI)
+  const lookupCnpj = async (who: 'emitente' | 'credor') => {
+    const raw = who === 'emitente' ? form.emitenteCpfCnpj : form.credorCpfCnpj;
+    const digits = raw.replace(/\D/g, '');
+    if (digits.length !== 14) return;
+    try {
+      const { data } = await api.get(`/enrichment/cnpj/${digits}`);
+      if (!data?.razaoSocial) return;
+      setForm(prev =>
+        who === 'emitente'
+          ? {
+              ...prev,
+              emitenteNome: prev.emitenteNome || data.razaoSocial || '',
+              emitenteCidade: prev.emitenteCidade || data.municipio || '',
+              emitenteEstado: prev.emitenteEstado || data.uf || '',
+              emitenteEmail: prev.emitenteEmail || data.email || '',
+            }
+          : {
+              ...prev,
+              credorNome: prev.credorNome || data.razaoSocial || '',
+              credorEmail: prev.credorEmail || data.email || '',
+            },
+      );
+      toast.success('Dados do CNPJ preenchidos.');
+    } catch {
+      /* silencioso — CNPJ pode não existir ou API indisponível */
+    }
+  };
+
   // ─── Prazo / Safras / Carência ──────────────────────────────────────────────
   const prazoAnosNum = form.prazoAnos ? parseInt(form.prazoAnos) : 0;
   const carenciaMaxAnos = prazoAnosNum > 0 ? Math.min(5, prazoAnosNum) : 5;
@@ -626,7 +655,7 @@ export default function CprPage() {
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Emitente (Produtor Rural)</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2"><Field label="Nome completo *" value={form.emitenteNome} onChange={set('emitenteNome')} required /></div>
-                  <Field label="CPF / CNPJ *" value={form.emitenteCpfCnpj} onChange={setMasked('emitenteCpfCnpj', maskCpfCnpj)} required placeholder="000.000.000-00" inputMode="numeric" />
+                  <Field label="CPF / CNPJ *" value={form.emitenteCpfCnpj} onChange={setMasked('emitenteCpfCnpj', maskCpfCnpj)} onBlur={() => lookupCnpj('emitente')} required placeholder="000.000.000-00" inputMode="numeric" />
                   <Field label="Número CAR" value={form.emitenteCarNumero} onChange={set('emitenteCarNumero')} placeholder="SP-XXXXXXX-XXXX..." />
                   <Field label="E-mail (p/ assinatura)" value={form.emitenteEmail} onChange={set('emitenteEmail')} type="email" placeholder="email@exemplo.com" />
                   <Field label="Telefone / WhatsApp" value={form.emitenteTelefone} onChange={setMasked('emitenteTelefone', maskPhone)} placeholder="(11) 99999-9999" inputMode="tel" />
@@ -650,7 +679,7 @@ export default function CprPage() {
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Credor</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2"><Field label="Nome *" value={form.credorNome} onChange={set('credorNome')} required /></div>
-                  <Field label="CPF / CNPJ *" value={form.credorCpfCnpj} onChange={setMasked('credorCpfCnpj', maskCpfCnpj)} required placeholder="00.000.000/0000-00" inputMode="numeric" />
+                  <Field label="CPF / CNPJ *" value={form.credorCpfCnpj} onChange={setMasked('credorCpfCnpj', maskCpfCnpj)} onBlur={() => lookupCnpj('credor')} required placeholder="00.000.000/0000-00" inputMode="numeric" />
                   <div>
                     <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Tipo</label>
                     <select value={form.credorTipo} onChange={set('credorTipo')} className={inputClass}>
@@ -995,11 +1024,12 @@ const inputClass =
   'w-full text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-colors';
 
 function Field({
-  label, value, onChange, required, type = 'text', placeholder, inputMode,
+  label, value, onChange, onBlur, required, type = 'text', placeholder, inputMode,
 }: {
   label: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   required?: boolean;
   type?: string;
   placeholder?: string;
@@ -1012,6 +1042,7 @@ function Field({
         type={type}
         value={value}
         onChange={onChange}
+        onBlur={onBlur}
         required={required}
         placeholder={placeholder}
         inputMode={inputMode}

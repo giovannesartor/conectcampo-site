@@ -1022,6 +1022,22 @@ model CarbonDocument {
 // CPR — CÉDULA DE PRODUTO RURAL
 // ──────────────────────────────────────────────
 
+model Lead {
+  id          String   @id @default(uuid())
+  email       String
+  name        String?
+  phone       String?
+  amount      Decimal? @db.Decimal(15, 2)
+  termMonths  Int?
+  source      String?  // simulador | contato | etc.
+  status      String   @default("NOVO") // NOVO | CONTATADO | CONVERTIDO | DESCARTADO
+  createdAt   DateTime @default(now())
+
+  @@index([email])
+  @@index([createdAt])
+  @@map("leads")
+}
+
 model ApiKey {
   id          String    @id @default(uuid())
   userId      String
