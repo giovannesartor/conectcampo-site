@@ -38,7 +38,7 @@ export class CarbonCreditsController {
   // ─── Dashboard ────────────────────────────────────────────────────────────
 
   @Get('dashboard')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Resumo executivo de Crédito de Carbono do produtor' })
   async getDashboard(
     @CurrentUser('sub') userId: string,
@@ -62,7 +62,7 @@ export class CarbonCreditsController {
   // ─── Projects ─────────────────────────────────────────────────────────────
 
   @Post('projects')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Criar projeto de crédito de carbono' })
   async createProject(
     @CurrentUser('sub') userId: string,
@@ -72,7 +72,7 @@ export class CarbonCreditsController {
   }
 
   @Get('projects')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Listar projetos de carbono' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'perPage', required: false })
@@ -82,11 +82,13 @@ export class CarbonCreditsController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('perPage', new DefaultValuePipe(10), ParseIntPipe) perPage: number,
   ) {
-    return this.service.findAllProjects(userId, role, page, perPage);
+    const safePage = Math.max(1, page);
+    const safePerPage = Math.min(100, Math.max(1, perPage));
+    return this.service.findAllProjects(userId, role, safePage, safePerPage);
   }
 
   @Get('projects/:id')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Detalhar projeto de carbono' })
   async findProjectById(
     @Param('id') id: string,
@@ -97,7 +99,7 @@ export class CarbonCreditsController {
   }
 
   @Patch('projects/:id/status')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Atualizar status do projeto' })
   async updateStatus(
     @Param('id') id: string,
@@ -109,7 +111,7 @@ export class CarbonCreditsController {
   }
 
   @Delete('projects/:id')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Cancelar / excluir projeto (soft delete)' })
   async deleteProject(
     @Param('id') id: string,
@@ -122,7 +124,7 @@ export class CarbonCreditsController {
   // ─── Inventory ────────────────────────────────────────────────────────────
 
   @Post('projects/:id/inventories')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Adicionar inventário de emissões ao projeto' })
   async addInventory(
     @Param('id') projectId: string,
@@ -134,7 +136,7 @@ export class CarbonCreditsController {
   }
 
   @Get('projects/:id/inventories')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Listar inventários do projeto' })
   async getInventories(
     @Param('id') projectId: string,
@@ -147,7 +149,7 @@ export class CarbonCreditsController {
   // ─── Credits ──────────────────────────────────────────────────────────────
 
   @Post('projects/:id/credits/issue')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Emitir créditos de carbono para o projeto' })
   async issueCredits(
     @Param('id') projectId: string,
@@ -159,7 +161,7 @@ export class CarbonCreditsController {
   }
 
   @Get('projects/:id/credits')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Listar créditos do projeto' })
   async getCredits(
     @Param('id') projectId: string,
@@ -170,7 +172,7 @@ export class CarbonCreditsController {
   }
 
   @Post('credits/:creditId/transact')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Registrar transação de crédito (venda, aposentadoria, transferência)' })
   async transactCredit(
     @Param('creditId') creditId: string,
@@ -184,7 +186,7 @@ export class CarbonCreditsController {
   // ─── Setup Fee ────────────────────────────────────────────────────────────
 
   @Post('projects/:id/setup-fee')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Gerar cobrança de setup carbono (R$ 5.000 + 6% ConectCampo)',
     description: 'Cria a cobrança única de onboarding do projeto de carbono via Asaas. Retorna link de pagamento (PIX/boleto/cartão).',

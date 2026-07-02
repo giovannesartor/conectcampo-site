@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
+import toast from 'react-hot-toast';
 
 interface DashboardSummary {
   totalProjects: number;
@@ -73,7 +74,7 @@ const PROJECT_TYPE_LABELS: Record<string, string> = {
 function StatusBadge({ status }: { status: string }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.DRAFT;
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${cfg.color}`}>
+    <span role="status" aria-label={`Status: ${cfg.label}`} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${cfg.color}`}>
       {cfg.icon}
       {cfg.label}
     </span>
@@ -122,7 +123,15 @@ export default function CarbonCreditsDashboard() {
   useEffect(() => {
     api.get('/carbon-credits/dashboard')
       .then((r) => setSummary(r.data))
-      .catch(() => setSummary(null))
+      .catch((err) => {
+        setSummary(null);
+        const status = err?.response?.status;
+        if (status === 403) {
+          toast.error('Você não tem acesso ao módulo de Crédito de Carbono.');
+        } else {
+          toast.error('Não foi possível carregar o painel de Crédito de Carbono.');
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 

@@ -35,7 +35,7 @@ export class CprController {
   // ─── Dashboard ────────────────────────────────────────────────────────────
 
   @Get('summary')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Resumo das CPRs do usuário' })
   async getSummary(
     @CurrentUser('sub') userId: string,
@@ -47,7 +47,7 @@ export class CprController {
   // ─── CRUD ─────────────────────────────────────────────────────────────────
 
   @Post()
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Criar nova CPR (rascunho)',
     description:
@@ -62,7 +62,7 @@ export class CprController {
   }
 
   @Get()
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Listar CPRs' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'perPage', required: false, type: Number })
@@ -72,11 +72,13 @@ export class CprController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('perPage', new DefaultValuePipe(10), ParseIntPipe) perPage: number,
   ) {
-    return this.service.findAll(userId, role, page, perPage);
+    const safePage = Math.max(1, page);
+    const safePerPage = Math.min(100, Math.max(1, perPage));
+    return this.service.findAll(userId, role, safePage, safePerPage);
   }
 
   @Get(':id')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Buscar CPR por ID' })
   async findOne(
     @Param('id') id: string,
@@ -87,7 +89,7 @@ export class CprController {
   }
 
   @Get(':id/document')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Gerar minuta imprimível da CPR (HTML)' })
   async getDocument(
     @Param('id') id: string,
@@ -98,7 +100,7 @@ export class CprController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Atualizar CPR (apenas rascunhos)' })
   async update(
     @Param('id') id: string,
@@ -110,7 +112,7 @@ export class CprController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Cancelar / remover CPR' })
   async remove(
     @Param('id') id: string,
@@ -123,7 +125,7 @@ export class CprController {
   // ─── Fluxo de vida ────────────────────────────────────────────────────────
 
   @Post(':id/emit')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Emitir CPR',
     description: 'Muda status de RASCUNHO para EMITIDA e gera número único da CPR.',
@@ -137,7 +139,7 @@ export class CprController {
   }
 
   @Post(':id/signature/request')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Solicitar assinatura eletrônica (gera links de emitente e credor)' })
   async requestSignature(
     @Param('id') id: string,
@@ -148,7 +150,7 @@ export class CprController {
   }
 
   @Get(':id/signature')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Status da assinatura da CPR' })
   async signatureStatus(
     @Param('id') id: string,
@@ -159,7 +161,7 @@ export class CprController {
   }
 
   @Get(':id/signed-file')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Link do PDF assinado da CPR' })
   async signedFile(
     @Param('id') id: string,
@@ -170,7 +172,7 @@ export class CprController {
   }
 
   @Post(':id/register')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Registrar CPR em cartório' })
   async register(
     @Param('id') id: string,
@@ -183,7 +185,7 @@ export class CprController {
   }
 
   @Post(':id/liquidate')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
   @ApiOperation({ summary: 'Liquidar CPR' })
   async liquidate(
     @Param('id') id: string,

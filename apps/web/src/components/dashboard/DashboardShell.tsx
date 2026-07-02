@@ -73,6 +73,30 @@ const TOUR_ATTR: Record<string, string> = {
   '/dashboard/documents': 'documents',
 };
 
+// Seções compartilhadas entre todos os perfis (evita duplicação)
+const INSTRUMENTOS_SECTION: NavSection = {
+  title: 'Instrumentos',
+  items: [
+    { label: 'Crédito de Carbono', href: '/dashboard/carbon-credits', icon: <Leaf className="h-5 w-5" /> },
+    { label: 'CPR',                href: '/dashboard/cpr',            icon: <ScrollText className="h-5 w-5" /> },
+  ],
+};
+
+const CONTA_SECTION: NavSection = {
+  title: 'Conta',
+  items: [
+    { label: 'Configurações', href: '/dashboard/settings', icon: <Settings className="h-5 w-5" /> },
+  ],
+};
+
+const CONTA_SECTION_COM_ASSINATURA: NavSection = {
+  title: 'Conta',
+  items: [
+    { label: 'Assinatura',    href: '/dashboard/subscription', icon: <Package className="h-5 w-5" /> },
+    { label: 'Configurações', href: '/dashboard/settings',     icon: <Settings className="h-5 w-5" /> },
+  ],
+};
+
 function buildNav(role: string, plan: string): NavSection[] {
   if (role === 'ADMIN') {
     return [
@@ -97,25 +121,14 @@ function buildNav(role: string, plan: string): NavSection[] {
           { label: 'Auditoria',          href: '/dashboard/admin/audit',       icon: <Activity className="h-5 w-5" /> },
         ],
       },
-      {
-        title: 'Instrumentos',
-        items: [
-          { label: 'Crédito de Carbono', href: '/dashboard/carbon-credits',    icon: <Leaf className="h-5 w-5" /> },
-          { label: 'CPR',                href: '/dashboard/cpr',               icon: <ScrollText className="h-5 w-5" /> },
-        ],
-      },
+      INSTRUMENTOS_SECTION,
       {
         title: 'Integrações',
         items: [
           { label: 'Valuations',         href: '/dashboard/valuation',         icon: <TrendingUp className="h-5 w-5" /> },
         ],
       },
-      {
-        title: 'Conta',
-        items: [
-          { label: 'Configurações',      href: '/dashboard/settings',          icon: <Settings className="h-5 w-5" /> },
-        ],
-      },
+      CONTA_SECTION,
     ];
   }
 
@@ -137,19 +150,8 @@ function buildNav(role: string, plan: string): NavSection[] {
           { label: 'Valuations',         href: '/dashboard/valuation',         icon: <TrendingUp className="h-5 w-5" /> },
         ],
       },
-      {
-        title: 'Instrumentos',
-        items: [
-          { label: 'Crédito de Carbono', href: '/dashboard/carbon-credits',    icon: <Leaf className="h-5 w-5" /> },
-          { label: 'CPR',                href: '/dashboard/cpr',               icon: <ScrollText className="h-5 w-5" /> },
-        ],
-      },
-      {
-        title: 'Conta',
-        items: [
-          { label: 'Configurações',      href: '/dashboard/settings',          icon: <Settings className="h-5 w-5" /> },
-        ],
-      },
+      INSTRUMENTOS_SECTION,
+      CONTA_SECTION,
     ];
   }
 
@@ -170,20 +172,8 @@ function buildNav(role: string, plan: string): NavSection[] {
           { label: 'Relatórios',             href: '/dashboard/scoring',       icon: <BarChart3 className="h-5 w-5" /> },
         ],
       },
-      {
-        title: 'Instrumentos',
-        items: [
-          { label: 'Crédito de Carbono',     href: '/dashboard/carbon-credits', icon: <Leaf className="h-5 w-5" /> },
-          { label: 'CPR',                    href: '/dashboard/cpr',           icon: <ScrollText className="h-5 w-5" /> },
-        ],
-      },
-      {
-        title: 'Conta',
-        items: [
-          { label: 'Assinatura',             href: '/dashboard/subscription',  icon: <Package className="h-5 w-5" /> },
-          { label: 'Configurações',          href: '/dashboard/settings',      icon: <Settings className="h-5 w-5" /> },
-        ],
-      },
+      INSTRUMENTOS_SECTION,
+      CONTA_SECTION_COM_ASSINATURA,
     ];
   }
 
@@ -198,13 +188,7 @@ function buildNav(role: string, plan: string): NavSection[] {
           { label: 'Documentos',         href: '/dashboard/documents',         icon: <FolderOpen className="h-5 w-5" /> },
         ],
       },
-      {
-        title: 'Instrumentos',
-        items: [
-          { label: 'Crédito de Carbono', href: '/dashboard/carbon-credits',    icon: <Leaf className="h-5 w-5" /> },
-          { label: 'CPR',                href: '/dashboard/cpr',               icon: <ScrollText className="h-5 w-5" /> },
-        ],
-      },
+      INSTRUMENTOS_SECTION,
       {
         title: 'Analytics',
         items: [
@@ -213,13 +197,7 @@ function buildNav(role: string, plan: string): NavSection[] {
           { label: 'Valuations',         href: '/dashboard/valuation',         icon: <DollarSign className="h-5 w-5" /> },
         ],
       },
-      {
-        title: 'Conta',
-        items: [
-          { label: 'Assinatura',         href: '/dashboard/subscription',      icon: <Package className="h-5 w-5" /> },
-          { label: 'Configurações',      href: '/dashboard/settings',          icon: <Settings className="h-5 w-5" /> },
-        ],
-      },
+      CONTA_SECTION_COM_ASSINATURA,
     ];
   }
 
@@ -234,26 +212,14 @@ function buildNav(role: string, plan: string): NavSection[] {
         { label: 'Documentos',           href: '/dashboard/documents',         icon: <FolderOpen className="h-5 w-5" /> },
       ],
     },
-    {
-      title: 'Instrumentos',
-      items: [
-        { label: 'Crédito de Carbono',   href: '/dashboard/carbon-credits',    icon: <Leaf className="h-5 w-5" /> },
-        { label: 'CPR',                  href: '/dashboard/cpr',               icon: <ScrollText className="h-5 w-5" /> },
-      ],
-    },
+    INSTRUMENTOS_SECTION,
     {
       title: 'Análise',
       items: [
         { label: 'Score ConectCampo',    href: '/dashboard/scoring',           icon: <BarChart3 className="h-5 w-5" /> },
       ],
     },
-    {
-      title: 'Conta',
-      items: [
-        { label: 'Assinatura',           href: '/dashboard/subscription',      icon: <Package className="h-5 w-5" /> },
-        { label: 'Configurações',        href: '/dashboard/settings',          icon: <Settings className="h-5 w-5" /> },
-      ],
-    },
+    CONTA_SECTION_COM_ASSINATURA,
   ];
 }
 
@@ -327,7 +293,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+      <nav aria-label="Navegação principal" className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
         {navSections.map((section) => (
           <div key={section.title}>
             {!collapsed && (
@@ -342,6 +308,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
                     data-tour={TOUR_ATTR[item.href]}
+                    aria-current={isActive(item.href) ? 'page' : undefined}
                     className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
                       isActive(item.href)
                         ? 'bg-gradient-to-r from-brand-50 to-transparent dark:from-brand-950/40 text-brand-700 dark:text-brand-400 shadow-[inset_3px_0_0_0_theme(colors.brand.600)]'
