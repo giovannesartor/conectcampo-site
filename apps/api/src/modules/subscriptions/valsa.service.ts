@@ -124,6 +124,30 @@ export class ValsaService {
    * ativa a assinatura do usuário identificado em `metadata.userId`.
    */
   async handleWebhook(payload: any): Promise<{ userId: string | null }> {
+    const { isPaid, metadata, paymentId } = this.extractPayment(payload);
+    if (!isPaid) {
+      return { userId: null };
+    }
+
+    const userId: string | undefined = metadata?.userId;
+    if (!userId) {
+      this.logger.warn('Valsa webhook: pagamento sem userId no metadata');
+      return { userId: null };
+    }
+
+    const activated = await this.activateByUserId(userId, paymentId);
+    return { userId: activated };
+  }
+
+  /**
+   * Extrai do payload do webhook se o pagamento foi confirmado, o metadata
+   * (já parseado) e o id do pagamento. Usado para rotear assinaturas x marketplace.
+   */
+  extractPayment(payload: any): {
+    isPaid: boolean;
+    metadata: Record<string, any> | undefined;
+    paymentId: string | undefined;
+  } {
     const event: string | undefined = payload?.event;
     const data = payload?.data ?? {};
     this.logger.log(`Valsa webhook event: ${event} (status: ${data?.status})`);
@@ -136,11 +160,6 @@ export class ValsaService {
       data?.status === 'approved' ||
       data?.status === 'confirmed';
 
-    if (!isPaid) {
-      return { userId: null };
-    }
-
-    // Recupera userId do metadata
     let metadata = data?.metadata ?? payload?.metadata;
     if (typeof metadata === 'string') {
       try {
@@ -149,16 +168,8 @@ export class ValsaService {
         metadata = {};
       }
     }
-    const userId: string | undefined = metadata?.userId;
     const paymentId: string | undefined = data?.payment_id ?? data?.id;
-
-    if (!userId) {
-      this.logger.warn('Valsa webhook: pagamento sem userId no metadata');
-      return { userId: null };
-    }
-
-    const activated = await this.activateByUserId(userId, paymentId);
-    return { userId: activated };
+    return { isPaid, metadata, paymentId };
   }
 
   // ─── Activate subscription after payment ──────────────────────────────────────
@@ -231,6 +242,28 @@ export class ValsaService {
       },
     });
 
+    return { invoiceUrl };
+  }
+
+  // ─── Checkout genérico (marketplace, taxas avulsas, etc.) ─────────────────────
+
+  /**
+   * Monta uma URL de checkout hospedado da Valsa para um valor arbitrário.
+   * O contexto é carregado em `metadata` e confirmado via webhook.
+   */
+  buildGenericCheckoutUrl(params: {
+    amount: number;
+    description: string;
+    metadata: Record<string, unknown>;
+    email?: string;
+  }): { invoiceUrl: string } {
+    const query = new URLSearchParams({
+      amount: params.amount.toFixed(2),
+      description: params.description,
+      metadata: JSON.stringify(params.metadata),
+    });
+    if (params.email) query.set('email', params.email);
+    const invoiceUrl = `${this.checkoutBase}/${this.checkoutSlug}?${query.toString()}`;
     return { invoiceUrl };
   }
 }

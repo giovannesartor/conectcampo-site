@@ -58,12 +58,35 @@ export class MarketplaceService {
     if (filters.product) where.product = { contains: filters.product, mode: 'insensitive' };
     if (filters.state) where.state = filters.state as any;
 
-    return this.prisma.grainListing.findMany({
+    const listings = await this.prisma.grainListing.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       take: 100,
-      include: { user: { select: { name: true } } },
+      include: { user: { select: { id: true, name: true } } },
     });
+
+    // Reputação do vendedor (média/total de avaliações) para exibir na vitrine.
+    const sellerIds = Array.from(new Set(listings.map((l) => l.userId)));
+    const reputation = sellerIds.length
+      ? await this.prisma.marketplaceReview.groupBy({
+          by: ['ratedId'],
+          where: { ratedId: { in: sellerIds } },
+          _avg: { rating: true },
+          _count: { rating: true },
+        })
+      : [];
+    const repMap: Record<string, { average: number; count: number }> = {};
+    for (const r of reputation) {
+      repMap[r.ratedId] = {
+        average: Math.round((r._avg.rating ?? 0) * 100) / 100,
+        count: r._count.rating,
+      };
+    }
+
+    return listings.map((l) => ({
+      ...l,
+      sellerRating: repMap[l.userId] ?? { average: 0, count: 0 },
+    }));
   }
 
   async findMine(userId: string, role: string) {

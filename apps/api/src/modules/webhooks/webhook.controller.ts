@@ -11,6 +11,7 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 import { AsaasService } from '../subscriptions/asaas.service';
 import { ValsaService } from '../subscriptions/valsa.service';
+import { MarketplaceOrdersService } from '../marketplace/marketplace-orders.service';
 import { AuthService } from '../auth/auth.service';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -25,6 +26,7 @@ export class WebhookController {
   constructor(
     private readonly asaasService: AsaasService,
     private readonly valsaService: ValsaService,
+    private readonly marketplaceOrders: MarketplaceOrdersService,
     private readonly authService: AuthService,
     private readonly mailService: MailService,
     private readonly prisma: PrismaService,
@@ -107,6 +109,14 @@ export class WebhookController {
     if (await this.isDuplicate('VALSA', externalId)) {
       this.logger.warn(`Valsa webhook duplicado ignorado (${externalId})`);
       return { success: true, deduped: true };
+    }
+
+    // Roteamento: pagamentos do marketplace (custódia) x assinaturas
+    const { isPaid, metadata, paymentId } = this.valsaService.extractPayment(payload);
+    if (isPaid && metadata?.type === 'marketplace' && metadata?.orderId) {
+      await this.marketplaceOrders.confirmPayment(metadata.orderId, paymentId);
+      await this.markProcessed('VALSA', externalId, payload?.event);
+      return { success: true };
     }
 
     const { userId } = await this.valsaService.handleWebhook(payload);
