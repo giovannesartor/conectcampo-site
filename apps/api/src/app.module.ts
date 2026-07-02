@@ -28,6 +28,18 @@ import { LeadsModule } from './modules/leads/leads.module';
 import { EnrichmentModule } from './modules/enrichment/enrichment.module';
 import { MetricsModule } from './modules/metrics/metrics.module';
 import { PricingModule } from './common/pricing/pricing.module';
+import { FarmsModule } from './modules/farms/farms.module';
+import { FieldJournalModule } from './modules/field-journal/field-journal.module';
+import { NdviModule } from './modules/ndvi/ndvi.module';
+import { WeatherModule } from './modules/weather/weather.module';
+import { CalendarModule } from './modules/calendar/calendar.module';
+import { CashflowModule } from './modules/cashflow/cashflow.module';
+import { BarterModule } from './modules/barter/barter.module';
+import { QuotesModule } from './modules/quotes/quotes.module';
+import { MarketplaceModule } from './modules/marketplace/marketplace.module';
+import { SalesContractsModule } from './modules/sales-contracts/sales-contracts.module';
+import { ClimateScoreModule } from './modules/climate-score/climate-score.module';
+import { SmartDocsModule } from './modules/smart-docs/smart-docs.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 
@@ -77,6 +89,18 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     EnrichmentModule,
     MetricsModule,
     PricingModule,
+    FarmsModule,
+    FieldJournalModule,
+    NdviModule,
+    WeatherModule,
+    CalendarModule,
+    CashflowModule,
+    BarterModule,
+    QuotesModule,
+    MarketplaceModule,
+    SalesContractsModule,
+    ClimateScoreModule,
+    SmartDocsModule,
   ],
   providers: [
     {

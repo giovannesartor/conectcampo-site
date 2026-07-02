@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import {
   Search, LayoutDashboard, FileText, CreditCard, FolderOpen, BarChart3,
   ScrollText, Leaf, Settings, Users, Landmark, ArrowRight,
+  MapPin, Satellite, CloudSun, DollarSign, Store, Wallet, CalendarClock,
+  FileSignature, ArrowLeftRight, ShieldAlert, NotebookPen, FileScan,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -27,6 +29,18 @@ const NAV: Cmd[] = [
   { id: 'cpr', label: 'CPR', sub: 'Cédula de Produto Rural', href: '/dashboard/cpr', icon: <ScrollText className="h-4 w-4" />, keywords: 'cedula assinatura' },
   { id: 'carbon', label: 'Crédito de Carbono', href: '/dashboard/carbon-credits', icon: <Leaf className="h-4 w-4" />, keywords: 'esg carbono co2' },
   { id: 'market', label: 'Mercado de Carbono', href: '/dashboard/carbon-credits/mercado', icon: <Leaf className="h-4 w-4" />, keywords: 'preco cotacao carbono' },
+  { id: 'farms', label: 'Gestão de Áreas', sub: 'Fazendas e talhões', href: '/dashboard/farms', icon: <MapPin className="h-4 w-4" />, keywords: 'fazenda talhao area car mapa' },
+  { id: 'journal', label: 'Diário de Safra', href: '/dashboard/field-journal', icon: <NotebookPen className="h-4 w-4" />, keywords: 'caderno campo insumo plantio colheita' },
+  { id: 'ndvi', label: 'Satélite (NDVI)', href: '/dashboard/ndvi', icon: <Satellite className="h-4 w-4" />, keywords: 'monitoramento satelite vigor lavoura sentinel planet' },
+  { id: 'weather', label: 'Clima & Alertas', href: '/dashboard/weather', icon: <CloudSun className="h-4 w-4" />, keywords: 'previsao tempo geada seca chuva plantio' },
+  { id: 'climate', label: 'Risco de Safra', href: '/dashboard/climate-score', icon: <ShieldAlert className="h-4 w-4" />, keywords: 'score climatico risco producao' },
+  { id: 'calendar', label: 'Calendário de Vencimentos', href: '/dashboard/calendar', icon: <CalendarClock className="h-4 w-4" />, keywords: 'vencimento parcela lembrete' },
+  { id: 'cashflow', label: 'Fluxo de Caixa', href: '/dashboard/cashflow', icon: <Wallet className="h-4 w-4" />, keywords: 'receita despesa projecao safra' },
+  { id: 'barter', label: 'Barter (troca)', href: '/dashboard/barter', icon: <ArrowLeftRight className="h-4 w-4" />, keywords: 'troca insumo grao' },
+  { id: 'quotes', label: 'Cotações & Preços', href: '/dashboard/quotes', icon: <DollarSign className="h-4 w-4" />, keywords: 'soja milho boi dolar cepea b3 preco' },
+  { id: 'marketplace', label: 'Marketplace de Grãos', href: '/dashboard/marketplace', icon: <Store className="h-4 w-4" />, keywords: 'oferta compra venda grao' },
+  { id: 'sales', label: 'Contratos de Venda', href: '/dashboard/sales-contracts', icon: <FileSignature className="h-4 w-4" />, keywords: 'contrato termo hedge preco travado' },
+  { id: 'smartdocs', label: 'Docs Inteligentes', href: '/dashboard/smart-docs', icon: <FileScan className="h-4 w-4" />, keywords: 'ocr documento matricula car nota extracao' },
   { id: 'settings', label: 'Configurações', href: '/dashboard/settings', icon: <Settings className="h-4 w-4" />, keywords: 'perfil senha conta api' },
   { id: 'admin', label: 'Painel Admin', href: '/dashboard/admin', icon: <Users className="h-4 w-4" />, keywords: 'administracao' },
   { id: 'leads', label: 'Leads', href: '/dashboard/admin/leads', icon: <Landmark className="h-4 w-4" />, keywords: 'contatos simulador' },

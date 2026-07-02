@@ -32,6 +32,17 @@ import {
   Eye,
   Leaf,
   UserPlus,
+  MapPin,
+  NotebookPen,
+  Satellite,
+  CloudSun,
+  CalendarClock,
+  Wallet,
+  ArrowLeftRight,
+  Store,
+  FileSignature,
+  ShieldAlert,
+  FileScan,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { Logo } from '@/components/Logo';
@@ -79,6 +90,39 @@ const INSTRUMENTOS_SECTION: NavSection = {
   items: [
     { label: 'Crédito de Carbono', href: '/dashboard/carbon-credits', icon: <Leaf className="h-5 w-5" /> },
     { label: 'CPR',                href: '/dashboard/cpr',            icon: <ScrollText className="h-5 w-5" /> },
+    { label: 'Docs Inteligentes',  href: '/dashboard/smart-docs',     icon: <FileScan className="h-5 w-5" /> },
+  ],
+};
+
+// Produção & Campo — disponível para todos os perfis
+const PRODUCAO_SECTION: NavSection = {
+  title: 'Produção & Campo',
+  items: [
+    { label: 'Gestão de Áreas',    href: '/dashboard/farms',          icon: <MapPin className="h-5 w-5" /> },
+    { label: 'Diário de Safra',    href: '/dashboard/field-journal',  icon: <NotebookPen className="h-5 w-5" /> },
+    { label: 'Satélite (NDVI)',    href: '/dashboard/ndvi',           icon: <Satellite className="h-5 w-5" /> },
+    { label: 'Clima & Alertas',    href: '/dashboard/weather',        icon: <CloudSun className="h-5 w-5" /> },
+    { label: 'Risco de Safra',     href: '/dashboard/climate-score',  icon: <ShieldAlert className="h-5 w-5" /> },
+  ],
+};
+
+// Financeiro (gestão da safra)
+const FINANCEIRO_SECTION: NavSection = {
+  title: 'Financeiro',
+  items: [
+    { label: 'Calendário',         href: '/dashboard/calendar',       icon: <CalendarClock className="h-5 w-5" /> },
+    { label: 'Fluxo de Caixa',     href: '/dashboard/cashflow',       icon: <Wallet className="h-5 w-5" /> },
+    { label: 'Barter (troca)',     href: '/dashboard/barter',         icon: <ArrowLeftRight className="h-5 w-5" /> },
+  ],
+};
+
+// Mercado & comercialização
+const MERCADO_SECTION: NavSection = {
+  title: 'Mercado',
+  items: [
+    { label: 'Cotações',           href: '/dashboard/quotes',         icon: <DollarSign className="h-5 w-5" /> },
+    { label: 'Marketplace',        href: '/dashboard/marketplace',    icon: <Store className="h-5 w-5" /> },
+    { label: 'Contratos de Venda', href: '/dashboard/sales-contracts', icon: <FileSignature className="h-5 w-5" /> },
   ],
 };
 
@@ -97,7 +141,17 @@ const CONTA_SECTION_COM_ASSINATURA: NavSection = {
   ],
 };
 
+// Injeta as seções agro (Produção, Financeiro, Mercado) antes da seção "Conta",
+// garantindo que aparecem para todos os perfis sem duplicar código.
 function buildNav(role: string, plan: string): NavSection[] {
+  const base = buildRoleNav(role, plan);
+  if (base.length === 0) return base;
+  const conta = base[base.length - 1];
+  const rest = base.slice(0, -1);
+  return [...rest, PRODUCAO_SECTION, FINANCEIRO_SECTION, MERCADO_SECTION, conta];
+}
+
+function buildRoleNav(role: string, plan: string): NavSection[] {
   if (role === 'ADMIN') {
     return [
       {

@@ -223,6 +223,16 @@ model User {
   cprDocuments         CprDocument[]
   apiKeys              ApiKey[]
 
+  // Agro — produção, financeiro e comercialização
+  farms                Farm[]
+  fieldJournalEntries  FieldJournalEntry[]
+  financialEvents      FinancialEvent[]
+  cashFlowEntries      CashFlowEntry[]
+  barterOffers         BarterOffer[]
+  grainListings        GrainListing[]
+  salesContracts       SalesContract[]
+  documentExtractions  DocumentExtraction[]
+
   @@index([email])
   @@index([role])
   @@map("users")
@@ -1188,4 +1198,398 @@ model QuantovaleConnection {
   updatedAt    DateTime  @updatedAt
 
   @@map("quantovale_connections")
+}
+
+// ──────────────────────────────────────────────
+// AGRO — FAZENDAS & TALHÕES
+// ──────────────────────────────────────────────
+
+enum PlotStatus {
+  PREPARO
+  PLANTADO
+  EM_DESENVOLVIMENTO
+  COLHIDO
+  POUSIO
+}
+
+/// Fazenda / propriedade rural do produtor. Base para talhões, carbono, CPR e score.
+model Farm {
+  id           String          @id @default(uuid())
+  userId       String
+  name         String
+  carNumero    String?         // Cadastro Ambiental Rural
+  state        BrazilianState
+  city         String
+  totalAreaHa  Decimal         @db.Decimal(12, 2)
+  latitude     Float?
+  longitude    Float?
+  geometry     Json?           // GeoJSON (Polygon/MultiPolygon)
+  notes        String?
+
+  deletedAt    DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plots        Plot[]
+  fieldEntries FieldJournalEntry[]
+
+  @@index([userId])
+  @@index([state])
+  @@map("farms")
+}
+
+/// Talhão (subdivisão da fazenda), com cultura, safra e geometria.
+model Plot {
+  id            String      @id @default(uuid())
+  farmId        String
+  name          String
+  crop          CropType
+  areaHa        Decimal     @db.Decimal(12, 2)
+  safra         String?     // ex: "2025/2026"
+  status        PlotStatus  @default(PLANTADO)
+  plantingDate  DateTime?
+  harvestDate   DateTime?
+  expectedYield Decimal?    @db.Decimal(12, 2) // sacas/ha estimadas
+  geometry      Json?       // GeoJSON
+
+  deletedAt     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  farm          Farm        @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  fieldEntries  FieldJournalEntry[]
+  ndviReadings  NdviReading[]
+
+  @@index([farmId])
+  @@map("plots")
+}
+
+// ──────────────────────────────────────────────
+// DIÁRIO DE SAFRA / CADERNO DE CAMPO
+// ──────────────────────────────────────────────
+
+enum FieldActivityType {
+  PLANTIO
+  PULVERIZACAO
+  ADUBACAO
+  IRRIGACAO
+  COLHEITA
+  MANEJO
+  MONITORAMENTO
+  OUTRO
+}
+
+model FieldJournalEntry {
+  id            String            @id @default(uuid())
+  userId        String
+  farmId        String
+  plotId        String?
+  type          FieldActivityType
+  title         String
+  description   String?
+  date          DateTime
+  inputName     String?           // insumo aplicado
+  inputQuantity Decimal?          @db.Decimal(12, 2)
+  inputUnit     String?
+  cost          Decimal?          @db.Decimal(15, 2)
+
+  deletedAt     DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  farm          Farm              @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  plot          Plot?             @relation(fields: [plotId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([farmId])
+  @@index([date])
+  @@map("field_journal_entries")
+}
+
+// ──────────────────────────────────────────────
+// MONITORAMENTO POR SATÉLITE (NDVI)
+// ──────────────────────────────────────────────
+
+model NdviReading {
+  id         String   @id @default(uuid())
+  plotId     String
+  date       DateTime
+  ndviMean   Float
+  ndviMin    Float
+  ndviMax    Float
+  cloudCover Float?
+  source     String   @default("Sentinel-2")
+
+  createdAt  DateTime @default(now())
+
+  plot       Plot     @relation(fields: [plotId], references: [id], onDelete: Cascade)
+
+  @@index([plotId])
+  @@index([date])
+  @@map("ndvi_readings")
+}
+
+// ──────────────────────────────────────────────
+// CALENDÁRIO DE VENCIMENTOS
+// ──────────────────────────────────────────────
+
+enum FinancialEventType {
+  CPR
+  PARCELA_CREDITO
+  SEGURO
+  IMPOSTO
+  ARRENDAMENTO
+  FORNECEDOR
+  OUTRO
+}
+
+enum FinancialEventStatus {
+  PENDENTE
+  PAGO
+  ATRASADO
+}
+
+model FinancialEvent {
+  id           String               @id @default(uuid())
+  userId       String
+  title        String
+  type         FinancialEventType
+  amount       Decimal?             @db.Decimal(15, 2)
+  dueDate      DateTime
+  status       FinancialEventStatus @default(PENDENTE)
+  notes        String?
+  reminderDays Int                  @default(3)
+  paidAt       DateTime?
+
+  deletedAt    DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([dueDate])
+  @@index([status])
+  @@map("financial_events")
+}
+
+// ──────────────────────────────────────────────
+// FLUXO DE CAIXA AGRÍCOLA
+// ──────────────────────────────────────────────
+
+enum CashFlowType {
+  RECEITA
+  DESPESA
+}
+
+enum CashFlowCategory {
+  VENDA_GRAO
+  CUSTEIO
+  INSUMOS
+  MAO_DE_OBRA
+  MAQUINARIO
+  ARRENDAMENTO
+  FINANCIAMENTO
+  IMPOSTOS
+  OUTRO
+}
+
+model CashFlowEntry {
+  id          String           @id @default(uuid())
+  userId      String
+  safra       String?          // ex: "2025/2026"
+  type        CashFlowType
+  category    CashFlowCategory
+  description String
+  amount      Decimal          @db.Decimal(15, 2)
+  date        DateTime
+  isProjected Boolean          @default(false)
+
+  deletedAt   DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+  @@index([safra])
+  @@map("cash_flow_entries")
+}
+
+// ──────────────────────────────────────────────
+// BARTER / TROCA (INSUMO POR GRÃO)
+// ──────────────────────────────────────────────
+
+enum BarterStatus {
+  ABERTA
+  NEGOCIACAO
+  FECHADA
+  CANCELADA
+}
+
+model BarterOffer {
+  id            String       @id @default(uuid())
+  userId        String
+  partnerName   String?      // fornecedor de insumo / revenda
+  inputProduct  String       // insumo (ex: fertilizante, defensivo)
+  inputQuantity Decimal      @db.Decimal(12, 2)
+  inputUnit     String
+  inputValue    Decimal?     @db.Decimal(15, 2)
+  grainProduct  String       // grão de troca (soja, milho)
+  grainQuantity Decimal      @db.Decimal(12, 2)
+  grainUnit     String
+  safra         String?
+  deliveryDate  DateTime?
+  status        BarterStatus @default(ABERTA)
+  notes         String?
+
+  deletedAt     DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("barter_offers")
+}
+
+// ──────────────────────────────────────────────
+// MARKETPLACE DE GRÃOS / OFERTAS
+// ──────────────────────────────────────────────
+
+enum GrainListingType {
+  VENDA
+  COMPRA
+}
+
+enum GrainListingStatus {
+  ATIVA
+  PAUSADA
+  ENCERRADA
+}
+
+model GrainListing {
+  id            String             @id @default(uuid())
+  userId        String
+  type          GrainListingType   @default(VENDA)
+  product       String
+  cropType      CropType?
+  quantity      Decimal            @db.Decimal(12, 2)
+  unit          String
+  pricePerUnit  Decimal?           @db.Decimal(12, 2)
+  state         BrazilianState?
+  city          String?
+  safra         String?
+  availableFrom DateTime?
+  description   String?
+  contactPhone  String?
+  status        GrainListingStatus @default(ATIVA)
+
+  deletedAt     DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([product])
+  @@index([type])
+  @@index([status])
+  @@map("grain_listings")
+}
+
+// ──────────────────────────────────────────────
+// CONTRATOS DE VENDA
+// ──────────────────────────────────────────────
+
+enum SalesContractStatus {
+  RASCUNHO
+  ATIVO
+  ENTREGUE
+  LIQUIDADO
+  CANCELADO
+}
+
+enum SalesContractDeliveryType {
+  DISPONIVEL
+  A_TERMO
+}
+
+model SalesContract {
+  id               String                    @id @default(uuid())
+  userId           String
+  buyerName        String
+  product          String
+  quantity         Decimal                   @db.Decimal(12, 2)
+  unit             String
+  pricePerUnit     Decimal                   @db.Decimal(12, 2)
+  totalValue       Decimal?                  @db.Decimal(15, 2)
+  currency         String                    @default("BRL")
+  deliveryType     SalesContractDeliveryType @default(A_TERMO)
+  deliveryDate     DateTime?
+  deliveryLocation String?
+  safra            String?
+  priceLocked      Boolean                   @default(true)
+  hedged           Boolean                   @default(false)
+  hedgeReference   String?
+  status           SalesContractStatus       @default(ATIVO)
+  notes            String?
+
+  deletedAt        DateTime?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  user             User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("sales_contracts")
+}
+
+// ──────────────────────────────────────────────
+// CENTRAL DE DOCUMENTOS INTELIGENTE (OCR + IA)
+// ──────────────────────────────────────────────
+
+enum DocExtractionType {
+  MATRICULA
+  CAR
+  NOTA_FISCAL
+  CONTRATO
+  CPR
+  LAUDO
+  OUTRO
+}
+
+enum DocExtractionStatus {
+  PENDENTE
+  PROCESSANDO
+  CONCLUIDO
+  ERRO
+}
+
+model DocumentExtraction {
+  id           String              @id @default(uuid())
+  userId       String
+  fileName     String
+  docType      DocExtractionType   @default(OUTRO)
+  status       DocExtractionStatus @default(PENDENTE)
+  rawText      String?
+  extracted    Json?               // campos estruturados extraídos
+  summary      String?
+  confidence   Float?
+  errorMessage String?
+
+  deletedAt    DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("document_extractions")
 }
