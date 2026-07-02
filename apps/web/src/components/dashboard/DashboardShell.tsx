@@ -98,7 +98,7 @@ function buildNav(role: string, plan: string): NavSection[] {
         ],
       },
       {
-        title: 'Sustentabilidade',
+        title: 'Instrumentos',
         items: [
           { label: 'Crédito de Carbono', href: '/dashboard/carbon-credits',    icon: <Leaf className="h-5 w-5" /> },
           { label: 'CPR',                href: '/dashboard/cpr',               icon: <ScrollText className="h-5 w-5" /> },
@@ -138,6 +138,13 @@ function buildNav(role: string, plan: string): NavSection[] {
         ],
       },
       {
+        title: 'Instrumentos',
+        items: [
+          { label: 'Crédito de Carbono', href: '/dashboard/carbon-credits',    icon: <Leaf className="h-5 w-5" /> },
+          { label: 'CPR',                href: '/dashboard/cpr',               icon: <ScrollText className="h-5 w-5" /> },
+        ],
+      },
+      {
         title: 'Conta',
         items: [
           { label: 'Configurações',      href: '/dashboard/settings',          icon: <Settings className="h-5 w-5" /> },
@@ -164,6 +171,13 @@ function buildNav(role: string, plan: string): NavSection[] {
         ],
       },
       {
+        title: 'Instrumentos',
+        items: [
+          { label: 'Crédito de Carbono',     href: '/dashboard/carbon-credits', icon: <Leaf className="h-5 w-5" /> },
+          { label: 'CPR',                    href: '/dashboard/cpr',           icon: <ScrollText className="h-5 w-5" /> },
+        ],
+      },
+      {
         title: 'Conta',
         items: [
           { label: 'Assinatura',             href: '/dashboard/subscription',  icon: <Package className="h-5 w-5" /> },
@@ -185,7 +199,7 @@ function buildNav(role: string, plan: string): NavSection[] {
         ],
       },
       {
-        title: 'Sustentabilidade',
+        title: 'Instrumentos',
         items: [
           { label: 'Crédito de Carbono', href: '/dashboard/carbon-credits',    icon: <Leaf className="h-5 w-5" /> },
           { label: 'CPR',                href: '/dashboard/cpr',               icon: <ScrollText className="h-5 w-5" /> },
@@ -221,9 +235,10 @@ function buildNav(role: string, plan: string): NavSection[] {
       ],
     },
     {
-      title: 'Sustentabilidade',
+      title: 'Instrumentos',
       items: [
         { label: 'Crédito de Carbono',   href: '/dashboard/carbon-credits',    icon: <Leaf className="h-5 w-5" /> },
+        { label: 'CPR',                  href: '/dashboard/cpr',               icon: <ScrollText className="h-5 w-5" /> },
       ],
     },
     {
