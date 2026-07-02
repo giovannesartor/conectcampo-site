@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, LayoutDashboard, GitCompareArrows, FolderLock, TrendingUp, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, LayoutDashboard, GitCompareArrows, FolderLock, TrendingUp, ArrowUpRight, Satellite, DollarSign, ShieldCheck } from 'lucide-react';
 
 const FEATURES = [
   { icon: LayoutDashboard, title: 'KPIs em tempo real', desc: 'Score, propostas, operações e documentos num só painel.' },
@@ -46,7 +46,7 @@ export function ProductShowcase() {
             </h2>
             <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-lg">
               Dashboards desenhados por perfil — produtor, empresa, cooperativa e instituição
-              financeira. Acompanhe score, propostas e documentos em tempo real.
+              financeira. Além do crédito: satélite, clima, cotações e marketplace no mesmo painel.
             </p>
 
             <div className="mt-8 space-y-4">
@@ -112,6 +112,21 @@ export function ProductShowcase() {
                     <p className="mt-2 text-sm font-semibold text-gray-900 dark:text-white">Portfólio</p>
                     <p className="text-[11px] text-gray-500 dark:text-gray-400">Aprovadas, em análise e match</p>
                   </div>
+                </div>
+
+                {/* Módulos da plataforma */}
+                <div className="mt-3 grid grid-cols-3 gap-3">
+                  {[
+                    { icon: Satellite, label: 'Satélite NDVI', value: 'Vigor 0,78' },
+                    { icon: DollarSign, label: 'Cotações', value: 'Soja R$128' },
+                    { icon: ShieldCheck, label: 'Marketplace', value: 'Custódia' },
+                  ].map((m) => (
+                    <div key={m.label} className="rounded-xl border border-gray-100 dark:border-dark-border bg-gray-50/70 dark:bg-dark-bg/60 p-2.5">
+                      <m.icon className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+                      <p className="mt-1.5 text-[11px] font-semibold text-gray-900 dark:text-white leading-none">{m.value}</p>
+                      <p className="mt-1 text-[10px] text-gray-500 dark:text-gray-400 leading-tight">{m.label}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

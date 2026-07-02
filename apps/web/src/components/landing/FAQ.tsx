@@ -36,6 +36,16 @@ const faqs = [
       'Instituições parceiras têm acesso a uma base curada de tomadores de crédito com scoring pré-qualificado, dados de produção validados e operações já documentadas. Oferecemos API RESTful para integração, dashboard de gestão, conformidade com regulação do Banco Central e gerente de conta dedicado.',
   },
   {
+    question: 'Como funciona o marketplace de grãos e o pagamento seguro?',
+    answer:
+      'No marketplace você compra e vende grãos direto com outros produtores. O pagamento é feito em custódia (escrow): o comprador paga via ValsaPay, o ConectCampo retém o valor e só libera ao vendedor depois que o comprador confirma o recebimento — protegendo as duas partes. A taxa é de apenas 1% por venda (0,5% de cada parte). Há ainda avaliações (reputação) e liberação automática após o prazo de entrega.',
+  },
+  {
+    question: 'O que é o monitoramento por satélite (NDVI)?',
+    answer:
+      'Cadastrando os talhões da sua fazenda, a plataforma acompanha a saúde da lavoura por imagens de satélite (índice NDVI), mostrando o vigor da vegetação ao longo da safra. Isso ajuda a identificar problemas cedo, compõe o score de risco de safra e fortalece a análise de crédito. Usamos a Planet Insights Platform (Sentinel-2), com série temporal por talhão.',
+  },
+  {
     question: 'Meus dados estão seguros?',
     answer:
       'Sim. A ConectCampo utiliza criptografia end-to-end, está em conformidade com a LGPD, implementa autenticação multi-fator e passa por auditorias de segurança regulares. Toda a infraestrutura segue padrões bancários de proteção de dados e as operações possuem rastreabilidade completa.',

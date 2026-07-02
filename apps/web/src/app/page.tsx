@@ -60,6 +60,22 @@ const jsonLd = {
             text: 'A pré-análise automática sai em até 48h. A aprovação final depende da instituição parceira.',
           },
         },
+        {
+          '@type': 'Question',
+          name: 'Como funciona o marketplace de grãos e o pagamento seguro?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'O comprador paga via ValsaPay, o ConectCampo retém o valor em custódia (escrow) e só libera ao vendedor após a confirmação do recebimento. Taxa de 1% por venda (0,5% de cada parte), com avaliações e liberação automática por prazo.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'O que é o monitoramento por satélite (NDVI)?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Acompanhamento da saúde da lavoura por imagens de satélite (índice NDVI, Sentinel-2) por talhão, ajudando a identificar problemas cedo e a compor o score de risco de safra.',
+          },
+        },
       ],
     },
   ],

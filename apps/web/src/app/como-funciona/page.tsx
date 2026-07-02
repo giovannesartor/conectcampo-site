@@ -1,6 +1,13 @@
 import { PublicLayout } from '@/components/landing/PublicLayout';
-import { CheckCircle2, ArrowRight, FileText, Search, Handshake, TrendingUp } from 'lucide-react';
+import { CheckCircle2, ArrowRight, FileText, Search, Handshake, TrendingUp, ShoppingCart, ShieldCheck, Truck, HandCoins } from 'lucide-react';
 import Link from 'next/link';
+
+const escrowSteps = [
+  { icon: ShoppingCart, title: '1. Comprador paga', desc: 'O pagamento é feito via ValsaPay (PIX, cartão ou boleto), sem taxas de gateway.' },
+  { icon: ShieldCheck, title: '2. ConectCampo retém', desc: 'O valor fica em custódia (escrow) — o vendedor ainda não recebe.' },
+  { icon: Truck, title: '3. Vendedor entrega', desc: 'O vendedor envia o produto e marca o pedido como enviado.' },
+  { icon: HandCoins, title: '4. Comprador confirma', desc: 'Ao confirmar o recebimento, o valor é liberado ao vendedor. A taxa é de 1% (0,5% de cada parte).' },
+];
 
 const steps = [
   {
@@ -95,6 +102,58 @@ export default function ComoFuncionaPage() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Marketplace com pagamento seguro (escrow) */}
+      <section className="px-6 py-20 lg:px-8 bg-gray-50 dark:bg-dark-card/40">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-4 py-1.5 text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-4">
+              <ShieldCheck className="h-4 w-4" /> Marketplace de grãos
+            </span>
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+              Pagamento seguro em custódia
+            </h2>
+            <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              Compre e venda produção direto com outros produtores, com proteção para as duas partes.
+              O dinheiro só chega ao vendedor depois que o comprador confirma o recebimento.
+            </p>
+          </div>
+
+          <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {escrowSteps.map((s, i) => {
+              const Icon = s.icon;
+              return (
+                <div key={s.title} className="relative rounded-2xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card p-5">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-600 text-white">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="mt-4 font-bold text-gray-900 dark:text-white">{s.title}</h3>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{s.desc}</p>
+                  {i < escrowSteps.length - 1 && (
+                    <ArrowRight className="hidden lg:block absolute top-1/2 -right-3 h-5 w-5 text-gray-300 dark:text-gray-600" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { t: 'Taxa de apenas 1%', d: 'Dividida igualmente: 0,5% do comprador e 0,5% do vendedor.' },
+              { t: 'Liberação automática', d: 'Se não houver contestação, o valor é liberado após o prazo de entrega.' },
+              { t: 'Reputação', d: 'Comprador e vendedor se avaliam a cada transação concluída.' },
+            ].map((b) => (
+              <div key={b.t} className="rounded-xl bg-white dark:bg-dark-card border border-gray-100 dark:border-dark-border p-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <p className="font-semibold text-gray-900 dark:text-white">{b.t}</p>
+                </div>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{b.d}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

@@ -62,7 +62,8 @@ export function Hero() {
               className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400 sm:text-xl max-w-xl mx-auto lg:mx-0 [text-wrap:pretty]"
             >
               Conectamos sua operação a bancos, cooperativas, FIDCs, securitizadoras e ao
-              mercado de capitais. Pré-análise em 48h, 100% digital.
+              mercado de capitais — com gestão da fazenda, satélite, cotações e marketplace na mesma plataforma.
+              Pré-análise em 48h, 100% digital.
             </motion.p>
 
             <motion.div
