@@ -419,7 +419,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 bg-white dark:bg-dark-card border-r border-gray-200 dark:border-dark-border transition-all duration-300 lg:relative lg:z-0 ${
+        className={`fixed inset-y-0 left-0 z-50 bg-white dark:bg-dark-card border-r border-gray-200 dark:border-dark-border transition-all duration-300 lg:sticky lg:top-0 lg:h-screen lg:z-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         } ${collapsed ? 'w-[70px]' : 'w-64'}`}
       >
