@@ -50,12 +50,23 @@ export default function CalendarPage() {
   const remove = async (id: string) => {
     try { await api.delete(`/calendar/${id}`); load(); } catch { toast.error('Erro'); }
   };
+  const sync = async () => {
+    try {
+      const { data } = await api.post('/calendar/sync', {});
+      toast.success(data.created ? `${data.created} vencimento(s) criado(s)` : 'Tudo já sincronizado');
+      load();
+    } catch { toast.error('Erro ao sincronizar'); }
+  };
 
   if (loading) return <Spinner />;
 
   return (
     <div className="space-y-6">
       <PageHeader title="Calendário de Vencimentos" subtitle="Parcelas, CPRs, seguros e impostos" icon={<CalendarClock className="h-6 w-6 text-brand-600" />} onAdd={() => setShow(true)} addLabel="Novo vencimento" />
+
+      <div className="flex justify-end">
+        <button onClick={sync} className="btn-secondary text-sm">Sincronizar de CPRs e contratos</button>
+      </div>
 
       {summary && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

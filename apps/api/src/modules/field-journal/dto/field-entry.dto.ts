@@ -3,6 +3,7 @@ import {
   IsString,
   IsOptional,
   IsNumber,
+  IsBoolean,
   IsDateString,
   IsUUID,
   MaxLength,
@@ -59,6 +60,11 @@ export class CreateFieldEntryDto {
   @IsOptional()
   @IsNumber()
   cost?: number;
+
+  @ApiPropertyOptional({ description: 'Lançar o custo como despesa no fluxo de caixa' })
+  @IsOptional()
+  @IsBoolean()
+  addToCashflow?: boolean;
 }
 
 export class UpdateFieldEntryDto {

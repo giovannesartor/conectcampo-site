@@ -50,3 +50,15 @@ export class CreateReviewDto {
   @MaxLength(500)
   comment?: string;
 }
+
+export class SellerKycDto {
+  @ApiProperty({ description: 'Chave PIX para recebimento' })
+  @IsString()
+  @MaxLength(140)
+  pixKey: string;
+
+  @ApiProperty({ description: 'Tipo da chave: CPF, CNPJ, EMAIL, PHONE, ALEATORIA' })
+  @IsString()
+  @MaxLength(20)
+  pixKeyType: string;
+}

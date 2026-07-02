@@ -39,6 +39,18 @@ export default function CashflowPage() {
 
   const remove = async (id: string) => { try { await api.delete(`/cashflow/${id}`); load(); } catch { toast.error('Erro'); } };
 
+  const exportCsv = async () => {
+    try {
+      const res = await api.get('/cashflow/export', { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'fluxo-de-caixa.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { toast.error('Erro ao exportar'); }
+  };
+
   if (loading) return <Spinner />;
 
   const maxBar = summary ? Math.max(1, ...summary.monthlySeries.map((m) => Math.max(m.receita, m.despesa))) : 1;
@@ -46,6 +58,10 @@ export default function CashflowPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Fluxo de Caixa Agrícola" subtitle="Receitas e despesas por safra, com projeção" icon={<Wallet className="h-6 w-6 text-brand-600" />} onAdd={() => setShow(true)} addLabel="Novo lançamento" />
+
+      <div className="flex justify-end">
+        <button onClick={exportCsv} className="btn-secondary text-sm">Exportar CSV</button>
+      </div>
 
       {summary && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

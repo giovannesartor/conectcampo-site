@@ -45,6 +45,12 @@ export class CalendarController {
     return this.service.create(userId, dto);
   }
 
+  @Post('sync')
+  @ApiOperation({ summary: 'Gerar vencimentos automaticamente a partir de CPRs e contratos' })
+  sync(@CurrentUser('sub') userId: string) {
+    return this.service.syncFromSources(userId);
+  }
+
   @Patch(':id/pay')
   @ApiOperation({ summary: 'Marcar como pago' })
   markPaid(

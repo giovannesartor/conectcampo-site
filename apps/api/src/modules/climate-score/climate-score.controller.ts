@@ -19,4 +19,10 @@ export class ClimateScoreController {
   assess(@CurrentUser('sub') userId: string, @CurrentUser('role') role: string) {
     return this.service.assess(userId, role);
   }
+
+  @Get('agro-signals')
+  @ApiOperation({ summary: 'Sinais agro consolidados (NDVI, risco climático, reputação) para score' })
+  agroSignals(@CurrentUser('sub') userId: string, @CurrentUser('role') role: string) {
+    return this.service.getAgroSignals(userId, role);
+  }
 }

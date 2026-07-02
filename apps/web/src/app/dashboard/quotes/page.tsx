@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TrendingUp, TrendingDown, RefreshCw, DollarSign } from 'lucide-react';
+import { TrendingUp, TrendingDown, RefreshCw, DollarSign, Bell, Trash2, Sprout } from 'lucide-react';
 import { api } from '@/lib/api';
+import { formatCurrency } from '@/lib/format';
+import { Modal } from '@/components/dashboard/Modal';
 import toast from 'react-hot-toast';
 
 interface Quote {
@@ -43,17 +45,25 @@ export default function QuotesPage() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [updatedAt, setUpdatedAt] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [production, setProduction] = useState<{ totalValue: number; items: any[] } | null>(null);
+  const [alertFor, setAlertFor] = useState<Quote | null>(null);
 
   const load = () => {
     setLoading(true);
-    api
-      .get('/quotes')
-      .then((r) => {
-        setQuotes(r.data.quotes);
-        setUpdatedAt(r.data.updatedAt);
+    Promise.all([api.get('/quotes'), api.get('/quotes/alerts'), api.get('/quotes/production-value')])
+      .then(([q, a, p]) => {
+        setQuotes(q.data.quotes);
+        setUpdatedAt(q.data.updatedAt);
+        setAlerts(a.data);
+        setProduction(p.data);
       })
       .catch(() => toast.error('Não foi possível carregar as cotações.'))
       .finally(() => setLoading(false));
+  };
+
+  const removeAlert = async (id: string) => {
+    try { await api.delete(`/quotes/alerts/${id}`); load(); } catch { toast.error('Erro'); }
   };
 
   useEffect(load, []);
@@ -107,8 +117,11 @@ export default function QuotesPage() {
                   <p className="mt-3 text-2xl font-bold text-gray-900 dark:text-white">
                     {q.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
-                  <div className="mt-2">
+                  <div className="mt-2 flex items-end justify-between">
                     <Sparkline data={q.history} up={up} />
+                    <button onClick={() => setAlertFor(q)} className="text-gray-400 hover:text-brand-600" title="Criar alerta de preço">
+                      <Bell className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               );
@@ -119,8 +132,83 @@ export default function QuotesPage() {
               Atualizado em {new Date(updatedAt).toLocaleString('pt-BR')} · valores de referência
             </p>
           )}
+
+          {production && production.items.length > 0 && (
+            <div className="card">
+              <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <Sprout className="h-5 w-5 text-emerald-600" /> Valor estimado da sua produção
+              </h2>
+              <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(production.totalValue)}</p>
+              <div className="mt-3 space-y-1">
+                {production.items.map((it, i) => (
+                  <div key={i} className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                    <span>{it.plot} · {it.crop} · {it.estProduction.toLocaleString('pt-BR')} un</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(it.value)}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-gray-400">Baseado na produtividade estimada dos talhões × preço de mercado.</p>
+            </div>
+          )}
+
+          {alerts.length > 0 && (
+            <div className="card">
+              <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <Bell className="h-5 w-5 text-amber-500" /> Meus alertas de preço
+              </h2>
+              <div className="mt-3 space-y-2">
+                {alerts.map((a) => (
+                  <div key={a.id} className="flex items-center justify-between text-sm">
+                    <span className={a.active ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 line-through'}>
+                      {a.symbol} {a.direction === 'ABOVE' ? '≥' : '≤'} {Number(a.target).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      {!a.active && ' · disparado'}
+                    </span>
+                    <button onClick={() => removeAlert(a.id)} className="text-gray-300 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
+
+      {alertFor && <AlertModal quote={alertFor} onClose={() => setAlertFor(null)} onSaved={() => { setAlertFor(null); load(); }} />}
     </div>
+  );
+}
+
+function AlertModal({ quote, onClose, onSaved }: { quote: Quote; onClose: () => void; onSaved: () => void }) {
+  const [direction, setDirection] = useState<'ABOVE' | 'BELOW'>('ABOVE');
+  const [target, setTarget] = useState(String(quote.price.toFixed(2)));
+  const [saving, setSaving] = useState(false);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!Number(target)) { toast.error('Informe o preço-alvo.'); return; }
+    setSaving(true);
+    try {
+      await api.post('/quotes/alerts', { symbol: quote.symbol, direction, target: Number(target) });
+      toast.success('Alerta criado'); onSaved();
+    } catch { toast.error('Erro ao criar alerta'); setSaving(false); }
+  };
+  return (
+    <Modal title={`Alerta de preço — ${quote.name}`} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        <p className="text-sm text-gray-500 dark:text-gray-400">Preço atual: <strong>{quote.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> ({quote.unit})</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">Quando o preço ficar</label>
+            <select className="input" value={direction} onChange={(e) => setDirection(e.target.value as any)}>
+              <option value="ABOVE">Acima de (≥)</option>
+              <option value="BELOW">Abaixo de (≤)</option>
+            </select>
+          </div>
+          <div>
+            <label className="label">Preço-alvo</label>
+            <input type="number" step="0.01" className="input" value={target} onChange={(e) => setTarget(e.target.value)} />
+          </div>
+        </div>
+        <button type="submit" disabled={saving} className="btn-primary w-full">{saving ? 'Salvando...' : 'Criar alerta'}</button>
+      </form>
+    </Modal>
   );
 }

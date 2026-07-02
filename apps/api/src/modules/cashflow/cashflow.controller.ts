@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   Query,
+  Header,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
@@ -34,6 +35,19 @@ export class CashflowController {
     @Query('safra') safra?: string,
   ) {
     return this.service.getSummary(userId, role, safra);
+  }
+
+  @Get('export')
+  @Header('Content-Type', 'text/csv; charset=utf-8')
+  @Header('Content-Disposition', 'attachment; filename="fluxo-de-caixa.csv"')
+  @ApiOperation({ summary: 'Exportar lançamentos em CSV' })
+  @ApiQuery({ name: 'safra', required: false })
+  exportCsv(
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
+    @Query('safra') safra?: string,
+  ) {
+    return this.service.exportCsv(userId, role, safra);
   }
 
   @Get()

@@ -13,6 +13,7 @@ import { api } from '@/lib/api';
 import { formatCurrency, formatRelative } from '@/lib/format';
 import { KPICard } from './KPICard';
 import { StatusBadge } from './StatusBadge';
+import { AgroOverview } from './AgroOverview';
 import {
   Plus,
   FileText,
@@ -160,6 +161,9 @@ export function DashboardStart() {
         <KPICard title="Propostas Recebidas" value={stats.proposals} subtitle={stats.newProposals > 0 ? `${stats.newProposals} aguardando resposta` : 'de parceiros'} icon={<CreditCard className="h-6 w-6" />} color="purple" />
         <KPICard title="Docs Enviados" value={stats.docs} subtitle="documentos enviados" icon={<TrendingUp className="h-6 w-6" />} color="amber" />
       </div>
+
+      {/* Visão geral agro (satélite, vencimentos, marketplace, produção) */}
+      <AgroOverview />
 
       {/* Plan usage */}
       <div className="card">

@@ -3,13 +3,18 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserRole, Prisma, CashFlowType } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateCashFlowDto, UpdateCashFlowDto } from './dto/cashflow.dto';
 
 @Injectable()
 export class CashflowService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   private async assertOwner(id: string, userId: string, role: string) {
     const entry = await this.prisma.cashFlowEntry.findUnique({ where: { id } });
@@ -43,6 +48,7 @@ export class CashflowService {
     return this.prisma.cashFlowEntry.findMany({
       where,
       orderBy: { date: 'desc' },
+      take: 1000,
     });
   }
 
@@ -107,5 +113,46 @@ export class CashflowService {
       data: { deletedAt: new Date() },
     });
     return { success: true };
+  }
+
+  // ─── Export CSV ───────────────────────────────────────────────────────────────
+
+  async exportCsv(userId: string, role: string, safra?: string): Promise<string> {
+    const entries = await this.findAll(userId, role, safra);
+    const header = 'Data;Tipo;Categoria;Descricao;Valor;Safra;Projetado';
+    const rows = entries.map((e) => {
+      const date = new Date(e.date).toISOString().slice(0, 10);
+      const desc = String(e.description).replace(/;/g, ',');
+      return [date, e.type, e.category, desc, Number(e.amount).toFixed(2), e.safra ?? '', e.isProjected ? 'Sim' : 'Nao'].join(';');
+    });
+    return [header, ...rows].join('\n');
+  }
+
+  // ─── Alerta de saldo projetado negativo ───────────────────────────────────────
+
+  @Cron(CronExpression.EVERY_WEEK)
+  async alertNegativeProjection() {
+    const grouped = await this.prisma.cashFlowEntry.groupBy({
+      by: ['userId'],
+      where: { deletedAt: null },
+    });
+    for (const g of grouped) {
+      try {
+        const summary = await this.getSummary(g.userId, UserRole.PRODUCER);
+        if (summary.saldoProjetado < 0) {
+          this.notifications
+            .notify({
+              userId: g.userId,
+              type: 'CASHFLOW',
+              title: 'Saldo projetado negativo',
+              message: `Sua projeção de fluxo de caixa está negativa (${summary.saldoProjetado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}). Revise custos e receitas previstas.`,
+              link: '/dashboard/cashflow',
+            })
+            .catch(() => null);
+        }
+      } catch {
+        /* ignora usuário com erro */
+      }
+    }
   }
 }

@@ -125,6 +125,8 @@ export default function NdviPage() {
           icon={Satellite}
           title="Nenhum talhão para monitorar"
           description="Cadastre fazendas e talhões em Gestão de Áreas para acompanhar a saúde da lavoura via satélite."
+          actionLabel="Cadastrar áreas"
+          onAction={() => { window.location.href = '/dashboard/farms'; }}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

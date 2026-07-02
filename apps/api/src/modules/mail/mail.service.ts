@@ -43,6 +43,10 @@ export class MailService {
 
   /** Envio real (chamado pelo processor da fila ou pelo fallback). */
   async deliver(to: string, subject: string, html: string): Promise<void> {
+    // Preferência: Resend (HTTP API) quando configurado; senão SMTP (nodemailer).
+    if (this.config.get<string>('RESEND_API_KEY')) {
+      return this.deliverViaResend(to, subject, html);
+    }
     const from = `"ConectCampo" <${this.config.get<string>('MAIL_FROM', 'conectcampodigital@gmail.com')}>`;
     try {
       await this.transporter.sendMail({ from, to, subject, html });
@@ -50,6 +54,47 @@ export class MailService {
     } catch (err) {
       this.logger.error(`Failed to send email to ${to}: ${(err as Error).message}`);
     }
+  }
+
+  /** Envio via Resend (https://resend.com) usando a HTTP API. */
+  private async deliverViaResend(to: string, subject: string, html: string): Promise<void> {
+    const apiKey = this.config.get<string>('RESEND_API_KEY') as string;
+    const from =
+      this.config.get<string>('RESEND_FROM') ??
+      this.config.get<string>('MAIL_FROM', 'ConectCampo <no-reply@conectcampo.digital>');
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ from, to, subject, html }),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Resend ${res.status}: ${text}`);
+      }
+      this.logger.log(`Email sent via Resend to ${to}: ${subject}`);
+    } catch (err) {
+      this.logger.error(`Resend falhou para ${to}: ${(err as Error).message}`);
+    }
+  }
+
+  /** Notificação transacional genérica (usada por outros módulos). */
+  async sendNotification(
+    to: string,
+    title: string,
+    message: string,
+    ctaPath?: string,
+    ctaLabel = 'Abrir no painel',
+  ): Promise<void> {
+    const html = this.layout(`
+      <h1 style="font-size:20px;color:#166534;margin:0 0 12px">${title}</h1>
+      <p style="margin:0 0 16px;color:#374151;line-height:1.5">${message}</p>
+      ${ctaPath ? this.button(ctaLabel, `${this.appUrl()}${ctaPath}`) : ''}
+    `);
+    await this.send(to, title, html);
   }
 
   // ─── Templates ──────────────────────────────────────────────────────────────

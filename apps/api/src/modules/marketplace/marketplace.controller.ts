@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { MarketplaceService } from './marketplace.service';
 import {
   CreateGrainListingDto,
@@ -48,6 +49,7 @@ export class MarketplaceController {
   }
 
   @Post()
+  @Throttle({ default: { ttl: 60000, limit: 15 } })
   @ApiOperation({ summary: 'Publicar oferta de grãos' })
   create(@CurrentUser('sub') userId: string, @Body() dto: CreateGrainListingDto) {
     return this.service.create(userId, dto);

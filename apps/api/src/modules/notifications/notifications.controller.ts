@@ -5,6 +5,7 @@ import {
   Delete,
   Param,
   Query,
+  Body,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -78,6 +79,21 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Marcar todas como lidas' })
   async markAllRead(@CurrentUser('sub') userId: string) {
     return this.notificationsService.markAllAsRead(userId);
+  }
+
+  @Get('preferences')
+  @ApiOperation({ summary: 'Minhas preferências de notificação' })
+  async getPreferences(@CurrentUser('sub') userId: string) {
+    return this.notificationsService.getPreferences(userId);
+  }
+
+  @Patch('preferences')
+  @ApiOperation({ summary: 'Atualizar preferências de notificação (e-mail, in-app, tipos silenciados)' })
+  async updatePreferences(
+    @CurrentUser('sub') userId: string,
+    @Body() body: { email?: boolean; inApp?: boolean; mutedTypes?: string[] },
+  ) {
+    return this.notificationsService.updatePreferences(userId, body);
   }
 
   @Patch(':id/read')

@@ -171,6 +171,7 @@ function buildRoleNav(role: string, plan: string): NavSection[] {
           { label: 'Todas Operações',    href: '/dashboard/admin/operations',  icon: <ClipboardList className="h-5 w-5" /> },
           { label: 'Parceiros',          href: '/dashboard/admin/partners',    icon: <Building2 className="h-5 w-5" /> },
           { label: 'Leads',              href: '/dashboard/admin/leads',       icon: <UserPlus className="h-5 w-5" /> },
+          { label: 'Disputas',           href: '/dashboard/admin/disputes',    icon: <ShieldAlert className="h-5 w-5" /> },
           { label: 'Receita',            href: '/dashboard/admin/revenue',     icon: <DollarSign className="h-5 w-5" /> },
           { label: 'Auditoria',          href: '/dashboard/admin/audit',       icon: <Activity className="h-5 w-5" /> },
         ],

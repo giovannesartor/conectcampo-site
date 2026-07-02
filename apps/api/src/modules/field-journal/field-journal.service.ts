@@ -31,7 +31,7 @@ export class FieldJournalService {
 
   async create(userId: string, role: string, dto: CreateFieldEntryDto) {
     await this.assertFarmOwner(dto.farmId, userId, role);
-    return this.prisma.fieldJournalEntry.create({
+    const entry = await this.prisma.fieldJournalEntry.create({
       data: {
         userId,
         farmId: dto.farmId,
@@ -46,6 +46,22 @@ export class FieldJournalService {
         cost: dto.cost,
       },
     });
+
+    // Integração: lança o custo como despesa no fluxo de caixa, se solicitado.
+    if (dto.addToCashflow && dto.cost && dto.cost > 0) {
+      await this.prisma.cashFlowEntry.create({
+        data: {
+          userId,
+          type: 'DESPESA',
+          category: dto.type === 'PLANTIO' || dto.type === 'ADUBACAO' || dto.type === 'PULVERIZACAO' ? 'INSUMOS' : 'CUSTEIO',
+          description: `${dto.title}${dto.inputName ? ` (${dto.inputName})` : ''}`,
+          amount: dto.cost,
+          date: new Date(dto.date),
+        },
+      });
+    }
+
+    return entry;
   }
 
   async findAll(userId: string, role: string, farmId?: string) {
@@ -56,6 +72,7 @@ export class FieldJournalService {
     return this.prisma.fieldJournalEntry.findMany({
       where,
       orderBy: { date: 'desc' },
+      take: 500,
       include: {
         farm: { select: { id: true, name: true } },
         plot: { select: { id: true, name: true } },

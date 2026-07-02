@@ -172,4 +172,28 @@ export class FarmsService {
 
     return { totalFarms, totalPlots, totalAreaHa, cropDistribution };
   }
+
+  /** Produção estimada por cultura (área × produtividade) — usado para prefill de CPR. */
+  async getProductionSummary(userId: string, role: string) {
+    const where: Prisma.PlotWhereInput = { deletedAt: null };
+    if (role !== UserRole.ADMIN) where.farm = { userId, deletedAt: null };
+
+    const plots = await this.prisma.plot.findMany({
+      where,
+      select: { crop: true, areaHa: true, expectedYield: true, safra: true },
+    });
+
+    const byCrop: Record<string, { crop: string; areaHa: number; estProduction: number; safra: string | null }> = {};
+    for (const p of plots) {
+      const area = Number(p.areaHa);
+      const yieldPerHa = Number(p.expectedYield ?? 0);
+      byCrop[p.crop] ??= { crop: p.crop, areaHa: 0, estProduction: 0, safra: p.safra };
+      byCrop[p.crop].areaHa += area;
+      byCrop[p.crop].estProduction += area * yieldPerHa;
+    }
+
+    return Object.values(byCrop)
+      .map((c) => ({ ...c, estProduction: Number(c.estProduction.toFixed(0)) }))
+      .sort((a, b) => b.areaHa - a.areaHa);
+  }
 }

@@ -42,7 +42,7 @@ export class ClimateScoreService {
     const plots: PlotRisk[] = [];
 
     for (const farm of farms) {
-      const forecast = this.weather.getForecast(farm.state, farm.city);
+      const forecast = await this.weather.getForecast(farm.state, farm.city);
       const hasSeca = forecast.alerts.some((a) => a.type === 'SECA');
       const hasGeada = forecast.alerts.some((a) => a.type === 'GEADA');
       const hasChuvaForte = forecast.alerts.some((a) => a.type === 'CHUVA_FORTE');
@@ -103,6 +103,39 @@ export class ClimateScoreService {
       overallLevel: this.levelFrom(overallScore),
       plotsAssessed: plots.length,
       plots: plots.sort((a, b) => b.riskScore - a.riskScore),
+    };
+  }
+
+  /**
+   * Sinais agro consolidados do produtor (NDVI, risco climático e reputação no
+   * marketplace) — usados para enriquecer a análise de crédito/score.
+   */
+  async getAgroSignals(userId: string, role: string) {
+    const assessment = await this.assess(userId, role);
+
+    // NDVI médio dos talhões (última leitura de cada)
+    const plots = await this.prisma.plot.findMany({
+      where: role === UserRole.ADMIN ? { deletedAt: null } : { deletedAt: null, farm: { userId, deletedAt: null } },
+      include: { ndviReadings: { orderBy: { date: 'desc' }, take: 1 } },
+    });
+    const ndviValues = plots
+      .map((p) => p.ndviReadings[0]?.ndviMean)
+      .filter((v): v is number => v != null);
+    const ndviAvg = ndviValues.length
+      ? Number((ndviValues.reduce((s, v) => s + v, 0) / ndviValues.length).toFixed(2))
+      : null;
+
+    // Reputação no marketplace
+    const rep = await this.prisma.marketplaceReview.aggregate({
+      where: { ratedId: userId },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    return {
+      climateRisk: { score: assessment.overallScore, level: assessment.overallLevel, plotsAssessed: assessment.plotsAssessed },
+      ndvi: { average: ndviAvg, plotsMonitored: ndviValues.length },
+      reputation: { average: Number((rep._avg.rating ?? 0).toFixed(2)), count: rep._count.rating },
     };
   }
 }

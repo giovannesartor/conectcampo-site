@@ -82,11 +82,18 @@ export default function MarketplacePage() {
   const [filterCrop, setFilterCrop] = useState('');
   const [sort, setSort] = useState<SortKey>('recent');
   const [showFilters, setShowFilters] = useState(false);
+  const [kyc, setKyc] = useState<{ pixKey: string | null; verified: boolean } | null>(null);
+  const [showKyc, setShowKyc] = useState(false);
 
   const load = () => {
     setLoading(true);
-    Promise.all([api.get('/marketplace'), api.get('/marketplace/mine'), api.get('/marketplace/orders')])
-      .then(([b, m, o]) => { setBrowse(b.data); setMine(m.data); setOrders(o.data); })
+    Promise.all([
+      api.get('/marketplace'),
+      api.get('/marketplace/mine'),
+      api.get('/marketplace/orders'),
+      api.get('/marketplace/orders/kyc'),
+    ])
+      .then(([b, m, o, k]) => { setBrowse(b.data); setMine(m.data); setOrders(o.data); setKyc(k.data); })
       .catch(() => toast.error('Não foi possível carregar o marketplace.'))
       .finally(() => setLoading(false));
   };
@@ -177,6 +184,16 @@ export default function MarketplacePage() {
         <StatCard label="Procura (compra)" value={stats.compras} />
         <StatCard label="Preço médio" value={stats.avg ? formatCurrency(stats.avg) : '—'} />
       </div>
+
+      {kyc && !kyc.verified && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30 p-4">
+          <ShieldCheck className="h-5 w-5 text-amber-600 flex-shrink-0" />
+          <p className="flex-1 text-sm text-amber-800 dark:text-amber-300">
+            Para <strong>vender</strong> no marketplace, cadastre sua chave PIX (KYC). É onde você receberá os pagamentos.
+          </p>
+          <button onClick={() => setShowKyc(true)} className="btn-primary text-sm flex-shrink-0">Cadastrar PIX</button>
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex gap-2">
@@ -282,7 +299,44 @@ export default function MarketplacePage() {
 
       {show && <ListingModal listing={editing} onClose={() => setShow(false)} onSaved={() => { setShow(false); setTab('mine'); load(); }} />}
       {buying && <OrderModal listing={buying} onClose={() => setBuying(null)} />}
+      {showKyc && <KycModal current={kyc} onClose={() => setShowKyc(false)} onSaved={() => { setShowKyc(false); load(); }} />}
     </div>
+  );
+}
+
+function KycModal({ current, onClose, onSaved }: { current: { pixKey: string | null } | null; onClose: () => void; onSaved: () => void }) {
+  const [pixKey, setPixKey] = useState(current?.pixKey ?? '');
+  const [pixKeyType, setPixKeyType] = useState('CPF');
+  const [saving, setSaving] = useState(false);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pixKey.trim()) { toast.error('Informe a chave PIX.'); return; }
+    setSaving(true);
+    try {
+      await api.patch('/marketplace/orders/kyc', { pixKey: pixKey.trim(), pixKeyType });
+      toast.success('Chave PIX cadastrada — você já pode vender!');
+      onSaved();
+    } catch { toast.error('Erro ao salvar'); setSaving(false); }
+  };
+  return (
+    <Modal title="Cadastro do vendedor (KYC)" onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        <p className="text-sm text-gray-500 dark:text-gray-400">Informe a chave PIX onde você receberá os pagamentos das vendas.</p>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="label">Tipo</label>
+            <select className="input" value={pixKeyType} onChange={(e) => setPixKeyType(e.target.value)}>
+              {['CPF', 'CNPJ', 'EMAIL', 'PHONE', 'ALEATORIA'].map((t) => <option key={t}>{t}</option>)}
+            </select>
+          </div>
+          <div className="col-span-2">
+            <label className="label">Chave PIX</label>
+            <input className="input" value={pixKey} onChange={(e) => setPixKey(e.target.value)} />
+          </div>
+        </div>
+        <button type="submit" disabled={saving} className="btn-primary w-full">{saving ? 'Salvando...' : 'Salvar e habilitar vendas'}</button>
+      </form>
+    </Modal>
   );
 }
 

@@ -31,6 +31,12 @@ export class FarmsController {
     return this.service.getSummary(userId, role);
   }
 
+  @Get('production-summary')
+  @ApiOperation({ summary: 'Produção estimada por cultura (para prefill de CPR)' })
+  getProductionSummary(@CurrentUser('sub') userId: string, @CurrentUser('role') role: string) {
+    return this.service.getProductionSummary(userId, role);
+  }
+
   @Get()
   @ApiOperation({ summary: 'Listar fazendas do usuário' })
   findAll(@CurrentUser('sub') userId: string, @CurrentUser('role') role: string) {

@@ -4,9 +4,11 @@ import {
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserRole } from '@prisma/client';
 import { SatelliteService } from './satellite.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 export interface NdviHealth {
   status: 'EXCELENTE' | 'BOM' | 'ATENCAO' | 'CRITICO' | 'SEM_DADOS';
@@ -22,6 +24,7 @@ export class NdviService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly satellite: SatelliteService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   private async assertPlotAccess(plotId: string, userId: string, role: string) {
@@ -242,5 +245,51 @@ export class NdviService {
     );
 
     return { plots };
+  }
+
+  // ─── Atualização automática semanal + alertas de queda ────────────────────────
+
+  /**
+   * Atualiza o NDVI de todos os talhões semanalmente e alerta o produtor quando
+   * o vigor está crítico (< 0,3) ou caiu de forma acentuada (queda ≥ 0,15).
+   */
+  @Cron(CronExpression.EVERY_WEEK)
+  async weeklyRefreshAndAlert() {
+    const plots = await this.prisma.plot.findMany({
+      where: { deletedAt: null },
+      include: {
+        farm: { select: { userId: true, name: true } },
+        ndviReadings: { orderBy: { date: 'desc' }, take: 1 },
+      },
+    });
+    if (plots.length === 0) return;
+
+    this.logger.log(`Atualização semanal de NDVI para ${plots.length} talhão(ões)`);
+    for (const plot of plots) {
+      const previous = plot.ndviReadings[0]?.ndviMean ?? null;
+      try {
+        const result = await this.generateForPlot(plot.id, 'system', UserRole.ADMIN);
+        const latest = result.health.ndviMean;
+        if (latest == null) continue;
+
+        const critical = latest < 0.3;
+        const sharpDrop = previous != null && previous - latest >= 0.15;
+        if (critical || sharpDrop) {
+          this.notifications
+            .notify({
+              userId: plot.farm.userId,
+              type: 'NDVI',
+              title: 'Alerta de vigor da lavoura',
+              message: `O NDVI do talhão "${plot.name}" (${plot.farm.name}) está em ${latest.toFixed(
+                2,
+              )}${sharpDrop ? ` (queda desde ${previous!.toFixed(2)})` : ''}. Verifique possível estresse hídrico, pragas ou deficiência nutricional.`,
+              link: '/dashboard/ndvi',
+            })
+            .catch(() => null);
+        }
+      } catch (err) {
+        this.logger.warn(`Falha ao atualizar NDVI do talhão ${plot.id}: ${(err as Error).message}`);
+      }
+    }
   }
 }

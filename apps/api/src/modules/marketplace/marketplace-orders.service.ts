@@ -45,8 +45,37 @@ export class MarketplaceOrdersService {
 
   private notify(userId: string, title: string, message: string) {
     this.notifications
-      .create({ userId, type: 'MARKETPLACE', title, message, link: '/dashboard/marketplace' })
+      .notify({ userId, type: 'MARKETPLACE', title, message, link: '/dashboard/marketplace' })
       .catch(() => null);
+  }
+
+  private recordEvent(orderId: string, type: string, description: string, actorId?: string) {
+    this.prisma.marketplaceOrderEvent
+      .create({ data: { orderId, type, description, actorId } })
+      .catch(() => null);
+  }
+
+  // ─── KYC do vendedor (recebimento via PIX) ────────────────────────────────────
+
+  async getSellerKyc(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { pixKey: true, pixKeyType: true, sellerVerified: true },
+    });
+    return {
+      pixKey: user?.pixKey ?? null,
+      pixKeyType: user?.pixKeyType ?? null,
+      verified: user?.sellerVerified ?? false,
+    };
+  }
+
+  async updateSellerKyc(userId: string, dto: { pixKey: string; pixKeyType: string }) {
+    if (!dto.pixKey?.trim()) throw new BadRequestException('Informe a chave PIX');
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { pixKey: dto.pixKey.trim(), pixKeyType: dto.pixKeyType, sellerVerified: true },
+    });
+    return this.getSellerKyc(userId);
   }
 
   /** Retorna o detalhamento de taxas para um subtotal (usado no "como funciona"/preview). */
@@ -129,6 +158,7 @@ export class MarketplaceOrdersService {
       data: { paymentUrl: invoiceUrl },
     });
 
+    this.recordEvent(order.id, 'CRIADO', `Pedido criado por compra de ${dto.quantity} ${listing.unit} de ${listing.product}.`, buyerId);
     return { order: updated, paymentUrl: invoiceUrl };
   }
 
@@ -154,6 +184,8 @@ export class MarketplaceOrdersService {
       },
     });
     this.logger.log(`Pedido ${orderId} pago e em custódia (escrow)`);
+    this.recordEvent(orderId, 'PAGO', 'Pagamento confirmado; valor em custódia.');
+    await this.createContractFromOrder(order.id).catch(() => null);
     this.notify(order.sellerId, 'Pagamento recebido (em custódia)', `O comprador pagou "${order.product}". Envie o produto e marque como enviado para prosseguir.`);
     this.notify(order.buyerId, 'Pagamento confirmado', `Seu pagamento de "${order.product}" está em custódia segura até a entrega.`);
     return true;
@@ -167,6 +199,7 @@ export class MarketplaceOrdersService {
       include: {
         buyer: { select: { id: true, name: true } },
         seller: { select: { id: true, name: true } },
+        events: { orderBy: { createdAt: 'asc' } },
       },
     });
     if (!order) throw new NotFoundException('Pedido não encontrado');
@@ -243,6 +276,7 @@ export class MarketplaceOrdersService {
       where: { id },
       data: { status: MarketplaceOrderStatus.ENVIADO, shippedAt: new Date(), shippingInfo },
     });
+    this.recordEvent(id, 'ENVIADO', shippingInfo ? `Enviado. ${shippingInfo}` : 'Pedido marcado como enviado.', userId);
     this.notify(order.buyerId, 'Pedido enviado', `"${order.product}" foi marcado como enviado. Após receber, confirme o recebimento para liberar o pagamento ao vendedor.`);
     return updated;
   }
@@ -260,6 +294,7 @@ export class MarketplaceOrdersService {
       where: { id },
       data: { status: MarketplaceOrderStatus.RECEBIDO_LIBERADO, confirmedAt: new Date() },
     });
+    this.recordEvent(id, 'CONFIRMADO', 'Comprador confirmou o recebimento; valor liberado ao vendedor.', userId);
     this.notify(order.sellerId, 'Valor liberado 🎉', `O comprador confirmou o recebimento de "${order.product}". O repasse de ${this.round(Number(order.sellerNet))} será processado.`);
     return updated;
   }
@@ -276,6 +311,7 @@ export class MarketplaceOrdersService {
       where: { id },
       data: { status: MarketplaceOrderStatus.DISPUTA, disputeReason: reason },
     }).then((updated) => {
+      this.recordEvent(id, 'DISPUTA', `Disputa aberta: ${reason}`, userId);
       this.notify(order.sellerId, 'Disputa aberta', `O comprador abriu uma disputa no pedido "${order.product}". Nossa equipe será acionada.`);
       return updated;
     });
@@ -286,6 +322,7 @@ export class MarketplaceOrdersService {
     if (order.status !== MarketplaceOrderStatus.AGUARDANDO_PAGAMENTO) {
       throw new BadRequestException('Só é possível cancelar um pedido ainda não pago');
     }
+    this.recordEvent(id, 'CANCELADO', 'Pedido cancelado antes do pagamento.', userId);
     return this.prisma.marketplaceOrder.update({
       where: { id },
       data: { status: MarketplaceOrderStatus.CANCELADO, cancelledAt: new Date() },
@@ -299,6 +336,8 @@ export class MarketplaceOrdersService {
     if (order.status !== MarketplaceOrderStatus.RECEBIDO_LIBERADO) {
       throw new BadRequestException('O pedido precisa estar liberado para repasse');
     }
+    this.recordEvent(id, 'REPASSADO', `Repasse de ${this.round(Number(order.sellerNet))} realizado ao vendedor.`);
+    this.notify(order.sellerId, 'Repasse realizado', `O valor de "${order.product}" foi repassado para sua conta.`);
     return this.prisma.marketplaceOrder.update({
       where: { id },
       data: { status: MarketplaceOrderStatus.REPASSADO, payoutAt: new Date() },
@@ -316,6 +355,7 @@ export class MarketplaceOrdersService {
       where: { id },
       data: { status: MarketplaceOrderStatus.REEMBOLSADO },
     });
+    this.recordEvent(id, 'REEMBOLSADO', 'Comprador reembolsado.');
     this.notify(order.buyerId, 'Reembolso processado', `Seu pagamento de "${order.product}" foi devolvido.`);
     return updated;
   }
@@ -343,9 +383,27 @@ export class MarketplaceOrdersService {
         where: { id: order.id },
         data: { status: MarketplaceOrderStatus.RECEBIDO_LIBERADO, confirmedAt: new Date() },
       });
+      this.recordEvent(order.id, 'CONFIRMADO', `Liberado automaticamente após ${AUTO_CONFIRM_DAYS} dias sem contestação.`);
       this.notify(order.sellerId, 'Valor liberado automaticamente', `O prazo de ${AUTO_CONFIRM_DAYS} dias passou sem contestação em "${order.product}". O valor foi liberado.`);
       this.notify(order.buyerId, 'Pedido concluído automaticamente', `O pedido "${order.product}" foi confirmado automaticamente após ${AUTO_CONFIRM_DAYS} dias.`);
     }
+  }
+
+  /** Cancela pedidos não pagos após 24h (reconciliação/limpeza). Roda a cada 6h. */
+  @Cron(CronExpression.EVERY_6_HOURS)
+  async cancelStaleUnpaidOrders() {
+    const cutoff = new Date(Date.now() - 24 * 3600 * 1000);
+    const stale = await this.prisma.marketplaceOrder.findMany({
+      where: { status: MarketplaceOrderStatus.AGUARDANDO_PAGAMENTO, createdAt: { lte: cutoff } },
+    });
+    for (const order of stale) {
+      await this.prisma.marketplaceOrder.update({
+        where: { id: order.id },
+        data: { status: MarketplaceOrderStatus.CANCELADO, cancelledAt: new Date() },
+      });
+      this.recordEvent(order.id, 'CANCELADO', 'Cancelado automaticamente por falta de pagamento em 24h.');
+    }
+    if (stale.length) this.logger.log(`${stale.length} pedido(s) não pago(s) cancelado(s)`);
   }
 
   // ─── Reputação / avaliações ───────────────────────────────────────────────────
@@ -435,5 +493,46 @@ export class MarketplaceOrdersService {
       };
     }
     return map;
+  }
+
+  // ─── Contrato automático (reaproveita o módulo de Contratos de Venda) ──────────
+
+  /** Gera um contrato de venda para o vendedor a partir do pedido pago (idempotente). */
+  private async createContractFromOrder(orderId: string) {
+    const order = await this.prisma.marketplaceOrder.findUnique({
+      where: { id: orderId },
+      include: { buyer: { select: { name: true } } },
+    });
+    if (!order) return;
+    await this.prisma.salesContract.create({
+      data: {
+        userId: order.sellerId,
+        buyerName: order.buyer.name,
+        product: order.product,
+        quantity: order.quantity,
+        unit: order.unit,
+        pricePerUnit: order.unitPrice,
+        totalValue: order.subtotal,
+        deliveryType: 'DISPONIVEL',
+        priceLocked: true,
+        status: 'ATIVO',
+        notes: `Gerado automaticamente pelo marketplace (pedido ${order.id.slice(0, 8)}).`,
+      },
+    });
+    this.recordEvent(orderId, 'CONTRATO', 'Contrato de venda gerado automaticamente.');
+  }
+
+  // ─── Admin: fila de disputas ──────────────────────────────────────────────────
+
+  async adminListDisputes() {
+    return this.prisma.marketplaceOrder.findMany({
+      where: { status: MarketplaceOrderStatus.DISPUTA },
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        buyer: { select: { name: true, email: true } },
+        seller: { select: { name: true, email: true } },
+        events: { orderBy: { createdAt: 'asc' } },
+      },
+    });
   }
 }

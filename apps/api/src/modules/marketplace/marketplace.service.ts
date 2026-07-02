@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
@@ -29,10 +30,23 @@ export class MarketplaceService {
   }
 
   async create(userId: string, dto: CreateGrainListingDto) {
+    const type = dto.type ?? GrainListingType.VENDA;
+    // KYC: para vender (receber pagamento em custódia) é preciso ter chave PIX cadastrada.
+    if (type === GrainListingType.VENDA) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { pixKey: true },
+      });
+      if (!user?.pixKey) {
+        throw new BadRequestException(
+          'Cadastre sua chave PIX (KYC do vendedor) antes de publicar uma oferta de venda.',
+        );
+      }
+    }
     return this.prisma.grainListing.create({
       data: {
         userId,
-        type: dto.type ?? GrainListingType.VENDA,
+        type,
         product: dto.product,
         cropType: dto.cropType,
         quantity: dto.quantity,
@@ -95,6 +109,7 @@ export class MarketplaceService {
     return this.prisma.grainListing.findMany({
       where,
       orderBy: { createdAt: 'desc' },
+      take: 300,
     });
   }
 

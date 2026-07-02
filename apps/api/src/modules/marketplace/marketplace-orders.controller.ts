@@ -9,8 +9,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { MarketplaceOrdersService } from './marketplace-orders.service';
-import { CreateOrderDto, ShipOrderDto, DisputeOrderDto, CreateReviewDto } from './dto/order.dto';
+import { CreateOrderDto, ShipOrderDto, DisputeOrderDto, CreateReviewDto, SellerKycDto } from './dto/order.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -50,7 +51,27 @@ export class MarketplaceOrdersController {
     return this.service.getReputation(userId);
   }
 
+  @Get('kyc')
+  @ApiOperation({ summary: 'Status de KYC do vendedor (chave PIX)' })
+  getKyc(@CurrentUser('sub') userId: string) {
+    return this.service.getSellerKyc(userId);
+  }
+
+  @Patch('kyc')
+  @ApiOperation({ summary: 'Cadastrar/atualizar chave PIX do vendedor (KYC)' })
+  updateKyc(@CurrentUser('sub') userId: string, @Body() dto: SellerKycDto) {
+    return this.service.updateSellerKyc(userId, dto);
+  }
+
+  @Get('admin/disputes')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: '[Admin] Fila de disputas' })
+  adminDisputes() {
+    return this.service.adminListDisputes();
+  }
+
   @Post()
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @ApiOperation({ summary: 'Criar pedido de compra e gerar link de pagamento (ValsaPay, em custódia)' })
   create(@CurrentUser('sub') buyerId: string, @Body() dto: CreateOrderDto) {
     return this.service.createOrder(buyerId, dto);

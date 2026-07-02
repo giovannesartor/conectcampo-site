@@ -4,7 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { UserRole, Prisma, FinancialEventStatus } from '@prisma/client';
+import { UserRole, Prisma, FinancialEventStatus, FinancialEventType } from '@prisma/client';
 import {
   CreateFinancialEventDto,
   UpdateFinancialEventDto,
@@ -123,5 +123,65 @@ export class CalendarService {
       data: { deletedAt: new Date() },
     });
     return { success: true };
+  }
+
+  // ─── Sincronização a partir de CPRs e contratos ───────────────────────────────
+
+  /** Cria vencimentos automaticamente a partir de CPRs e contratos de venda do usuário. */
+  async syncFromSources(userId: string) {
+    let created = 0;
+
+    // CPRs com data de vencimento
+    const cprs = await this.prisma.cprDocument.findMany({
+      where: { userId, deletedAt: null },
+      select: { id: true, numeroCpr: true, produto: true, valorTotal: true, dataVencimento: true },
+    });
+    for (const cpr of cprs) {
+      const title = `CPR ${cpr.numeroCpr ?? ''} — ${cpr.produto}`.trim();
+      const exists = await this.prisma.financialEvent.findFirst({
+        where: { userId, type: FinancialEventType.CPR, title, dueDate: cpr.dataVencimento, deletedAt: null },
+      });
+      if (!exists) {
+        await this.prisma.financialEvent.create({
+          data: {
+            userId,
+            title,
+            type: FinancialEventType.CPR,
+            amount: cpr.valorTotal ?? undefined,
+            dueDate: cpr.dataVencimento,
+            notes: 'Sincronizado da CPR',
+          },
+        });
+        created += 1;
+      }
+    }
+
+    // Contratos de venda com data de entrega
+    const contracts = await this.prisma.salesContract.findMany({
+      where: { userId, deletedAt: null, deliveryDate: { not: null } },
+      select: { id: true, buyerName: true, product: true, totalValue: true, deliveryDate: true },
+    });
+    for (const c of contracts) {
+      if (!c.deliveryDate) continue;
+      const title = `Entrega ${c.product} — ${c.buyerName}`;
+      const exists = await this.prisma.financialEvent.findFirst({
+        where: { userId, type: FinancialEventType.OUTRO, title, dueDate: c.deliveryDate, deletedAt: null },
+      });
+      if (!exists) {
+        await this.prisma.financialEvent.create({
+          data: {
+            userId,
+            title,
+            type: FinancialEventType.OUTRO,
+            amount: c.totalValue ?? undefined,
+            dueDate: c.deliveryDate,
+            notes: 'Sincronizado de contrato de venda',
+          },
+        });
+        created += 1;
+      }
+    }
+
+    return { created };
   }
 }

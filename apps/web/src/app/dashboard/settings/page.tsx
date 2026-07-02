@@ -25,9 +25,11 @@ export default function SettingsPage() {
 
   // Notification preferences
   const [notifications, setNotifications] = useState({
+    email: true,
     proposals: true,
     operations: true,
     scoring: true,
+    marketplace: true,
     marketing: false,
   });
   const [savingNotifications, setSavingNotifications] = useState(false);
@@ -85,9 +87,11 @@ export default function SettingsPage() {
   ] as { key: 'profile' | 'password' | 'notifications' | 'apikeys'; label: string; icon: typeof User }[];
 
   const NOTIFICATION_ITEMS = [
+    { label: 'Receber e-mails', desc: 'Interruptor geral — desligue para não receber nenhum e-mail', key: 'email' as const },
     { label: 'Novas propostas', desc: 'Receber email quando uma proposta for recebida', key: 'proposals' as const },
     { label: 'Atualizações de operação', desc: 'Quando o status de uma operação mudar', key: 'operations' as const },
     { label: 'Score atualizado', desc: 'Quando seu score for recalculado', key: 'scoring' as const },
+    { label: 'Marketplace & agro', desc: 'Pedidos, entregas, satélite e clima', key: 'marketplace' as const },
     { label: 'Novidades da plataforma', desc: 'Newsletter e atualizações', key: 'marketing' as const },
   ];
 
