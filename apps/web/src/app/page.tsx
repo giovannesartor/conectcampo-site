@@ -3,6 +3,7 @@ import { Hero } from '@/components/landing/Hero';
 import { SocialProof } from '@/components/landing/SocialProof';
 import { AudienceSplit } from '@/components/landing/AudienceSplit';
 import { ProductShowcase } from '@/components/landing/ProductShowcase';
+import { Platform } from '@/components/landing/Platform';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { Segments } from '@/components/landing/Segments';
 import { Security } from '@/components/landing/Security';
@@ -22,7 +23,7 @@ const jsonLd = {
       url: 'https://conectcampo.digital',
       logo: 'https://conectcampo.digital/logo.png',
       description:
-        'Marketplace de crédito agro que conecta produtores rurais e empresas do agronegócio a bancos, cooperativas, FIDCs, securitizadoras e FIAGROs.',
+        'Plataforma completa para o agronegócio: crédito rural multi-financiador, marketplace de grãos com pagamento seguro, monitoramento por satélite (NDVI), clima, cotações, fluxo de caixa, CPR digital e crédito de carbono.',
       areaServed: 'BR',
     },
     {
@@ -76,6 +77,7 @@ export default function LandingPage() {
       <SocialProof />
       <AudienceSplit />
       <ProductShowcase />
+      <Platform />
       <HowItWorks />
       <Segments />
       <Security />

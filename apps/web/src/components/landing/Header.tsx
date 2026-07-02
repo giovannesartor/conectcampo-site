@@ -7,6 +7,7 @@ import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const plataformaLinks = [
+  { name: 'Ferramentas', href: '/#plataforma' },
   { name: 'Como Funciona', href: '/como-funciona' },
   { name: 'Planos', href: '/planos' },
   { name: 'Parceiros', href: '/parceiros' },
@@ -14,6 +15,7 @@ const plataformaLinks = [
 ];
 
 const mobileNavLinks = [
+  { name: 'Ferramentas', href: '/#plataforma' },
   { name: 'Como Funciona', href: '/como-funciona' },
   { name: 'Planos', href: '/planos' },
   { name: 'Parceiros', href: '/parceiros' },
