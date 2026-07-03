@@ -6,7 +6,7 @@ const footerLinks = {
     { name: 'Como Funciona', href: '/como-funciona' },
     { name: 'Planos', href: '/planos' },
     { name: 'Parceiros', href: '/parceiros' },
-    { name: 'API', href: '/api-docs' },
+    { name: 'API para Devs', href: '/api-docs' },
   ],
   Legal: [
     { name: 'Termos de Uso', href: '/legal/termos-de-uso' },

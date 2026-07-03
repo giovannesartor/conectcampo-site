@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/lib/auth-context';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, Lock, Bell, Save, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -12,6 +12,14 @@ export default function SettingsPage() {
   const [tab, setTab] = useState<'profile' | 'password' | 'notifications' | 'apikeys'>('profile');
   const canUseApiKeys = user?.role === 'FINANCIAL_INSTITUTION' || user?.role === 'ADMIN';
   const [saving, setSaving] = useState(false);
+
+  // Deep-link: /dashboard/settings?tab=apikeys
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('tab');
+    if (t === 'apikeys' && canUseApiKeys) setTab('apikeys');
+    else if (t === 'profile' || t === 'password' || t === 'notifications') setTab(t);
+  }, [canUseApiKeys]);
+
 
   // Profile form
   const [name, setName] = useState(user?.name || '');

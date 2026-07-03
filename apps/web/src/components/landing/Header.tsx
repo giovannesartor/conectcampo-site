@@ -11,7 +11,7 @@ const plataformaLinks = [
   { name: 'Como Funciona', href: '/como-funciona' },
   { name: 'Planos', href: '/planos' },
   { name: 'Parceiros', href: '/parceiros' },
-  { name: 'API', href: '/api-docs' },
+  { name: 'API para Devs', href: '/api-docs' },
 ];
 
 const mobileNavLinks = [
@@ -19,7 +19,7 @@ const mobileNavLinks = [
   { name: 'Como Funciona', href: '/como-funciona' },
   { name: 'Planos', href: '/planos' },
   { name: 'Parceiros', href: '/parceiros' },
-  { name: 'API', href: '/api-docs' },
+  { name: 'API para Devs', href: '/api-docs' },
   { name: 'Sobre Nós', href: '/sobre' },
   { name: 'Contato', href: '/contato' },
 ];
