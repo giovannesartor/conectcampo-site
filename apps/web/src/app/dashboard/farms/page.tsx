@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
   MapPin,
   Plus,
@@ -14,6 +15,12 @@ import {
 import { api } from '@/lib/api';
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import toast from 'react-hot-toast';
+import type { PlotMapValue } from '@/components/dashboard/PlotMap';
+
+const PlotMap = dynamic(() => import('@/components/dashboard/PlotMap'), {
+  ssr: false,
+  loading: () => <div className="h-72 w-full rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />,
+});
 
 const STATES = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
 const CROPS = ['SOJA','MILHO','CAFE','ALGODAO','CANA','ARROZ','TRIGO','FEIJAO','PECUARIA_CORTE','PECUARIA_LEITE','AVICULTURA','SUINOCULTURA','FRUTICULTURA','SILVICULTURA','OUTRO'];
@@ -354,7 +361,44 @@ function FarmModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
 
 function PlotModal({ farm, onClose, onSaved }: { farm: Farm; onClose: () => void; onSaved: () => void }) {
   const [form, setForm] = useState({ name: '', crop: 'SOJA', areaHa: '', safra: '', status: 'PLANTADO', plantingDate: '', harvestDate: '', expectedYield: '', latitude: '', longitude: '' });
+  const [geometry, setGeometry] = useState<Record<string, unknown> | null>(null);
+  const [showMap, setShowMap] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const handleMapChange = (v: PlotMapValue) => {
+    setGeometry(v.geometry);
+    setForm((f) => ({
+      ...f,
+      latitude: v.latitude != null ? String(v.latitude) : f.latitude,
+      longitude: v.longitude != null ? String(v.longitude) : f.longitude,
+      areaHa: v.areaHa != null ? String(v.areaHa) : f.areaHa,
+    }));
+  };
+
+  const importGeoJson = async (file: File) => {
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const feature = parsed.type === 'FeatureCollection' ? parsed.features?.[0] : parsed;
+      const geom = feature?.geometry ?? (feature?.type === 'Polygon' ? feature : null);
+      if (!geom || (geom.type !== 'Polygon' && geom.type !== 'MultiPolygon')) {
+        toast.error('Arquivo sem polígono válido.');
+        return;
+      }
+      const poly = geom.type === 'MultiPolygon'
+        ? { type: 'Polygon', coordinates: geom.coordinates[0] }
+        : geom;
+      const ring: number[][] = poly.coordinates[0];
+      const lat = ring.reduce((s, c) => s + c[1], 0) / ring.length;
+      const lng = ring.reduce((s, c) => s + c[0], 0) / ring.length;
+      setGeometry(poly);
+      setForm((f) => ({ ...f, latitude: lat.toFixed(6), longitude: lng.toFixed(6) }));
+      setShowMap(true);
+      toast.success('Contorno importado do arquivo.');
+    } catch {
+      toast.error('Não foi possível ler o arquivo.');
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -375,6 +419,7 @@ function PlotModal({ farm, onClose, onSaved }: { farm: Farm; onClose: () => void
         expectedYield: form.expectedYield ? Number(form.expectedYield) : undefined,
         latitude: form.latitude ? Number(form.latitude) : undefined,
         longitude: form.longitude ? Number(form.longitude) : undefined,
+        geometry: geometry ?? undefined,
       });
       toast.success('Talhão adicionado');
       onSaved();
@@ -437,6 +482,37 @@ function PlotModal({ farm, onClose, onSaved }: { farm: Farm; onClose: () => void
             <input type="number" step="any" className="input" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="Longitude (ex: -47.8825)" />
           </div>
           <p className="text-xs text-gray-500 mt-1">Com a coordenada + área, geramos automaticamente a região para leitura de NDVI por satélite (dados reais).</p>
+        </div>
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label className="label mb-0">Contorno do talhão</label>
+            <div className="flex items-center gap-2">
+              <label className="text-xs cursor-pointer text-emerald-600 hover:underline">
+                Importar CAR/SICAR (GeoJSON)
+                <input
+                  type="file"
+                  accept=".geojson,.json,application/geo+json,application/json"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) importGeoJson(f); e.target.value = ''; }}
+                />
+              </label>
+              <button type="button" onClick={() => setShowMap((s) => !s)} className="text-xs font-medium text-emerald-600 hover:underline">
+                {showMap ? 'Ocultar mapa' : 'Desenhar no mapa'}
+              </button>
+            </div>
+          </div>
+          {showMap && (
+            <div className="mt-2">
+              <PlotMap
+                initialGeometry={geometry}
+                center={form.latitude && form.longitude ? [Number(form.latitude), Number(form.longitude)] : undefined}
+                onChange={handleMapChange}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {geometry ? 'Contorno definido — área e centro preenchidos automaticamente.' : 'Use a ferramenta de polígono/retângulo para desenhar o talhão.'}
+              </p>
+            </div>
+          )}
         </div>
         <button type="submit" disabled={saving} className="btn-primary w-full">
           {saving ? 'Salvando...' : 'Adicionar talhão'}
