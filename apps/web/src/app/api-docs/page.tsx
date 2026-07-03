@@ -11,7 +11,7 @@ export const metadata = {
     'API REST da ConectCampo: autenticação por API Key ou JWT, documentação interativa (Swagger/OpenAPI), scoring, monitoramento por satélite, marketplace e cotações.',
 };
 
-const API_BASE = 'https://api.conectcampo.com.br/api/v1';
+const API_BASE = 'https://conectcampo.digital/api/v1';
 const SWAGGER_URL = '/docs';
 const OPENAPI_URL = '/docs-json';
 

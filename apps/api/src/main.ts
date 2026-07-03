@@ -81,7 +81,7 @@ async function bootstrap() {
   );
 
   // Swagger
-  const apiUrl = process.env.PUBLIC_API_URL || 'https://api.conectcampo.com.br';
+  const apiUrl = process.env.PUBLIC_API_URL || 'https://conectcampo.digital/api/v1';
   const config = new DocumentBuilder()
     .setTitle('ConectCampo API')
     .setDescription(
@@ -103,12 +103,12 @@ async function bootstrap() {
       ].join('\n'),
     )
     .setVersion('1.0.0')
-    .setContact('Suporte ConectCampo', 'https://conectcampo.com.br/contato', 'api@conectcampo.com.br')
-    .setLicense('Proprietária — ConectCampo', 'https://conectcampo.com.br/legal')
-    .setTermsOfService('https://conectcampo.com.br/legal')
+    .setContact('Suporte ConectCampo', 'https://conectcampo.digital/contato', 'api@conectcampo.digital')
+    .setLicense('Proprietária — ConectCampo', 'https://conectcampo.digital/legal')
+    .setTermsOfService('https://conectcampo.digital/legal')
     .addServer(apiUrl, 'Produção')
-    .addServer('http://localhost:3001', 'Local')
-    .setExternalDoc('Guia de integração', 'https://conectcampo.com.br/api-docs')
+    .addServer('http://localhost:3001/api/v1', 'Local')
+    .setExternalDoc('Guia de integração', 'https://conectcampo.digital/api-docs')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT', description: 'Token JWT obtido em POST /auth/login' },
       'bearer',
