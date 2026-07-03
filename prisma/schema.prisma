@@ -1231,6 +1231,14 @@ model Farm {
   state        BrazilianState
   city         String
   totalAreaHa  Decimal         @db.Decimal(12, 2)
+
+  // Endereço / localização rural
+  cep          String?
+  address      String?         // logradouro / estrada de acesso
+  district     String?         // bairro / distrito / zona rural
+  matricula    String?         // matrícula do imóvel (cartório de registro)
+  inscricaoEstadual String?    // inscrição estadual rural / produtor
+
   latitude     Float?
   longitude    Float?
   geometry     Json?           // GeoJSON (Polygon/MultiPolygon)

@@ -13,16 +13,18 @@ export interface Quote {
   source: string;
 }
 
-// Preços de referência (base) — atualizados por variação diária determinística.
+// Preços de referência (estimados). Commodities agrícolas em BRL não têm API
+// pública gratuita em tempo real (CEPEA/B3 são pagos), então usamos referências.
+// O dólar (USD/BRL) é obtido em tempo real via open.er-api.com.
 const BASE_QUOTES: Omit<Quote, 'price' | 'changePct' | 'history'>[] = [
-  { symbol: 'SOJA', name: 'Soja', unit: 'R$/saca 60kg', source: 'CEPEA/ESALQ' },
-  { symbol: 'MILHO', name: 'Milho', unit: 'R$/saca 60kg', source: 'CEPEA/ESALQ' },
-  { symbol: 'BOI', name: 'Boi Gordo', unit: 'R$/arroba', source: 'CEPEA/B3' },
-  { symbol: 'CAFE', name: 'Café Arábica', unit: 'R$/saca 60kg', source: 'CEPEA/ESALQ' },
-  { symbol: 'ALGODAO', name: 'Algodão', unit: 'R$/@ pluma', source: 'CEPEA/ESALQ' },
-  { symbol: 'TRIGO', name: 'Trigo', unit: 'R$/ton', source: 'CEPEA/ESALQ' },
-  { symbol: 'DOLAR', name: 'Dólar Comercial', unit: 'R$', source: 'B3' },
-  { symbol: 'ACUCAR', name: 'Açúcar Cristal', unit: 'R$/saca 50kg', source: 'CEPEA/ESALQ' },
+  { symbol: 'SOJA', name: 'Soja', unit: 'R$/saca 60kg', source: 'Referência estimada' },
+  { symbol: 'MILHO', name: 'Milho', unit: 'R$/saca 60kg', source: 'Referência estimada' },
+  { symbol: 'BOI', name: 'Boi Gordo', unit: 'R$/arroba', source: 'Referência estimada' },
+  { symbol: 'CAFE', name: 'Café Arábica', unit: 'R$/saca 60kg', source: 'Referência estimada' },
+  { symbol: 'ALGODAO', name: 'Algodão', unit: 'R$/@ pluma', source: 'Referência estimada' },
+  { symbol: 'TRIGO', name: 'Trigo', unit: 'R$/ton', source: 'Referência estimada' },
+  { symbol: 'DOLAR', name: 'Dólar Comercial', unit: 'R$', source: 'open.er-api.com (tempo real)' },
+  { symbol: 'ACUCAR', name: 'Açúcar Cristal', unit: 'R$/saca 50kg', source: 'Referência estimada' },
 ];
 
 const BASE_PRICE: Record<string, number> = {
@@ -58,17 +60,39 @@ export class QuotesService {
     return Number((base * (1 + variation)).toFixed(2));
   }
 
-  getQuotes(): { quotes: Quote[]; updatedAt: string } {
+  private async fetchUsdBrl(): Promise<number | null> {
+    try {
+      const res = await fetch('https://open.er-api.com/v6/latest/USD');
+      if (res.ok) {
+        const json = (await res.json()) as { rates?: { BRL?: number } };
+        const rate = json?.rates?.BRL;
+        if (typeof rate === 'number' && rate > 0) return rate;
+      }
+    } catch {
+      /* usa referência */
+    }
+    return null;
+  }
+
+  async getQuotes(): Promise<{ quotes: Quote[]; updatedAt: string }> {
     // Cache (as cotações são estáveis por dia). Trocável por Redis se necessário.
     const day = Math.floor(Date.now() / 86400000);
     if (this.cache && this.cache.day === day) return this.cache.data;
 
+    const usdBrl = await this.fetchUsdBrl();
+
     const quotes: Quote[] = BASE_QUOTES.map((q) => {
-      const price = this.priceFor(q.symbol, 0);
+      let price = this.priceFor(q.symbol, 0);
       const prev = this.priceFor(q.symbol, 1);
-      const changePct = Number((((price - prev) / prev) * 100).toFixed(2));
       const history: number[] = [];
       for (let d = 13; d >= 0; d--) history.push(this.priceFor(q.symbol, d));
+
+      // Dólar em tempo real (quando disponível)
+      if (q.symbol === 'DOLAR' && usdBrl) {
+        price = Number(usdBrl.toFixed(2));
+        history[history.length - 1] = price;
+      }
+      const changePct = Number((((price - prev) / prev) * 100).toFixed(2));
       return { ...q, price, changePct, history };
     });
     const data = { quotes, updatedAt: new Date().toISOString() };
@@ -76,8 +100,8 @@ export class QuotesService {
     return data;
   }
 
-  getQuote(symbol: string): Quote | null {
-    const found = this.getQuotes().quotes.find(
+  async getQuote(symbol: string): Promise<Quote | null> {
+    const found = (await this.getQuotes()).quotes.find(
       (q) => q.symbol === symbol.toUpperCase(),
     );
     return found ?? null;
@@ -99,7 +123,7 @@ export class QuotesService {
       where: { deletedAt: null, farm: { userId, deletedAt: null } },
       select: { name: true, crop: true, areaHa: true, expectedYield: true, farm: { select: { name: true } } },
     });
-    const quotes = this.getQuotes().quotes;
+    const quotes = (await this.getQuotes()).quotes;
     const priceOf = (sym: string) => quotes.find((q) => q.symbol === sym)?.price ?? 0;
 
     let totalValue = 0;
@@ -153,7 +177,7 @@ export class QuotesService {
   async checkPriceAlerts() {
     const alerts = await this.prisma.priceAlert.findMany({ where: { active: true } });
     if (alerts.length === 0) return;
-    const quotes = this.getQuotes().quotes;
+    const quotes = (await this.getQuotes()).quotes;
 
     for (const alert of alerts) {
       const quote = quotes.find((q) => q.symbol === alert.symbol);

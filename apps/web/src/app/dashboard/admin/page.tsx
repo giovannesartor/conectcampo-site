@@ -190,16 +190,7 @@ export default function AdminDashboardPage() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RevenueAreaChart
-          data={stats?.monthlyRevenue || [
-            { month: 'Set', commissions: 12000, subscriptions: 4500 },
-            { month: 'Out', commissions: 18000, subscriptions: 5200 },
-            { month: 'Nov', commissions: 15000, subscriptions: 6100 },
-            { month: 'Dez', commissions: 22000, subscriptions: 6800 },
-            { month: 'Jan', commissions: 28000, subscriptions: 7500 },
-            { month: 'Fev', commissions: 31000, subscriptions: 8200 },
-          ]}
-        />
+        <RevenueAreaChart data={stats?.monthlyRevenue || []} />
         <OperationsBarChart
           data={stats?.operationsByStatus || []}
         />
@@ -209,16 +200,7 @@ export default function AdminDashboardPage() {
             value: r.count,
           }))}
         />
-        <GMVChart
-          data={stats?.monthlyGMV || [
-            { month: 'Set', volume: 8500000, count: 12 },
-            { month: 'Out', volume: 12000000, count: 18 },
-            { month: 'Nov', volume: 9800000, count: 15 },
-            { month: 'Dez', volume: 15500000, count: 22 },
-            { month: 'Jan', volume: 18200000, count: 28 },
-            { month: 'Fev', volume: 21000000, count: 31 },
-          ]}
-        />
+        <GMVChart data={stats?.monthlyGMV || []} />
       </div>
 
       {/* Recent Activity */}

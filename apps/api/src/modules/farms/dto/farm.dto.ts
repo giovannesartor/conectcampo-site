@@ -36,6 +36,36 @@ export class CreateFarmDto {
   @IsPositive()
   totalAreaHa: number;
 
+  @ApiPropertyOptional({ description: 'CEP' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(12)
+  cep?: string;
+
+  @ApiPropertyOptional({ description: 'Logradouro / estrada de acesso' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  address?: string;
+
+  @ApiPropertyOptional({ description: 'Bairro / distrito / zona rural' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  district?: string;
+
+  @ApiPropertyOptional({ description: 'Matrícula do imóvel (cartório)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  matricula?: string;
+
+  @ApiPropertyOptional({ description: 'Inscrição estadual rural / produtor' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  inscricaoEstadual?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
@@ -86,6 +116,36 @@ export class UpdateFarmDto {
   @IsNumber()
   @IsPositive()
   totalAreaHa?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(12)
+  cep?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  address?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  district?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  matricula?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  inscricaoEstadual?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

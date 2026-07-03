@@ -77,7 +77,7 @@ export default function QuotesPage() {
             Cotações & Preços
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Commodities agrícolas e dólar — referência CEPEA/B3
+            Dólar em tempo real · commodities agrícolas em valores de referência
           </p>
         </div>
         <button onClick={load} className="btn-secondary text-sm flex items-center gap-2">

@@ -53,6 +53,13 @@ interface RevenueChartProps {
 }
 
 export function RevenueAreaChart({ data }: RevenueChartProps) {
+  if (!data || data.length === 0) {
+    return (
+      <ChartCard title="Receita Mensal" subtitle="Comissões vs Assinaturas">
+        <div className="flex h-[300px] items-center justify-center text-sm text-gray-400">Sem dados no período</div>
+      </ChartCard>
+    );
+  }
   return (
     <ChartCard title="Receita Mensal" subtitle="Comissões vs Assinaturas">
       <ResponsiveContainer width="100%" height={300}>
@@ -215,6 +222,13 @@ interface GMVChartProps {
 }
 
 export function GMVChart({ data }: GMVChartProps) {
+  if (!data || data.length === 0) {
+    return (
+      <ChartCard title="Volume Mensal (GMV)" subtitle="Valor total das operações por mês">
+        <div className="flex h-[300px] items-center justify-center text-sm text-gray-400">Sem dados no período</div>
+      </ChartCard>
+    );
+  }
   return (
     <ChartCard title="Volume Mensal (GMV)" subtitle="Valor total das operações por mês">
       <ResponsiveContainer width="100%" height={300}>

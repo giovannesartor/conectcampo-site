@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UserRole, OperationStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService, AuditFilters } from '../audit/audit.service';
+import { PLAN_PRICES } from '../../common/pricing/pricing';
 
 export interface AdminActionMeta {
   actorId?: string;
@@ -92,6 +93,24 @@ export class AdminService {
     // Aggregate by month
     const userTrend = this.aggregateByMonth(monthlyUsers);
 
+    // Tendências financeiras reais (últimos 6 meses)
+    const [commissionsForTrend, subsForTrend, contractsForTrend] = await Promise.all([
+      this.prisma.commission.findMany({
+        where: { status: 'PAID', createdAt: { gte: sixMonthsAgo } },
+        select: { commissionValue: true, createdAt: true },
+      }),
+      this.prisma.subscription.findMany({
+        where: { createdAt: { gte: sixMonthsAgo }, cancelledAt: null },
+        select: { plan: true, createdAt: true },
+      }),
+      this.prisma.contract.findMany({
+        where: { createdAt: { gte: sixMonthsAgo } },
+        select: { signedAmount: true, createdAt: true },
+      }),
+    ]);
+    const monthlyRevenue = this.buildMonthlyRevenue(commissionsForTrend, subsForTrend);
+    const monthlyGMV = this.buildMonthlyGMV(contractsForTrend);
+
     return {
       totalUsers,
       activeUsers,
@@ -114,6 +133,8 @@ export class AdminService {
         userEmail: op.producerProfile?.user?.email ?? '—',
       })),
       userTrend,
+      monthlyRevenue,
+      monthlyGMV,
     };
   }
 
@@ -372,5 +393,65 @@ export class AdminService {
     return Array.from(map.entries())
       .map(([month, count]) => ({ month, count }))
       .sort((a, b) => a.month.localeCompare(b.month));
+  }
+
+  private static readonly MONTHS_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+  private last6MonthKeys(): { key: string; label: string }[] {
+    const arr: { key: string; label: string }[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      arr.push({
+        key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+        label: AdminService.MONTHS_PT[d.getMonth()],
+      });
+    }
+    return arr;
+  }
+
+  private monthKeyOf(date: Date): string {
+    const d = new Date(date);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  private buildMonthlyRevenue(
+    commissions: { commissionValue: any; createdAt: Date }[],
+    subs: { plan: any; createdAt: Date }[],
+  ): { month: string; commissions: number; subscriptions: number }[] {
+    const buckets = this.last6MonthKeys();
+    const commMap = new Map<string, number>();
+    for (const c of commissions) {
+      const k = this.monthKeyOf(c.createdAt);
+      commMap.set(k, (commMap.get(k) ?? 0) + Number(c.commissionValue ?? 0));
+    }
+    const subMap = new Map<string, number>();
+    for (const s of subs) {
+      const k = this.monthKeyOf(s.createdAt);
+      subMap.set(k, (subMap.get(k) ?? 0) + (PLAN_PRICES[s.plan as keyof typeof PLAN_PRICES] ?? 0));
+    }
+    return buckets.map((b) => ({
+      month: b.label,
+      commissions: Math.round(commMap.get(b.key) ?? 0),
+      subscriptions: Math.round(subMap.get(b.key) ?? 0),
+    }));
+  }
+
+  private buildMonthlyGMV(
+    contracts: { signedAmount: any; createdAt: Date }[],
+  ): { month: string; volume: number; count: number }[] {
+    const buckets = this.last6MonthKeys();
+    const volMap = new Map<string, number>();
+    const cntMap = new Map<string, number>();
+    for (const c of contracts) {
+      const k = this.monthKeyOf(c.createdAt);
+      volMap.set(k, (volMap.get(k) ?? 0) + Number(c.signedAmount ?? 0));
+      cntMap.set(k, (cntMap.get(k) ?? 0) + 1);
+    }
+    return buckets.map((b) => ({
+      month: b.label,
+      volume: Math.round(volMap.get(b.key) ?? 0),
+      count: cntMap.get(b.key) ?? 0,
+    }));
   }
 }

@@ -282,10 +282,10 @@ export default function DashboardPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ações Rápidas</h3>
             <div className="space-y-2">
               {[
-                { href: '/dashboard/operations', icon: <Plus className="h-4 w-4 text-blue-600" />, label: 'Solicitar Crédito', bg: 'bg-blue-50 dark:bg-blue-950/30' },
-                { href: '/dashboard/documents', icon: <FileText className="h-4 w-4 text-green-600" />, label: 'Enviar Documentos', bg: 'bg-green-50 dark:bg-green-950/30' },
-                { href: '/dashboard/scoring', icon: <BarChart3 className="h-4 w-4 text-purple-600" />, label: 'Ver Meu Score', bg: 'bg-purple-50 dark:bg-purple-950/30' },
-                { href: '/dashboard/subscription', icon: <TrendingUp className="h-4 w-4 text-amber-600" />, label: 'Minha Assinatura', bg: 'bg-amber-50 dark:bg-amber-950/30' },
+                { href: '/dashboard/admin/operations', icon: <FileText className="h-4 w-4 text-blue-600" />, label: 'Todas as Operações', bg: 'bg-blue-50 dark:bg-blue-950/30' },
+                { href: '/dashboard/admin/partners', icon: <Users className="h-4 w-4 text-green-600" />, label: 'Parceiros', bg: 'bg-green-50 dark:bg-green-950/30' },
+                { href: '/dashboard/admin/leads', icon: <TrendingUp className="h-4 w-4 text-purple-600" />, label: 'Leads', bg: 'bg-purple-50 dark:bg-purple-950/30' },
+                { href: '/dashboard/admin/audit', icon: <Shield className="h-4 w-4 text-amber-600" />, label: 'Auditoria', bg: 'bg-amber-50 dark:bg-amber-950/30' },
               ].map((action) => (
                 <Link
                   key={action.href}
@@ -300,22 +300,23 @@ export default function DashboardPage() {
           </div>
 
           <div className="card">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pendências</h3>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900/30">
-                <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">Complete seu perfil</p>
-                  <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-0.5">Preencha os dados do produtor para solicitar crédito</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30">
-                <Clock className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Documentos pendentes</p>
-                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">Envie DRE, Balanço e certidões</p>
-                </div>
-              </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Atalhos do Admin</h3>
+            <div className="space-y-2">
+              {[
+                { href: '/dashboard/admin', icon: <Shield className="h-4 w-4 text-gray-700 dark:text-gray-300" />, label: 'Painel Admin', bg: 'bg-gray-100 dark:bg-gray-800' },
+                { href: '/dashboard/admin/users', icon: <Users className="h-4 w-4 text-blue-600" />, label: 'Usuários', bg: 'bg-blue-50 dark:bg-blue-950/30' },
+                { href: '/dashboard/admin/disputes', icon: <AlertTriangle className="h-4 w-4 text-red-600" />, label: 'Disputas do Marketplace', bg: 'bg-red-50 dark:bg-red-950/30' },
+                { href: '/dashboard/admin/revenue', icon: <TrendingUp className="h-4 w-4 text-emerald-600" />, label: 'Receita', bg: 'bg-emerald-50 dark:bg-emerald-950/30' },
+              ].map((action) => (
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <div className={`h-8 w-8 rounded-lg ${action.bg} flex items-center justify-center`}>{action.icon}</div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{action.label}</span>
+                </Link>
+              ))}
             </div>
           </div>
         </div>
