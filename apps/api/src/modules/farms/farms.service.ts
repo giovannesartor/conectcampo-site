@@ -7,6 +7,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { UserRole, Prisma } from '@prisma/client';
 import { CreateFarmDto, UpdateFarmDto } from './dto/farm.dto';
 import { CreatePlotDto, UpdatePlotDto } from './dto/plot.dto';
+import { paginated, resolvePagination, wantsPagination } from '../../common/pagination/pagination';
 
 @Injectable()
 export class FarmsService {
@@ -47,13 +48,16 @@ export class FarmsService {
     });
   }
 
-  async findAllFarms(userId: string, role: string) {
+  async findAllFarms(userId: string, role: string, page?: number, perPage?: number) {
     const where: Prisma.FarmWhereInput = { deletedAt: null };
     if (role !== UserRole.ADMIN) where.userId = userId;
 
-    const farms = await this.prisma.farm.findMany({
+    const paginate = wantsPagination(page, perPage);
+    const { page: p, perPage: pp, skip, take } = resolvePagination(page, perPage, 20);
+
+    const farmsQuery = {
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'desc' as const },
       include: {
         _count: { select: { plots: true } },
         plots: {
@@ -61,8 +65,15 @@ export class FarmsService {
           select: { id: true, name: true, crop: true, areaHa: true, status: true, safra: true, latitude: true, longitude: true, geometry: true },
         },
       },
-    });
-    return farms;
+      ...(paginate ? { skip, take } : {}),
+    };
+
+    const [farms, total] = await Promise.all([
+      this.prisma.farm.findMany(farmsQuery),
+      paginate ? this.prisma.farm.count({ where }) : Promise.resolve(0),
+    ]);
+
+    return paginate ? paginated(farms, total, p, pp) : farms;
   }
 
   async findFarmById(id: string, userId: string, role: string) {

@@ -12,8 +12,8 @@ export const metadata = {
 };
 
 const API_BASE = 'https://api.conectcampo.com.br/api/v1';
-const SWAGGER_URL = 'https://api.conectcampo.com.br/docs';
-const OPENAPI_URL = 'https://api.conectcampo.com.br/docs-json';
+const SWAGGER_URL = '/docs';
+const OPENAPI_URL = '/docs-json';
 
 const methodColors: Record<string, string> = {
   GET: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -234,6 +234,7 @@ export default function ApiDocsPage() {
               <h3 className="font-semibold text-gray-900 dark:text-white mb-2">API Key (integrações)</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
                 Recomendado para servidor-a-servidor. Envie o header <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">X-API-Key</code> em toda requisição.
+                Cada chave tem <strong>scopes</strong> (<code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">read</code>/<code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">write</code>) e pode ter expiração. Chaves só de leitura não executam POST/PATCH/DELETE.
               </p>
               <CodeBlock>{`curl ${API_BASE}/farms \\
   -H "X-API-Key: ck_live_xxxxxxxxxxxxxxxx"`}</CodeBlock>
@@ -337,9 +338,11 @@ data = r.json()`}</CodeBlock>
           <div>
             <SectionTitle icon={Gauge}>Rate limit & paginação</SectionTitle>
             <ul className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-              <li className="flex gap-2"><Zap className="h-4 w-4 text-brand-600 shrink-0 mt-0.5" /> Limite padrão de <strong className="text-gray-900 dark:text-white">60 requisições/minuto</strong> por chave/IP.</li>
-              <li className="flex gap-2"><AlertTriangle className="h-4 w-4 text-brand-600 shrink-0 mt-0.5" /> Ao exceder, a API responde <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">429 Too Many Requests</code>.</li>
-              <li className="flex gap-2"><Code2 className="h-4 w-4 text-brand-600 shrink-0 mt-0.5" /> Listagens aceitam <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">?page</code> e <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">?limit</code> quando aplicável.</li>
+              <li className="flex gap-2"><Zap className="h-4 w-4 text-brand-600 shrink-0 mt-0.5" /> Limite padrão de <strong className="text-gray-900 dark:text-white">60 requisições/minuto</strong> por chave (ou por IP, sem chave).</li>
+              <li className="flex gap-2"><Gauge className="h-4 w-4 text-brand-600 shrink-0 mt-0.5" /> Cada resposta traz <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">X-RateLimit-Limit/Remaining/Reset</code>.</li>
+              <li className="flex gap-2"><AlertTriangle className="h-4 w-4 text-brand-600 shrink-0 mt-0.5" /> Ao exceder, a API responde <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">429 Too Many Requests</code> com <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">Retry-After</code>.</li>
+              <li className="flex gap-2"><Code2 className="h-4 w-4 text-brand-600 shrink-0 mt-0.5" /> Toda resposta inclui <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">X-Request-Id</code> para correlação/suporte.</li>
+              <li className="flex gap-2"><Code2 className="h-4 w-4 text-brand-600 shrink-0 mt-0.5" /> Listagens aceitam <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">?page</code> e <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">?perPage</code>, retornando <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">{'{ data, meta }'}</code>.</li>
               <li className="flex gap-2"><Shield className="h-4 w-4 text-brand-600 shrink-0 mt-0.5" /> Revogue chaves comprometidas a qualquer momento no painel.</li>
             </ul>
           </div>

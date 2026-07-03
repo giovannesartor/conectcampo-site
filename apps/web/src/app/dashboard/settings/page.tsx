@@ -10,7 +10,7 @@ import { ApiKeysPanel } from '@/components/dashboard/ApiKeysPanel';
 export default function SettingsPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<'profile' | 'password' | 'notifications' | 'apikeys'>('profile');
-  const canUseApiKeys = user?.role === 'FINANCIAL_INSTITUTION' || user?.role === 'ADMIN';
+  const canUseApiKeys = !!user;
   const [saving, setSaving] = useState(false);
 
   // Deep-link: /dashboard/settings?tab=apikeys

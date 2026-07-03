@@ -1,8 +1,10 @@
-import { Injectable, ExecutionContext } from '@nestjs/common';
+import { Injectable, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { ApiKeysService } from '../../api-keys/api-keys.service';
+
+const READ_ONLY_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -29,12 +31,19 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       | string
       | undefined;
     if (apiKey) {
-      const user = await this.apiKeys.validate(apiKey);
-      if (!user) {
+      const principal = await this.apiKeys.validate(apiKey);
+      if (!principal) {
         return false;
       }
-      request.user = { sub: user.id, email: user.email, role: user.role };
+      // Enforce de escopo: métodos de escrita exigem o scope "write".
+      const method = (request.method || 'GET').toUpperCase();
+      if (!READ_ONLY_METHODS.has(method) && !principal.scopes.includes('write')) {
+        throw new ForbiddenException('Esta API Key é somente leitura (scope "read").');
+      }
+      request.user = { sub: principal.id, email: principal.email, role: principal.role };
       request.authVia = 'api-key';
+      request.apiKeyId = principal.keyId;
+      request.apiKeyScopes = principal.scopes;
       return true;
     }
 

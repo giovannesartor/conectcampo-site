@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CarbonCreditsService } from './carbon-credits.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AsaasService } from '../subscriptions/asaas.service';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { CarbonProjectStatus, CarbonCreditStatus, CarbonProjectType, CarbonStandard } from './carbon-enums';
@@ -41,6 +42,7 @@ describe('CarbonCreditsService', () => {
       providers: [
         CarbonCreditsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: AsaasService, useValue: { createPayment: jest.fn(), createCustomer: jest.fn() } },
       ],
     }).compile();
 
@@ -141,7 +143,7 @@ describe('CarbonCreditsService', () => {
       // Deve ter pelo menos um standard com preço
       expect(result.prices.length).toBeGreaterThan(0);
       expect(result.prices[0]).toHaveProperty('standard');
-      expect(result.prices[0]).toHaveProperty('priceUsd');
+      expect(result.prices[0]).toHaveProperty('priceUSD');
     });
   });
 });

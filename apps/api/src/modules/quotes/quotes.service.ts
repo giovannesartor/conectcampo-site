@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { fetchJson } from '../../common/http/fetch-json';
 
 export interface Quote {
   symbol: string;
@@ -62,12 +63,12 @@ export class QuotesService {
 
   private async fetchUsdBrl(): Promise<number | null> {
     try {
-      const res = await fetch('https://open.er-api.com/v6/latest/USD');
-      if (res.ok) {
-        const json = (await res.json()) as { rates?: { BRL?: number } };
-        const rate = json?.rates?.BRL;
-        if (typeof rate === 'number' && rate > 0) return rate;
-      }
+      const json = await fetchJson<{ rates?: { BRL?: number } }>('https://open.er-api.com/v6/latest/USD', {
+        timeoutMs: 6000,
+        retries: 2,
+      });
+      const rate = json?.rates?.BRL;
+      if (typeof rate === 'number' && rate > 0) return rate;
     } catch {
       /* usa referência */
     }

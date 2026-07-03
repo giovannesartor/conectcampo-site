@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { fetchJson } from '../../common/http/fetch-json';
 
 export interface DayForecast {
   date: string;
@@ -59,12 +60,12 @@ export class WeatherService {
     if (city?.trim()) {
       try {
         const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&country=BR&language=pt`;
-        const res = await fetch(url);
-        if (res.ok) {
-          const json = (await res.json()) as { results?: Array<{ latitude: number; longitude: number }> };
-          const match = json.results?.[0];
-          if (match) return { lat: match.latitude, lon: match.longitude };
-        }
+        const json = await fetchJson<{ results?: Array<{ latitude: number; longitude: number }> }>(url, {
+          timeoutMs: 6000,
+          retries: 2,
+        });
+        const match = json.results?.[0];
+        if (match) return { lat: match.latitude, lon: match.longitude };
       } catch {
         /* cai para a capital do estado */
       }
@@ -79,9 +80,8 @@ export class WeatherService {
         `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}` +
         `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,relative_humidity_2m_mean,weather_code` +
         `&current=temperature_2m,relative_humidity_2m,weather_code&timezone=auto&forecast_days=7`;
-      const res = await fetch(url);
-      if (res.ok) {
-        const json = (await res.json()) as any;
+      const json = await fetchJson<any>(url, { timeoutMs: 7000, retries: 2 });
+      {
         const d = json.daily;
         const days: DayForecast[] = (d?.time ?? []).map((date: string, i: number) => ({
           date,

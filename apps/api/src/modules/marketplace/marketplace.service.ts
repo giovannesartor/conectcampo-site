@@ -11,6 +11,7 @@ import {
   GrainListingStatus,
   GrainListingType,
 } from '@prisma/client';
+import { paginated, resolvePagination, wantsPagination } from '../../common/pagination/pagination';
 import {
   CreateGrainListingDto,
   UpdateGrainListingDto,
@@ -63,7 +64,7 @@ export class MarketplaceService {
   }
 
   /** Vitrine pública: todas as ofertas ativas de todos os produtores. */
-  async browse(filters: { type?: string; product?: string; state?: string }) {
+  async browse(filters: { type?: string; product?: string; state?: string; page?: number; perPage?: number }) {
     const where: Prisma.GrainListingWhereInput = {
       deletedAt: null,
       status: GrainListingStatus.ATIVA,
@@ -72,12 +73,19 @@ export class MarketplaceService {
     if (filters.product) where.product = { contains: filters.product, mode: 'insensitive' };
     if (filters.state) where.state = filters.state as any;
 
-    const listings = await this.prisma.grainListing.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-      include: { user: { select: { id: true, name: true } } },
-    });
+    const paginate = wantsPagination(filters.page, filters.perPage);
+    const { page, perPage, skip, take } = resolvePagination(filters.page, filters.perPage, 100);
+
+    const [listings, total] = await Promise.all([
+      this.prisma.grainListing.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: paginate ? skip : 0,
+        take: paginate ? take : 100,
+        include: { user: { select: { id: true, name: true } } },
+      }),
+      paginate ? this.prisma.grainListing.count({ where }) : Promise.resolve(0),
+    ]);
 
     // Reputação do vendedor (média/total de avaliações) para exibir na vitrine.
     const sellerIds = Array.from(new Set(listings.map((l) => l.userId)));
@@ -97,10 +105,12 @@ export class MarketplaceService {
       };
     }
 
-    return listings.map((l) => ({
+    const items = listings.map((l) => ({
       ...l,
       sellerRating: repMap[l.userId] ?? { average: 0, count: 0 },
     }));
+
+    return paginate ? paginated(items, total, page, perPage) : items;
   }
 
   async findMine(userId: string, role: string) {

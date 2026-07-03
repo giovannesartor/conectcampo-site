@@ -77,6 +77,7 @@ export class SatelliteService {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body,
+        signal: AbortSignal.timeout(10_000),
       },
     );
 
@@ -169,6 +170,7 @@ function evaluatePixel(s) {
         Accept: 'application/json',
       },
       body: JSON.stringify(requestBody),
+      signal: AbortSignal.timeout(15_000),
     });
 
     if (!res.ok) {
@@ -247,6 +249,7 @@ function evaluatePixel(s) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),
+      signal: AbortSignal.timeout(15_000),
     });
 
     if (!res.ok) {

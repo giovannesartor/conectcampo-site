@@ -10,7 +10,10 @@ interface ApiKey {
   id: string;
   name: string;
   prefix: string;
+  scopes: string[];
+  expiresAt: string | null;
   lastUsedAt: string | null;
+  requestCount: number;
   revokedAt: string | null;
   createdAt: string;
 }
@@ -19,6 +22,8 @@ export function ApiKeysPanel() {
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
+  const [scopes, setScopes] = useState<('read' | 'write')[]>(['read', 'write']);
+  const [expiresInDays, setExpiresInDays] = useState('');
   const [creating, setCreating] = useState(false);
   const [newSecret, setNewSecret] = useState<string | null>(null);
 
@@ -35,12 +40,26 @@ export function ApiKeysPanel() {
 
   useEffect(() => { load(); }, []);
 
+  const toggleScope = (s: 'read' | 'write') => {
+    setScopes((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+  };
+
   const create = async () => {
+    if (scopes.length === 0) {
+      toast.error('Selecione ao menos um scope.');
+      return;
+    }
     setCreating(true);
     try {
-      const { data } = await api.post('/api-keys', { name });
+      const { data } = await api.post('/api-keys', {
+        name,
+        scopes,
+        expiresInDays: expiresInDays ? Number(expiresInDays) : undefined,
+      });
       setNewSecret(data.secret);
       setName('');
+      setExpiresInDays('');
+      setScopes(['read', 'write']);
       await load();
     } catch {
       toast.error('Não foi possível criar a chave.');
@@ -96,8 +115,8 @@ export function ApiKeysPanel() {
       )}
 
       {/* criar */}
-      <div className="flex items-end gap-2">
-        <div className="flex-1">
+      <div className="space-y-3">
+        <div>
           <label className="label">Nome da chave</label>
           <input
             value={name}
@@ -106,8 +125,41 @@ export function ApiKeysPanel() {
             className="input"
           />
         </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="label">Permissões (scopes)</label>
+            <div className="flex gap-2">
+              {(['read', 'write'] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => toggleScope(s)}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                    scopes.includes(s)
+                      ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-500'
+                  }`}
+                >
+                  {s === 'read' ? 'Leitura' : 'Escrita'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="label">Expira em (dias, opcional)</label>
+            <input
+              type="number"
+              min={1}
+              max={3650}
+              value={expiresInDays}
+              onChange={(e) => setExpiresInDays(e.target.value)}
+              placeholder="Sem expiração"
+              className="input"
+            />
+          </div>
+        </div>
         <button onClick={create} disabled={creating || !name.trim()} className="btn-primary disabled:opacity-50">
-          {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Criar
+          {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Criar chave
         </button>
       </div>
 
@@ -130,9 +182,26 @@ export function ApiKeysPanel() {
                   )}
                 </p>
                 <p className="text-xs text-gray-400 font-mono">{k.prefix}…</p>
-                <p className="text-[11px] text-gray-400">
+                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                  {(k.scopes ?? []).map((s) => (
+                    <span key={s} className="rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-[10px] font-medium text-gray-600 dark:text-gray-300">
+                      {s === 'read' ? 'leitura' : 'escrita'}
+                    </span>
+                  ))}
+                  {k.expiresAt && (
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      new Date(k.expiresAt) < new Date()
+                        ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+                    }`}>
+                      {new Date(k.expiresAt) < new Date() ? 'expirada' : `expira ${formatDate(k.expiresAt)}`}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1">
                   Criada em {formatDate(k.createdAt)}
                   {k.lastUsedAt ? ` · último uso ${formatDate(k.lastUsedAt)}` : ' · nunca usada'}
+                  {typeof k.requestCount === 'number' ? ` · ${k.requestCount} requisições` : ''}
                 </p>
               </div>
               {!k.revokedAt && (

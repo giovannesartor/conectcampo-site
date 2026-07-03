@@ -1064,7 +1064,10 @@ model ApiKey {
   name        String
   prefix      String    // primeiros caracteres da chave (exibição)
   keyHash     String    @unique // SHA-256 da chave (nunca guardamos o segredo)
+  scopes      String[]  @default(["read", "write"]) // permissões: read, write
+  expiresAt   DateTime? // expiração opcional
   lastUsedAt  DateTime?
+  requestCount Int      @default(0) // total de requisições autenticadas por esta chave
   revokedAt   DateTime?
   createdAt   DateTime  @default(now())
 

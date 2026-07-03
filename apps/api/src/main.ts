@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { RequestMethod } from '@nestjs/common';
+import { RequestMethod, VersioningType } from '@nestjs/common';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
@@ -41,12 +41,25 @@ async function bootstrap() {
   app.enableCors({
     origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
     credentials: true,
+    exposedHeaders: [
+      'X-Request-Id',
+      'X-RateLimit-Limit',
+      'X-RateLimit-Remaining',
+      'X-RateLimit-Reset',
+      'Retry-After',
+    ],
   });
 
   // Global prefix (webhooks are excluded so /webhook/asaas resolves correctly)
-  const prefix = process.env.API_PREFIX || '/api/v1';
+  // Versionamento por URI: rotas ficam em /api/v1/... e permitem /api/v2 no futuro
+  // via @Version('2') nos controllers, sem quebrar a v1.
+  const prefix = process.env.API_PREFIX || '/api';
   app.setGlobalPrefix(prefix, {
     exclude: [{ path: 'webhook/:provider', method: RequestMethod.POST }],
+  });
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
   });
 
   // Global exception filter

@@ -19,6 +19,12 @@ const nextConfig = {
         source: '/api/v1/:path*',
         destination: `${apiUrl}/api/v1/:path*`,
       },
+      // Documentação interativa (Swagger UI) e especificação OpenAPI,
+      // servidas pela API mas acessíveis no domínio do site.
+      { source: '/docs', destination: `${apiUrl}/docs` },
+      { source: '/docs/:path*', destination: `${apiUrl}/docs/:path*` },
+      { source: '/docs-json', destination: `${apiUrl}/docs-json` },
+      { source: '/docs-yaml', destination: `${apiUrl}/docs-yaml` },
     ];
   },
 };

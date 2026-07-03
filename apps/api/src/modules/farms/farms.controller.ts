@@ -6,9 +6,10 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { FarmsService } from './farms.service';
 import { CreateFarmDto, UpdateFarmDto } from './dto/farm.dto';
 import { CreatePlotDto, UpdatePlotDto } from './dto/plot.dto';
@@ -39,12 +40,22 @@ export class FarmsController {
 
   @Get()
   @ApiOperation({ summary: 'Listar fazendas do usuário' })
-  findAll(@CurrentUser('sub') userId: string, @CurrentUser('role') role: string) {
-    return this.service.findAllFarms(userId, role);
+  @ApiQuery({ name: 'page', required: false, description: 'Habilita paginação (envelope { data, meta })' })
+  @ApiQuery({ name: 'perPage', required: false })
+  @ApiResponse({ status: 200, description: 'Array de fazendas, ou { data, meta } quando paginado' })
+  findAll(
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
+    @Query('page') page?: number,
+    @Query('perPage') perPage?: number,
+  ) {
+    return this.service.findAllFarms(userId, role, page, perPage);
   }
 
   @Post()
   @ApiOperation({ summary: 'Cadastrar fazenda' })
+  @ApiResponse({ status: 201, description: 'Fazenda criada' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos' })
   create(@CurrentUser('sub') userId: string, @Body() dto: CreateFarmDto) {
     return this.service.createFarm(userId, dto);
   }

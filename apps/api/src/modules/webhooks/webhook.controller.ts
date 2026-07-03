@@ -6,6 +6,7 @@ import {
   HttpCode,
   UnauthorizedException,
   Logger,
+  VERSION_NEUTRAL,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
@@ -19,7 +20,7 @@ import { RawBodyRequest } from '@nestjs/common';
 import { Request } from 'express';
 
 @ApiTags('webhooks')
-@Controller('webhook')
+@Controller({ path: 'webhook', version: VERSION_NEUTRAL })
 export class WebhookController {
   private readonly logger = new Logger(WebhookController.name);
 

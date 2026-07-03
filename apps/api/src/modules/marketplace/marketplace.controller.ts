@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { MarketplaceService } from './marketplace.service';
 import {
@@ -34,12 +34,17 @@ export class MarketplaceController {
   @ApiQuery({ name: 'type', required: false })
   @ApiQuery({ name: 'product', required: false })
   @ApiQuery({ name: 'state', required: false })
+  @ApiQuery({ name: 'page', required: false, description: 'Habilita paginação (envelope { data, meta })' })
+  @ApiQuery({ name: 'perPage', required: false })
+  @ApiResponse({ status: 200, description: 'Array de ofertas, ou { data, meta } quando paginado' })
   browse(
     @Query('type') type?: string,
     @Query('product') product?: string,
     @Query('state') state?: string,
+    @Query('page') page?: number,
+    @Query('perPage') perPage?: number,
   ) {
-    return this.service.browse({ type, product, state });
+    return this.service.browse({ type, product, state, page, perPage });
   }
 
   @Get('mine')

@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bull';
-import { PrismaModule } from './prisma/prisma.module';
-import { MailModule } from './modules/mail/mail.module';
+import { PrismaModule } from './prisma/prisma.module';import { MailModule } from './modules/mail/mail.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ProducersModule } from './modules/producers/producers.module';
@@ -42,6 +41,7 @@ import { ClimateScoreModule } from './modules/climate-score/climate-score.module
 import { SmartDocsModule } from './modules/smart-docs/smart-docs.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { ApiThrottlerGuard } from './common/guards/api-throttler.guard';
 
 @Module({
   imports: [
@@ -109,7 +109,7 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     },
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: ApiThrottlerGuard,
     },
     {
       provide: APP_INTERCEPTOR,
