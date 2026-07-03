@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
  * site. Consome a especificação OpenAPI servida em /docs-json.
  */
 export default function DocsPage() {
-  const [failed, setFailed] = useState(false);
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
 
   useEffect(() => {
     // Elemento de configuração lido pelo script do Scalar.
@@ -19,7 +19,8 @@ export default function DocsPage() {
     const cdn = document.createElement('script');
     cdn.src = 'https://cdn.jsdelivr.net/npm/@scalar/api-reference';
     cdn.async = true;
-    cdn.onerror = () => setFailed(true);
+    cdn.onload = () => setStatus('ready');
+    cdn.onerror = () => setStatus('error');
     document.body.appendChild(cdn);
 
     return () => {
@@ -28,9 +29,9 @@ export default function DocsPage() {
     };
   }, []);
 
-  if (failed) {
+  if (status === 'error') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-8 text-center">
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-white p-8 text-center dark:bg-gray-950">
         <h1 className="text-2xl font-bold">Não foi possível carregar a documentação interativa</h1>
         <p className="text-gray-500 max-w-md">
           Você ainda pode acessar a especificação OpenAPI diretamente ou voltar para a página de guia da API.
@@ -43,10 +44,18 @@ export default function DocsPage() {
     );
   }
 
-  // O Scalar injeta sua própria UI no documento; mantemos apenas um placeholder.
-  return (
-    <div className="min-h-screen flex items-center justify-center text-gray-400">
-      Carregando documentação da API…
-    </div>
-  );
+  // Overlay de carregamento: cobre a tela inteira e some assim que o Scalar renderiza.
+  if (status === 'loading') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white text-gray-400 dark:bg-gray-950">
+        <div className="flex items-center gap-3">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+          Carregando documentação da API…
+        </div>
+      </div>
+    );
+  }
+
+  // Quando pronto, o Scalar já injetou sua própria UI no documento.
+  return null;
 }
