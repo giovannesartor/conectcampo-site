@@ -22,6 +22,11 @@ const PlotMap = dynamic(() => import('@/components/dashboard/PlotMap'), {
   loading: () => <div className="h-72 w-full rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />,
 });
 
+const FarmMap = dynamic(() => import('@/components/dashboard/FarmMap'), {
+  ssr: false,
+  loading: () => <div className="h-96 w-full rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />,
+});
+
 const STATES = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
 const CROPS = ['SOJA','MILHO','CAFE','ALGODAO','CANA','ARROZ','TRIGO','FEIJAO','PECUARIA_CORTE','PECUARIA_LEITE','AVICULTURA','SUINOCULTURA','FRUTICULTURA','SILVICULTURA','OUTRO'];
 const PLOT_STATUS = ['PREPARO','PLANTADO','EM_DESENVOLVIMENTO','COLHIDO','POUSIO'];
@@ -33,6 +38,9 @@ interface Plot {
   areaHa: number;
   safra: string | null;
   status: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  geometry?: Record<string, unknown> | null;
 }
 interface Farm {
   id: string;
@@ -60,6 +68,7 @@ export default function FarmsPage() {
   const [loading, setLoading] = useState(true);
   const [showFarm, setShowFarm] = useState(false);
   const [plotFarm, setPlotFarm] = useState<Farm | null>(null);
+  const [mapFarmId, setMapFarmId] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -157,11 +166,25 @@ export default function FarmsPage() {
                   <button onClick={() => setPlotFarm(farm)} className="btn-secondary text-xs flex items-center gap-1">
                     <Plus className="h-3 w-3" /> Talhão
                   </button>
+                  {farm.plots.some((p) => p.geometry || (p.latitude != null && p.longitude != null)) && (
+                    <button
+                      onClick={() => setMapFarmId((id) => (id === farm.id ? null : farm.id))}
+                      className="btn-secondary text-xs flex items-center gap-1"
+                    >
+                      <MapPin className="h-3 w-3" /> {mapFarmId === farm.id ? 'Ocultar mapa' : 'Mapa'}
+                    </button>
+                  )}
                   <button onClick={() => removeFarm(farm.id)} className="text-gray-400 hover:text-red-500 p-1">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
+
+              {mapFarmId === farm.id && (
+                <div className="mt-4">
+                  <FarmMap plots={farm.plots} />
+                </div>
+              )}
 
               {farm.plots.length > 0 && (
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">

@@ -58,7 +58,7 @@ export class FarmsService {
         _count: { select: { plots: true } },
         plots: {
           where: { deletedAt: null },
-          select: { id: true, name: true, crop: true, areaHa: true, status: true, safra: true },
+          select: { id: true, name: true, crop: true, areaHa: true, status: true, safra: true, latitude: true, longitude: true, geometry: true },
         },
       },
     });
