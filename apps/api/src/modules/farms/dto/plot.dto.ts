@@ -52,6 +52,16 @@ export class CreatePlotDto {
   @IsNumber()
   expectedYield?: number;
 
+  @ApiPropertyOptional({ description: 'Latitude do centro do talhão' })
+  @IsOptional()
+  @IsNumber()
+  latitude?: number;
+
+  @ApiPropertyOptional({ description: 'Longitude do centro do talhão' })
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
+
   @ApiPropertyOptional({ description: 'GeoJSON do talhão' })
   @IsOptional()
   @IsObject()
@@ -101,6 +111,16 @@ export class UpdatePlotDto {
   @IsOptional()
   @IsNumber()
   expectedYield?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  latitude?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
 
   @ApiPropertyOptional()
   @IsOptional()

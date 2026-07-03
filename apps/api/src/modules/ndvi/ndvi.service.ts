@@ -73,10 +73,45 @@ export class NdviService {
   }
 
   /**
+   * Gera um polígono quadrado aproximado (AOI) centrado em (lat, lon) com a área
+   * informada — permite consultar o satélite de verdade sem o contorno exato.
+   */
+  private approxPolygon(lat: number, lon: number, areaHa: number): Record<string, unknown> {
+    const side = Math.sqrt(Math.max(areaHa, 0.01) * 10000); // metros
+    const half = side / 2;
+    const dLat = half / 111320;
+    const dLon = half / (111320 * Math.cos((lat * Math.PI) / 180) || 1);
+    const ring = [
+      [lon - dLon, lat - dLat],
+      [lon + dLon, lat - dLat],
+      [lon + dLon, lat + dLat],
+      [lon - dLon, lat + dLat],
+      [lon - dLon, lat - dLat],
+    ];
+    return { type: 'Polygon', coordinates: [ring] };
+  }
+
+  /** Geometria efetiva: contorno desenhado, ou AOI aproximada por coordenada + área. */
+  private resolveGeometry(plot: {
+    geometry: unknown;
+    latitude: number | null;
+    longitude: number | null;
+    areaHa: any;
+    farm?: { latitude: number | null; longitude: number | null };
+  }): unknown | null {
+    if (plot.geometry) return plot.geometry;
+    const lat = plot.latitude ?? plot.farm?.latitude ?? null;
+    const lon = plot.longitude ?? plot.farm?.longitude ?? null;
+    const area = Number(plot.areaHa);
+    if (lat != null && lon != null && area > 0) return this.approxPolygon(lat, lon, area);
+    return null;
+  }
+
+  /**
    * Gera/atualiza a série temporal NDVI do talhão.
    * Usa a Statistical API do Sentinel Hub (dados reais de satélite) quando as
-   * credenciais estão configuradas e o talhão possui geometria; caso contrário,
-   * gera uma série sintética sazonal de demonstração.
+   * credenciais estão configuradas e há geometria (contorno ou AOI por coordenada);
+   * caso contrário, gera uma série sintética sazonal de demonstração.
    */
   async generateForPlot(plotId: string, userId: string, role: string) {
     const plot = await this.assertPlotAccess(plotId, userId, role);
@@ -86,10 +121,13 @@ export class NdviService {
       ? new Date(plot.plantingDate)
       : new Date(Date.now() - 150 * 86400000);
 
+    // Geometria efetiva: contorno desenhado OU polígono aproximado (coord + área).
+    const geometry = this.resolveGeometry(plot);
+
     // 1) Sentinel Hub Statistical API — valores de NDVI medidos (fonte preferencial)
-    if (this.satellite.isSentinelHubConfigured() && plot.geometry) {
+    if (this.satellite.isSentinelHubConfigured() && geometry) {
       try {
-        const series = await this.satellite.fetchNdviTimeSeries(plot.geometry, from, to);
+        const series = await this.satellite.fetchNdviTimeSeries(geometry, from, to);
         if (series && series.length > 0) {
           await this.prisma.ndviReading.deleteMany({ where: { plotId } });
           await this.prisma.ndviReading.createMany({
@@ -113,9 +151,9 @@ export class NdviService {
     }
 
     // 2) Planet Data API — cobertura real de cenas (datas + nuvem), NDVI modelado
-    if (this.satellite.isPlanetConfigured() && plot.geometry) {
+    if (this.satellite.isPlanetConfigured() && geometry) {
       try {
-        const scenes = await this.satellite.fetchPlanetScenes(plot.geometry, from, to);
+        const scenes = await this.satellite.fetchPlanetScenes(geometry, from, to);
         if (scenes && scenes.length > 0) {
           await this.prisma.ndviReading.deleteMany({ where: { plotId } });
           await this.prisma.ndviReading.createMany({

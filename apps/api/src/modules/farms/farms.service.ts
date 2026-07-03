@@ -113,6 +113,8 @@ export class FarmsService {
         plantingDate: dto.plantingDate ? new Date(dto.plantingDate) : undefined,
         harvestDate: dto.harvestDate ? new Date(dto.harvestDate) : undefined,
         expectedYield: dto.expectedYield,
+        latitude: dto.latitude,
+        longitude: dto.longitude,
         geometry: dto.geometry as Prisma.InputJsonValue,
       },
     });

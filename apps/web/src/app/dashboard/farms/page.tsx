@@ -353,7 +353,7 @@ function FarmModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
 }
 
 function PlotModal({ farm, onClose, onSaved }: { farm: Farm; onClose: () => void; onSaved: () => void }) {
-  const [form, setForm] = useState({ name: '', crop: 'SOJA', areaHa: '', safra: '', status: 'PLANTADO', plantingDate: '', harvestDate: '', expectedYield: '' });
+  const [form, setForm] = useState({ name: '', crop: 'SOJA', areaHa: '', safra: '', status: 'PLANTADO', plantingDate: '', harvestDate: '', expectedYield: '', latitude: '', longitude: '' });
   const [saving, setSaving] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
@@ -373,6 +373,8 @@ function PlotModal({ farm, onClose, onSaved }: { farm: Farm; onClose: () => void
         plantingDate: form.plantingDate ? new Date(form.plantingDate).toISOString() : undefined,
         harvestDate: form.harvestDate ? new Date(form.harvestDate).toISOString() : undefined,
         expectedYield: form.expectedYield ? Number(form.expectedYield) : undefined,
+        latitude: form.latitude ? Number(form.latitude) : undefined,
+        longitude: form.longitude ? Number(form.longitude) : undefined,
       });
       toast.success('Talhão adicionado');
       onSaved();
@@ -427,6 +429,14 @@ function PlotModal({ farm, onClose, onSaved }: { farm: Farm; onClose: () => void
             <label className="label">Prod. (sc/ha)</label>
             <input type="number" className="input" value={form.expectedYield} onChange={(e) => setForm({ ...form, expectedYield: e.target.value })} placeholder="60" />
           </div>
+        </div>
+        <div>
+          <label className="label">Coordenadas do talhão (centro)</label>
+          <div className="grid grid-cols-2 gap-3">
+            <input type="number" step="any" className="input" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="Latitude (ex: -15.7942)" />
+            <input type="number" step="any" className="input" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="Longitude (ex: -47.8825)" />
+          </div>
+          <p className="text-xs text-gray-500 mt-1">Com a coordenada + área, geramos automaticamente a região para leitura de NDVI por satélite (dados reais).</p>
         </div>
         <button type="submit" disabled={saving} className="btn-primary w-full">
           {saving ? 'Salvando...' : 'Adicionar talhão'}

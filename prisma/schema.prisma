@@ -1269,6 +1269,8 @@ model Plot {
   plantingDate  DateTime?
   harvestDate   DateTime?
   expectedYield Decimal?    @db.Decimal(12, 2) // sacas/ha estimadas
+  latitude      Float?      // centro do talhão (para gerar AOI de satélite)
+  longitude     Float?
   geometry      Json?       // GeoJSON
 
   deletedAt     DateTime?
