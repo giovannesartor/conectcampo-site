@@ -13,7 +13,7 @@ export const metadata = {
 
 const API_BASE = 'https://conectcampo.digital/api/v1';
 const SWAGGER_URL = '/docs';
-const OPENAPI_URL = '/docs-json';
+const OPENAPI_URL = '/api/v1/openapi.json';
 
 const methodColors: Record<string, string> = {
   GET: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',

@@ -149,6 +149,11 @@ async function bootstrap() {
     .addTag('health', 'Health checks e status')
     .build();
   const document = SwaggerModule.createDocument(app, config);
+  // Servidor relativo primeiro: permite "Try it" no mesmo domínio via proxy.
+  document.servers = [
+    { url: '/api/v1', description: 'Mesmo domínio (proxy)' },
+    ...(document.servers ?? []),
+  ];
   SwaggerModule.setup('docs', app, document, {
     jsonDocumentUrl: 'docs-json',
     yamlDocumentUrl: 'docs-yaml',
@@ -161,6 +166,14 @@ async function bootstrap() {
       tagsSorter: 'alpha',
       operationsSorter: 'alpha',
     },
+  });
+
+  // Expõe a especificação OpenAPI numa rota sob o prefixo /api/v1 — garantidamente
+  // acessível pelo mesmo proxy que serve o restante da API (evita 404 atrás de ingress).
+  const expressInstance = app.getHttpAdapter().getInstance();
+  expressInstance.get('/api/v1/openapi.json', (_req: any, res: any) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.json(document);
   });
 
   // Validate critical environment variables
@@ -178,7 +191,7 @@ async function bootstrap() {
   await app.listen(port);
   logger.log(`🚀 ConectCampo API running on port ${port}`);
   logger.log(`📚 Swagger docs: http://localhost:${port}/docs`);
-  logger.log(`🧩 OpenAPI JSON: http://localhost:${port}/docs-json`);
+  logger.log(`🧩 OpenAPI JSON: http://localhost:${port}/api/v1/openapi.json`);
 }
 
 bootstrap();

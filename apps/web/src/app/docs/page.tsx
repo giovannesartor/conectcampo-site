@@ -13,7 +13,7 @@ export default function DocsPage() {
     // Elemento de configuração lido pelo script do Scalar.
     const holder = document.createElement('script');
     holder.id = 'api-reference';
-    holder.setAttribute('data-url', '/docs-json');
+    holder.setAttribute('data-url', '/api/v1/openapi.json');
     document.body.appendChild(holder);
 
     const cdn = document.createElement('script');
@@ -36,7 +36,7 @@ export default function DocsPage() {
           Você ainda pode acessar a especificação OpenAPI diretamente ou voltar para a página de guia da API.
         </p>
         <div className="flex gap-3">
-          <a href="/docs-json" className="btn-primary">Abrir OpenAPI (JSON)</a>
+          <a href="/api/v1/openapi.json" className="btn-primary">Abrir OpenAPI (JSON)</a>
           <a href="/api-docs" className="btn-ghost">Guia da API</a>
         </div>
       </div>
