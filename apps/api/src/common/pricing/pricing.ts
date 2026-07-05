@@ -11,6 +11,10 @@ export const PLAN_PRICES: Record<string, number> = {
   CORPORATE: 0.0, // Instituição Financeira (grátis)
 };
 
+/** Dias de teste gratuito concedidos em todos os planos pagos. */
+export const TRIAL_DAYS = 7;
+
+
 export const PLAN_LABELS: Record<string, string> = {
   START: 'Produtor Rural',
   PRO: 'Empresa',
@@ -30,6 +34,7 @@ export const CPR_PRICING = {
 /** Payload público de preços (consumido pelo frontend via GET /pricing). */
 export function getPublicPricing() {
   return {
+    trialDays: TRIAL_DAYS,
     plans: Object.entries(PLAN_PRICES).map(([key, price]) => ({
       key,
       label: PLAN_LABELS[key] ?? key,

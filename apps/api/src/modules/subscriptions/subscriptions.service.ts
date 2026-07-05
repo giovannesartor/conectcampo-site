@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AsaasService } from './asaas.service';
 import { SubscriptionPlan, PaymentStatus } from '@prisma/client';
@@ -62,5 +63,37 @@ export class SubscriptionsService {
         paymentStatus: PaymentStatus.CANCELLED,
       },
     });
+  }
+
+  /**
+   * Rede de segurança para o trial de 7 dias: roda diariamente e bloqueia
+   * quem ainda está em TRIALING mas cujo período de teste já terminou sem
+   * pagamento confirmado. O webhook PAYMENT_OVERDUE do Asaas cobre o caso
+   * principal; este cron garante o bloqueio mesmo se o webhook falhar/atrasar.
+   */
+  @Cron(CronExpression.EVERY_HOUR)
+  async expireTrials() {
+    const now = new Date();
+    const expired = await this.prisma.subscription.findMany({
+      where: {
+        paymentStatus: PaymentStatus.TRIALING,
+        trialEndsAt: { lte: now },
+      },
+      select: { id: true, userId: true },
+    });
+
+    if (expired.length === 0) return;
+
+    this.logger.log(`Expirando ${expired.length} trial(s) vencido(s)`);
+
+    for (const sub of expired) {
+      await this.prisma.subscription.update({
+        where: { id: sub.id },
+        data: { paymentStatus: PaymentStatus.OVERDUE, isActive: false },
+      });
+      await this.prisma.user
+        .update({ where: { id: sub.userId }, data: { isActive: false } })
+        .catch(() => null);
+    }
   }
 }

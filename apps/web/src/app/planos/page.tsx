@@ -9,7 +9,7 @@ const plans = [
     price: 'R$ 299',
     period: '/mês',
     highlight: false,
-    cta: 'Começar agora',
+    cta: 'Começar 7 dias grátis',
     href: '/register?plan=START',
     features: [
       'Perfil completo na plataforma',
@@ -26,7 +26,7 @@ const plans = [
     price: 'R$ 799',
     period: '/mês',
     highlight: false,
-    cta: 'Assinar agora',
+    cta: 'Começar 7 dias grátis',
     href: '/register?plan=PRO',
     features: [
       'Tudo do Plano Produtor Rural',
@@ -44,7 +44,7 @@ const plans = [
     price: 'R$ 2.890',
     period: '/mês',
     highlight: true,
-    cta: 'Assinar agora',
+    cta: 'Começar 7 dias grátis',
     href: '/register?plan=COOPERATIVE',
     features: [
       'Tudo do Plano Empresa',
@@ -87,7 +87,7 @@ export default function PlanosPage() {
           O plano certo para cada <span className="text-brand-600">etapa do seu negócio</span>
         </h1>
         <p className="mt-6 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Escolha o plano ideal para o seu perfil. Instituições financeiras entram grátis na plataforma.
+          Comece com <span className="font-semibold text-brand-600">7 dias grátis</span> em qualquer plano pago — acesso completo, sem pagar nada agora. Instituições financeiras entram grátis na plataforma.
         </p>
       </section>
 
@@ -128,6 +128,15 @@ export default function PlanosPage() {
                     </span>
                   )}
                 </div>
+                {plan.period && (
+                  <span className={`mt-2 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    plan.highlight
+                      ? 'bg-white/20 text-white'
+                      : 'bg-brand-50 dark:bg-brand-950/20 text-brand-700 dark:text-brand-300'
+                  }`}>
+                    7 dias grátis
+                  </span>
+                )}
               </div>
 
               <ul className="mt-8 space-y-3 flex-1">
@@ -156,7 +165,7 @@ export default function PlanosPage() {
         {/* Opções de pagamento */}
         <div className="mx-auto mt-12 max-w-3xl text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Escolha entre dois checkouts seguros no momento da assinatura:
+            7 dias grátis em todos os planos pagos. Ao fim do teste, a cobrança é emitida no gateway escolhido, no CPF/CNPJ informado — escolha entre dois checkouts seguros:
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
             <span className="inline-flex items-center gap-2 rounded-full border-2 border-brand-500 bg-brand-50 dark:bg-brand-950/20 px-4 py-1.5 text-sm font-semibold text-brand-700 dark:text-brand-300">
@@ -170,7 +179,7 @@ export default function PlanosPage() {
             </span>
           </div>
           <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">
-            PIX, cartão ou boleto · processado com segurança
+            7 dias grátis · depois PIX, cartão ou boleto · cancele quando quiser
           </p>
         </div>
       </section>

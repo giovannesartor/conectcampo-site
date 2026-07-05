@@ -4,7 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { SubscriptionPlan, PaymentStatus } from '@prisma/client';
 import axios, { AxiosInstance } from 'axios';
 import * as crypto from 'crypto';
-import { PLAN_PRICES, PLAN_LABELS } from '../../common/pricing/pricing';
+import { PLAN_PRICES, PLAN_LABELS, TRIAL_DAYS } from '../../common/pricing/pricing';
 
 // ─── Asaas DTO interfaces ─────────────────────────────────────────────────────
 
@@ -101,7 +101,8 @@ export class AsaasService {
     asaasCustomerId: string,
     plan: SubscriptionPlan,
     description?: string,
-  ): Promise<{ subscriptionId: string; invoiceUrl: string }> {
+    trialDays = 0,
+  ): Promise<{ subscriptionId: string; invoiceUrl: string; nextDueDate: string }> {
     const value = PLAN_PRICES[plan];
     if (value === undefined) {
       throw new BadRequestException(`Plano ${plan} não suportado`);
@@ -110,8 +111,9 @@ export class AsaasService {
       throw new BadRequestException('Plano gratuito não requer assinatura Asaas');
     }
 
+    // Com trial: 1ª fatura vence ao fim do período de teste. Sem trial: amanhã.
     const nextDueDate = new Date();
-    nextDueDate.setDate(nextDueDate.getDate() + 1);
+    nextDueDate.setDate(nextDueDate.getDate() + (trialDays > 0 ? trialDays : 1));
     const dueDateStr = nextDueDate.toISOString().split('T')[0];
 
     const subRes = await this.client.post<AsaasSubscriptionResponse>('/subscriptions', {
@@ -141,6 +143,7 @@ export class AsaasService {
     return {
       subscriptionId: asaasSubscriptionId,
       invoiceUrl: firstPayment.invoiceUrl,
+      nextDueDate: dueDateStr,
     };
   }
 
@@ -153,8 +156,14 @@ export class AsaasService {
     cpfCnpj: string;
     phone?: string;
     plan: SubscriptionPlan;
-  }): Promise<{ invoiceUrl: string }> {
-    const { userId, name, email, cpfCnpj, phone, plan } = params;
+    trialDays?: number;
+  }): Promise<{ invoiceUrl: string; trialEndsAt: Date | null }> {
+    const { userId, name, email, cpfCnpj, phone, plan, trialDays = 0 } = params;
+
+    const trialEndsAt =
+      trialDays > 0
+        ? new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000)
+        : null;
 
     // ── Dev mode: Asaas not configured ──────────────────────────────────────
     if (!this.http) {
@@ -166,22 +175,29 @@ export class AsaasService {
         data: {
           userId,
           plan,
-          paymentStatus: PaymentStatus.PENDING,
-          isActive: false,
+          paymentStatus: trialDays > 0 ? PaymentStatus.TRIALING : PaymentStatus.PENDING,
+          isActive: trialDays > 0,
+          trialEndsAt,
+          ...(trialEndsAt ? { currentPeriodEnd: trialEndsAt } : {}),
           invoiceUrl: `${frontendUrl}/dashboard?dev_payment_pending=true`,
         },
       });
 
-      return { invoiceUrl: `${frontendUrl}/dashboard?dev_payment_pending=true` };
+      return {
+        invoiceUrl: `${frontendUrl}/dashboard?dev_payment_pending=true`,
+        trialEndsAt,
+      };
     }
 
     const customer = await this.createCustomer({ name, email, cpfCnpj, phone });
     const { subscriptionId, invoiceUrl } = await this.createSubscription(
       customer.id,
       plan,
+      undefined,
+      trialDays,
     );
 
-    // Salvar no banco
+    // Salvar no banco. Com trial, a conta já nasce ativa até o fim do período.
     await this.prisma.subscription.create({
       data: {
         userId,
@@ -189,12 +205,14 @@ export class AsaasService {
         asaasCustomerId: customer.id,
         asaasSubscriptionId: subscriptionId,
         invoiceUrl,
-        paymentStatus: PaymentStatus.PENDING,
-        isActive: false,
+        paymentStatus: trialDays > 0 ? PaymentStatus.TRIALING : PaymentStatus.PENDING,
+        isActive: trialDays > 0,
+        trialEndsAt,
+        ...(trialEndsAt ? { currentPeriodEnd: trialEndsAt } : {}),
       },
     });
 
-    return { invoiceUrl };
+    return { invoiceUrl, trialEndsAt };
   }
 
   // ─── Activate after payment ───────────────────────────────────────────────────
@@ -305,15 +323,30 @@ export class AsaasService {
       return { userId: null };
     }
 
-    // Pagamento vencido (evento de pagamento)
+    // Pagamento vencido (evento de pagamento) — trial expirado sem pagamento
+    // ou mensalidade em atraso: marca OVERDUE e bloqueia o acesso do usuário.
     if (event === 'PAYMENT_OVERDUE') {
       const asaasSubscriptionId: string | undefined =
         payload.payment?.subscription;
       if (asaasSubscriptionId) {
-        await this.prisma.subscription.updateMany({
+        const sub = await this.prisma.subscription.findUnique({
           where: { asaasSubscriptionId },
-          data: { paymentStatus: PaymentStatus.OVERDUE },
+          select: { id: true, userId: true },
         });
+        if (sub) {
+          await this.prisma.subscription.update({
+            where: { id: sub.id },
+            data: { paymentStatus: PaymentStatus.OVERDUE, isActive: false },
+          });
+          await this.prisma.user.update({
+            where: { id: sub.userId },
+            data: { isActive: false },
+          });
+          this.logger.log(
+            `Subscription ${sub.id} bloqueada por atraso (user ${sub.userId})`,
+          );
+          return { userId: sub.userId };
+        }
       }
     }
 

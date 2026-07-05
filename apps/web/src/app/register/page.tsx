@@ -164,17 +164,16 @@ function RegisterForm() {
 
       const { data } = await api.post('/auth/register', payload);
 
+      // Fluxo legado (pagamento imediato) — mantido como fallback.
       if (data.requiresPayment && data.invoiceUrl) {
-        // Guardar URL na sessão para o usuário poder reabrir se fechar a aba
         sessionStorage.setItem('pendingInvoiceUrl', data.invoiceUrl);
         sessionStorage.setItem('pendingPlanName', planConfig.name);
-        // Abre pagamento em nova aba, mostra tela de espera no ConectCampo
         window.open(data.invoiceUrl, '_blank', 'noopener,noreferrer');
         router.push(`/register/pending?userId=${data.user.id}&plan=${selectedPlan}`);
         return;
       }
 
-      // Plano gratuito — salvar tokens e ir ao dashboard
+      // Plano grátis ou trial de 7 dias — acesso imediato ao dashboard.
       if (data.accessToken) {
         Cookies.set('accessToken', data.accessToken, {
           expires: 1,
@@ -300,9 +299,15 @@ function RegisterForm() {
               </div>
               <p className="mt-3 text-brand-100 text-sm">{planConfig.description}</p>
               {!planConfig.free && (
-                <div className="mt-4 flex items-center gap-2 text-xs text-brand-200">
-                  <Check className="h-3.5 w-3.5 text-brand-300" />
-                  Pagamento via PIX, cartão ou boleto
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center gap-2 text-xs text-brand-100">
+                    <Check className="h-3.5 w-3.5 text-brand-300" />
+                    7 dias grátis — acesso completo, sem pagar nada agora
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-brand-200">
+                    <Check className="h-3.5 w-3.5 text-brand-300" />
+                    Depois, {planConfig.price}{planConfig.period} · PIX, cartão ou boleto
+                  </div>
                 </div>
               )}
             </div>
@@ -465,7 +470,7 @@ function RegisterForm() {
             {!planConfig?.free && (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Forma de pagamento
+                  Onde emitir a cobrança após o teste
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   {/* Valsa — recomendada */}
@@ -509,6 +514,17 @@ function RegisterForm() {
                     )}
                   </button>
                 </div>
+
+                {/* Aviso do trial de 7 dias */}
+                <div className="mt-2 rounded-xl border border-brand-200 dark:border-brand-800 bg-brand-50 dark:bg-brand-950/20 p-3 text-xs text-brand-700 dark:text-brand-300">
+                  <p className="font-semibold">Você tem 7 dias grátis</p>
+                  <p className="mt-1 text-brand-600 dark:text-brand-400">
+                    Acesso completo agora, sem cobrança. Ao fim dos 7 dias, a cobrança de{' '}
+                    <span className="font-medium">{planConfig?.price}{planConfig?.period}</span>{' '}
+                    é emitida no {gateway === 'VALSA' ? 'ValsaPay' : 'Asaas'} no {planConfig?.docType === 'cpf' ? 'CPF' : 'CNPJ'} informado.
+                    Você escolhe PIX, cartão ou boleto na hora de pagar e pode cancelar antes disso, sem custo.
+                  </p>
+                </div>
               </div>
             )}
 
@@ -550,18 +566,18 @@ function RegisterForm() {
                 'Criar conta gratuita'
               ) : (
                 <>
-                  Assinar agora <ArrowRight className="h-4 w-4" />
+                  Começar 7 dias grátis <ArrowRight className="h-4 w-4" />
                 </>
               )}
             </button>
 
             {!planConfig?.free && (
               <p className="text-center text-xs text-gray-400">
-                O pagamento abre em uma nova aba via{' '}
+                Sem cobrança hoje. Após 7 dias, a cobrança do plano é emitida via{' '}
                 <span className="font-medium">
                   {gateway === 'VALSA' ? 'ValsaPay' : 'Asaas · AG Digital'}
                 </span>
-                {' '}— {gateway === 'VALSA' ? 'PIX instantâneo' : 'PIX, cartão ou boleto'}. Você acompanha aqui.
+                {' '}— você escolhe PIX, cartão ou boleto. Cancele quando quiser antes disso.
               </p>
             )}
           </form>

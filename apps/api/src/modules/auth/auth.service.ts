@@ -20,6 +20,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UserRole, SubscriptionPlan } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
+import { TRIAL_DAYS } from '../../common/pricing/pricing';
 
 export interface AuthAuditMeta {
   ip?: string;
@@ -79,7 +80,9 @@ export class AuthService {
     const role = this.resolveRole(dto.email, dto.role);
     const isFree = dto.plan === SubscriptionPlan.CORPORATE;
 
-    // Conta inativa até pagamento (planos pagos) ou ativa direto (plano grátis)
+    // Todos os planos pagos ganham 7 dias grátis com acesso imediato; o plano
+    // gratuito (Instituição Financeira) já entra ativo. Ou seja: conta ativa
+    // desde o cadastro em ambos os casos.
     let user;
     try {
       user = await this.prisma.user.create({
@@ -91,7 +94,7 @@ export class AuthService {
           phone: dto.phone,
           cpf: dto.cpf,
           cnpj: dto.cnpj,
-          isActive: isFree, // free = ativo, paid = aguarda pagamento
+          isActive: true, // free = ativo · pago = trial de 7 dias ativo
           consentLgpd: true,
           consentLgpdAt: new Date(),
         },
@@ -139,21 +142,25 @@ export class AuthService {
       };
     }
 
-    // ── Planos pagos — criar checkout no gateway escolhido ───────────────────
+    // ── Planos pagos — 7 dias grátis em ambos os gateways (Asaas e ValsaPay) ──
+    // Acesso liberado imediatamente. A cobrança fica disponível desde já e
+    // vence/é cobrada ao fim do trial (dia 7), no CPF/CNPJ informado, com o
+    // cliente escolhendo o meio de pagamento (PIX, cartão ou boleto).
     const cpfCnpj = (dto.cpf ?? dto.cnpj)!;
-
-    // Valsa é o gateway recomendado (padrão quando não especificado)
     const gateway = dto.gateway ?? PaymentGateway.VALSA;
 
     let invoiceUrl: string | null = null;
+    let trialEndsAt: Date | null = null;
     try {
       if (gateway === PaymentGateway.VALSA) {
         const result = await this.valsaService.createPendingSubscription({
           userId: user.id,
           plan: dto.plan,
           email: user.email,
+          trialDays: TRIAL_DAYS,
         });
         invoiceUrl = result.invoiceUrl;
+        trialEndsAt = result.trialEndsAt;
       } else {
         const result = await this.asaasService.createCustomerAndSubscription({
           userId: user.id,
@@ -162,25 +169,42 @@ export class AuthService {
           cpfCnpj,
           phone: dto.phone,
           plan: dto.plan,
+          trialDays: TRIAL_DAYS,
         });
         invoiceUrl = result.invoiceUrl;
+        trialEndsAt = result.trialEndsAt;
       }
     } catch (err: any) {
       // Se o gateway falhar, remover usuário criado para não deixar registro órfão
       await this.prisma.user.delete({ where: { id: user.id } }).catch(() => null);
       this.logger.error(`Payment gateway (${gateway}) error during register: ${err.message}`);
       throw new BadRequestException(
-        'Erro ao processar pagamento. Verifique seus dados e tente novamente.',
+        'Erro ao iniciar seu período de teste. Verifique seus dados e tente novamente.',
       );
     }
 
-    this.logger.log(`Paid user registered (pending payment via ${gateway}): ${user.email}`);
+    const verificationToken = await this.createEmailVerificationToken(user.id);
+    this.mailService.sendWelcome(user.email, user.name).catch(() => null);
+    this.mailService
+      .sendEmailVerification(user.email, user.name, verificationToken)
+      .catch(() => null);
 
+    const tokens = await this.generateTokens(user.id, user.email, user.role);
+
+    this.logger.log(
+      `Paid user registered with ${TRIAL_DAYS}-day trial (${gateway}): ${user.email}`,
+    );
+
+    // Acesso liberado imediatamente durante o trial → entra direto no dashboard.
     return {
-      requiresPayment: true,
+      requiresPayment: false,
+      trial: true,
+      trialDays: TRIAL_DAYS,
+      trialEndsAt,
       gateway,
       invoiceUrl,
       user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      ...tokens,
     };
   }
 

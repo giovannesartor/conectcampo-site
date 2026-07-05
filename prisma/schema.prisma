@@ -104,6 +104,7 @@ enum SubscriptionPlan {
 
 enum PaymentStatus {
   PENDING
+  TRIALING
   ACTIVE
   OVERDUE
   CANCELLED
@@ -651,6 +652,7 @@ model Subscription {
   valsaPaymentId        String?          // ID do pagamento na Valsa
 
   isActive              Boolean          @default(false)
+  trialEndsAt           DateTime?        // Fim do período de teste gratuito (7 dias)
   currentPeriodStart    DateTime         @default(now())
   currentPeriodEnd      DateTime         @default(dbgenerated("now() + interval '30 days'"))
   cancelledAt           DateTime?

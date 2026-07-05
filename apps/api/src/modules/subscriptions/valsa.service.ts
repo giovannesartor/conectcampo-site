@@ -223,13 +223,22 @@ export class ValsaService {
 
   /**
    * Cria a assinatura pendente para o checkout Valsa e devolve a URL de pagamento.
+   * Com `trialDays`, a conta nasce em período de teste (acesso imediato) e o
+   * cliente paga pelo checkout quando quiser — durante ou após o trial.
    */
   async createPendingSubscription(params: {
     userId: string;
     plan: SubscriptionPlan;
     email?: string;
-  }): Promise<{ invoiceUrl: string }> {
+    trialDays?: number;
+  }): Promise<{ invoiceUrl: string; trialEndsAt: Date | null }> {
     const { invoiceUrl } = this.buildCheckoutUrl(params);
+
+    const trialDays = params.trialDays ?? 0;
+    const trialEndsAt =
+      trialDays > 0
+        ? new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000)
+        : null;
 
     await this.prisma.subscription.create({
       data: {
@@ -237,12 +246,14 @@ export class ValsaService {
         plan: params.plan,
         gateway: 'VALSA',
         invoiceUrl,
-        paymentStatus: PaymentStatus.PENDING,
-        isActive: false,
+        paymentStatus: trialDays > 0 ? PaymentStatus.TRIALING : PaymentStatus.PENDING,
+        isActive: trialDays > 0,
+        trialEndsAt,
+        ...(trialEndsAt ? { currentPeriodEnd: trialEndsAt } : {}),
       },
     });
 
-    return { invoiceUrl };
+    return { invoiceUrl, trialEndsAt };
   }
 
   // ─── Checkout genérico (marketplace, taxas avulsas, etc.) ─────────────────────

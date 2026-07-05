@@ -114,7 +114,9 @@ export default function SubscriptionPage() {
               </h3>
               {subscription.currentPeriodEnd && (
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Válido até {formatDate(subscription.currentPeriodEnd)}
+                  {subscription.paymentStatus === 'TRIALING'
+                    ? `Teste grátis até ${formatDate(subscription.trialEndsAt || subscription.currentPeriodEnd)}`
+                    : `Válido até ${formatDate(subscription.currentPeriodEnd)}`}
                 </p>
               )}
             </div>
@@ -123,12 +125,16 @@ export default function SubscriptionPage() {
               <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
                 subscription.paymentStatus === 'ACTIVE'
                   ? 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400'
+                  : subscription.paymentStatus === 'TRIALING'
+                  ? 'bg-brand-100 text-brand-700 dark:bg-brand-950/30 dark:text-brand-400'
                   : subscription.paymentStatus === 'PENDING'
                   ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400'
                   : 'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400'
               }`}>
                 {subscription.paymentStatus === 'ACTIVE'
                   ? 'Ativo'
+                  : subscription.paymentStatus === 'TRIALING'
+                  ? '7 dias grátis'
                   : subscription.paymentStatus === 'PENDING'
                   ? 'Aguardando Pagamento'
                   : subscription.paymentStatus === 'OVERDUE'
@@ -136,6 +142,60 @@ export default function SubscriptionPage() {
                   : 'Cancelado'}
               </span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Trial banner */}
+      {subscription?.paymentStatus === 'TRIALING' && (
+        <div className="card border-brand-200 dark:border-brand-800 bg-brand-50/60 dark:bg-brand-950/20">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white">
+                Você está no período de teste gratuito
+              </h4>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Acesso completo até{' '}
+                <span className="font-medium">
+                  {formatDate(subscription.trialEndsAt || subscription.currentPeriodEnd)}
+                </span>
+                . Ao fim do teste, a cobrança do plano é emitida no gateway escolhido, no CPF/CNPJ informado — você escolhe PIX, cartão ou boleto na hora de pagar. Cancele quando quiser antes disso, sem custo.
+              </p>
+            </div>
+            {subscription.invoiceUrl && (
+              <a
+                href={subscription.invoiceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary shrink-0 whitespace-nowrap text-sm"
+              >
+                Pagar agora e garantir o plano
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Overdue banner */}
+      {subscription?.paymentStatus === 'OVERDUE' && subscription?.invoiceUrl && (
+        <div className="card border-red-200 dark:border-red-800 bg-red-50/60 dark:bg-red-950/20">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white">
+                Seu período de teste terminou
+              </h4>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Para reativar o acesso completo, conclua o pagamento do plano. Você escolhe PIX, cartão ou boleto.
+              </p>
+            </div>
+            <a
+              href={subscription.invoiceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary shrink-0 whitespace-nowrap text-sm"
+            >
+              Pagar e reativar
+            </a>
           </div>
         </div>
       )}

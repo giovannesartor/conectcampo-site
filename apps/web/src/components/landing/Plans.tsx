@@ -18,7 +18,7 @@ const plans = [
       'Gestão de documentos',
       'Suporte por e-mail',
     ],
-    cta: 'Começar agora',
+    cta: 'Começar 7 dias grátis',
     highlighted: false,
     href: '/register?plan=START',
   },
@@ -36,7 +36,7 @@ const plans = [
       'Relatórios e analytics',
       'Suporte prioritário',
     ],
-    cta: 'Assinar agora',
+    cta: 'Começar 7 dias grátis',
     highlighted: false,
     href: '/register?plan=PRO',
   },
@@ -53,7 +53,7 @@ const plans = [
       'Relatórios consolidados',
       'Suporte dedicado com gerente de conta',
     ],
-    cta: 'Assinar agora',
+    cta: 'Começar 7 dias grátis',
     highlighted: true,
     href: '/register?plan=COOPERATIVE',
   },
@@ -83,7 +83,7 @@ export function Plans() {
         <div className="text-center">
           <h2 className="section-title">Planos que cabem na sua operação</h2>
           <p className="section-subtitle">
-            Escolha o plano ideal para o seu perfil. Instituições financeiras entram grátis. Além da assinatura, cobramos apenas uma comissão sobre operações fechadas.
+            Comece com <span className="font-semibold text-brand-600 dark:text-brand-400">7 dias grátis</span> em qualquer plano pago. Instituições financeiras entram grátis. Além da assinatura, cobramos apenas uma comissão sobre operações fechadas.
           </p>
         </div>
 
@@ -120,6 +120,11 @@ export function Plans() {
                   </span>
                 )}
               </div>
+              {plan.period && (
+                <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-brand-50 dark:bg-brand-950/20 px-2.5 py-0.5 text-xs font-semibold text-brand-700 dark:text-brand-300">
+                  7 dias grátis
+                </p>
+              )}
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                 {plan.description}
               </p>
@@ -162,7 +167,7 @@ export function Plans() {
             </span>
           </div>
           <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">
-            PIX, cartão ou boleto · processado com segurança
+            7 dias grátis · depois PIX, cartão ou boleto · cancele quando quiser
           </p>
         </div>
       </div>
