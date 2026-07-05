@@ -31,7 +31,7 @@ const PLANS: Array<{
     period: '/mês',
     role: 'PRODUCER',
     docType: 'cpf',
-    description: 'Para produtores rurais que buscam crédito com agilidade.',
+    description: 'Para o produtor rural que quer gerir a propriedade e acessar crédito com agilidade.',
     free: false,
   },
   {
@@ -41,7 +41,7 @@ const PLANS: Array<{
     period: '/mês',
     role: 'COMPANY',
     docType: 'cnpj',
-    description: 'Para empresas do agronegócio que buscam o melhor crédito.',
+    description: 'Para empresas do agronegócio que buscam as melhores condições de crédito em escala.',
     free: false,
   },
   {
@@ -51,7 +51,7 @@ const PLANS: Array<{
     period: '/mês',
     role: 'COMPANY',
     docType: 'cnpj',
-    description: 'Para cooperativas que desejam oferecer crédito aos seus cooperados.',
+    description: 'Para cooperativas que querem oferecer crédito e gestão aos seus cooperados.',
     free: false,
   },
   {
