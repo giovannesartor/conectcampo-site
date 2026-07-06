@@ -53,7 +53,13 @@ async function bootstrap() {
   // Global prefix (webhooks are excluded so /webhook/asaas resolves correctly)
   // Versionamento por URI: rotas ficam em /api/v1/... e permitem /api/v2 no futuro
   // via @Version('2') nos controllers, sem quebrar a v1.
-  const prefix = process.env.API_PREFIX || '/api';
+  //
+  // IMPORTANTE: o prefixo NÃO deve conter a versão — o enableVersioning() abaixo já
+  // adiciona "/v1". Se API_PREFIX vier como "/api/v1" (erro comum de env), as rotas
+  // ficariam em "/api/v1/v1/...". Removemos qualquer sufixo de versão do prefixo para
+  // garantir que "/api" e "/api/v1" produzam ambos "/api/v1/...".
+  const rawPrefix = process.env.API_PREFIX || '/api';
+  const prefix = rawPrefix.replace(/\/+v\d+\/?$/i, '') || '/api';
   app.setGlobalPrefix(prefix, {
     exclude: [{ path: 'webhook/:provider', method: RequestMethod.POST }],
   });
