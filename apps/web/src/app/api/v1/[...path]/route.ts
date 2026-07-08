@@ -63,7 +63,10 @@ async function proxyRequest(
       });
     }
 
-    const body = await response.arrayBuffer();
+    const body =
+      response.status === 204 || response.status === 304
+        ? null
+        : await response.arrayBuffer();
 
     return new NextResponse(body, {
       status: response.status,
