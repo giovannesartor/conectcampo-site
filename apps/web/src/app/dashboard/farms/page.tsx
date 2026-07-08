@@ -97,7 +97,9 @@ function FarmsPageInner() {
     setLoading(true);
     Promise.all([api.get('/farms'), api.get('/farms/summary')])
       .then(([f, s]) => {
-        setFarms(f.data);
+        // API may return a raw array or a paginated envelope { data, meta }
+        const farmsData = f.data;
+        setFarms(Array.isArray(farmsData) ? farmsData : (farmsData?.data ?? []));
         setSummary(s.data);
       })
       .catch(() => toast.error('Não foi possível carregar as fazendas.'))

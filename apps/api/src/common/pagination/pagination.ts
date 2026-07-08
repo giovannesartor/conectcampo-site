@@ -46,7 +46,10 @@ export function resolvePagination(page?: number, perPage?: number, defaultPerPag
   return { page: p, perPage: pp, skip: (p - 1) * pp, take: pp };
 }
 
-/** Indica se o cliente solicitou paginação (para respostas retrocompatíveis). */
+/** Indica se o cliente solicitou paginação (para respostas retrocompatíveis).
+ *  Retorna true somente quando page ou perPage é um número finito válido,
+ *  ignorando undefined, null e NaN (que chegam quando o ValidationPipe com
+ *  enableImplicitConversion: true converte query params ausentes). */
 export function wantsPagination(page?: unknown, perPage?: unknown): boolean {
-  return page !== undefined || perPage !== undefined;
+  return Number.isFinite(Number(page)) || Number.isFinite(Number(perPage));
 }
