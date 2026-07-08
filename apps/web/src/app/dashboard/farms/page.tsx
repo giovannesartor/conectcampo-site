@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Component, ReactNode } from 'react';
 import dynamic from 'next/dynamic';
 import {
   MapPin,
@@ -62,7 +62,30 @@ interface Summary {
   cropDistribution: { crop: string; area: number }[];
 }
 
-export default function FarmsPage() {
+// ─── Per-page error boundary (prevents the dashboard shell error.tsx from showing) ──
+class FarmsErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="card text-center py-16">
+          <p className="text-sm text-red-500 font-medium">Não foi possível carregar as fazendas.</p>
+          <p className="text-xs text-gray-400 mt-1">{(this.state.error as Error).message}</p>
+          <button
+            className="btn-primary mt-4 text-sm"
+            onClick={() => this.setState({ error: null })}
+          >
+            Tentar novamente
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function FarmsPageInner() {
   const [farms, setFarms] = useState<Farm[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -80,7 +103,7 @@ export default function FarmsPage() {
       .catch(() => toast.error('Não foi possível carregar as fazendas.'))
       .finally(() => setLoading(false));
   };
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);
 
   const removeFarm = async (id: string) => {
     if (!confirm('Remover esta fazenda e seus talhões?')) return;
@@ -132,7 +155,7 @@ export default function FarmsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <KPI icon={<Trees className="h-5 w-5" />} label="Fazendas" value={summary.totalFarms} />
           <KPI icon={<Layers className="h-5 w-5" />} label="Talhões" value={summary.totalPlots} />
-          <KPI icon={<Ruler className="h-5 w-5" />} label="Área total" value={`${summary.totalAreaHa.toLocaleString('pt-BR')} ha`} />
+          <KPI icon={<Ruler className="h-5 w-5" />} label="Área total" value={`${Number(summary.totalAreaHa).toLocaleString('pt-BR')} ha`} />
         </div>
       )}
 
@@ -218,6 +241,14 @@ export default function FarmsPage() {
       {showFarm && <FarmModal onClose={() => setShowFarm(false)} onSaved={() => { setShowFarm(false); load(); }} />}
       {plotFarm && <PlotModal farm={plotFarm} onClose={() => setPlotFarm(null)} onSaved={() => { setPlotFarm(null); load(); }} />}
     </div>
+  );
+}
+
+export default function FarmsPage() {
+  return (
+    <FarmsErrorBoundary>
+      <FarmsPageInner />
+    </FarmsErrorBoundary>
   );
 }
 

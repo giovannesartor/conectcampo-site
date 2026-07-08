@@ -25,24 +25,11 @@ export async function middleware(request: NextRequest) {
 
     const secret = getJwtSecret();
 
-    // If JWT_SECRET is not configured (e.g. dev without env), fall back to
-    // decode-only so the app doesn't hard-break — but log the warning.
+    // JWT_SECRET must be set in production. Without it we cannot verify tokens
+    // and must deny access to protect admin routes.
     if (!secret) {
-      console.warn(
-        '[middleware] JWT_SECRET not set — falling back to unverified decode. Set JWT_SECRET in production!',
-      );
-      try {
-        const base64Payload = token.split('.')[1]
-          .replace(/-/g, '+')
-          .replace(/_/g, '/');
-        const payload = JSON.parse(atob(base64Payload));
-        if (payload.role !== 'ADMIN') {
-          return NextResponse.redirect(new URL('/dashboard', request.url));
-        }
-      } catch {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-      }
-      return NextResponse.next();
+      console.error('[middleware] JWT_SECRET not configured — blocking admin access. Set JWT_SECRET in the web service environment.');
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
     // ── Verified path: use jose (edge-compatible) ─────────────────────────

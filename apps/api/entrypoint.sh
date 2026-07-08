@@ -13,7 +13,7 @@ if [ -d "$MIGRATIONS_DIR" ] && [ "$(ls -A $MIGRATIONS_DIR 2>/dev/null)" ]; then
   npx prisma migrate deploy --schema="$SCHEMA"
 else
   echo "[startup] No migrations found — running prisma db push (first deploy bootstrap)..."
-  npx prisma db push --schema="$SCHEMA" --accept-data-loss
+  npx prisma db push --schema="$SCHEMA" --accept-data-loss --skip-generate
 fi
 
 echo "[startup] Starting API..."
