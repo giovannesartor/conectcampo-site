@@ -23,10 +23,17 @@ import { formatCurrency, formatRelative, formatNumber } from '@/lib/format';
 import { api } from '@/lib/api';
 import { RevenueAreaChart, OperationsBarChart, UsersPieChart, GMVChart } from '@/components/dashboard/AdminCharts';
 
+interface AdminStats {
+  usersByRole?: { role: string; _count: number }[];
+  operationsByStatus?: { status: string; _count: number }[];
+  recentOperations?: { id: string; type: string; amount: number; status: string; createdAt: string }[];
+  [key: string]: unknown;
+}
+
 export default function AdminDashboardPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

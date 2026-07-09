@@ -53,8 +53,22 @@ function ScoreGauge({ score, label }: { score: number; label: string }) {
 
 export default function ScoringPage() {
   const [operations, setOperations] = useState<any[]>([]);
+interface OperationOption {
+  id: string;
+  type: string;
+  crop?: string;
+}
+
+interface ScoreResult {
+  profile: string;
+  score: number;
+  totalScore?: number;
+  factors?: ScoreFactor[];
+  [key: string]: unknown;
+}
+
   const [selectedOpId, setSelectedOpId] = useState<string>('');
-  const [scoring, setScoring] = useState<any>(null);
+  const [scoring, setScoring] = useState<ScoreResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingScore, setLoadingScore] = useState(false);
   const [calculating, setCalculating] = useState(false);
@@ -152,7 +166,7 @@ export default function ScoringPage() {
                 onChange={(e) => setSelectedOpId(e.target.value)}
                 className="input pr-8 min-w-[220px] appearance-none"
               >
-                {operations.map((op: any) => (
+                {operations.map((op: OperationOption) => (
                   <option key={op.id} value={op.id}>
                     {op.type} — {op.crop || 'Operação'} #{op.id.slice(-6).toUpperCase()}
                   </option>

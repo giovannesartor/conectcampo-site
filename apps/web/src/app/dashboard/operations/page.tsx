@@ -33,10 +33,21 @@ const TYPE_LABELS: Record<string, string> = {
   MERCADO_CAPITAIS: 'Mercado de Capitais',
 };
 
+interface OperationItem {
+  id: string;
+  type: string;
+  status: string;
+  amount: number;
+  termMonths: number;
+  createdAt: string;
+  riskScore?: { totalScore: number };
+  _count?: { proposals: number };
+}
+
 export default function OperationsPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [operations, setOperations] = useState<any[]>([]);
+  const [operations, setOperations] = useState<OperationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);

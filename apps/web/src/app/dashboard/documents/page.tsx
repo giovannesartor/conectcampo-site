@@ -8,7 +8,7 @@ import { formatDate } from '@/lib/format';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
 
-const DOC_STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
+const DOC_STATUS_MAP: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   PENDING: { label: 'Pendente', color: 'text-yellow-600 bg-yellow-50', icon: Clock },
   APPROVED: { label: 'Aprovado', color: 'text-green-600 bg-green-50', icon: CheckCircle },
   REJECTED: { label: 'Rejeitado', color: 'text-red-600 bg-red-50', icon: XCircle },
@@ -29,9 +29,17 @@ const DOC_TYPE_LABELS: Record<string, string> = {
   OTHER: 'Outro',
 };
 
+interface DocumentItem {
+  id: string;
+  status: string;
+  name?: string;
+  type: string;
+  createdAt: string;
+}
+
 export default function DocumentsPage() {
   const { user } = useAuth();
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
