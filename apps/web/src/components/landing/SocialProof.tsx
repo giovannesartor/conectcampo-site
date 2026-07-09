@@ -19,8 +19,8 @@ const PARTNERS = [
 
 const METRICS = [
   { icon: Clock, value: '48h', label: 'Pré-análise média' },
-  { icon: Network, value: 'Centenas', label: 'de instituições no match' },
-  { icon: Layers, value: '4 faixas', label: 'do pequeno ao agroindustrial' },
+  { icon: Network, value: '+50', label: 'instituições parceiras' },
+  { icon: Layers, value: 'R$500M+', label: 'em operações habilitadas' },
   { icon: ShieldCheck, value: '100%', label: 'digital, da CPR ao crédito' },
 ];
 

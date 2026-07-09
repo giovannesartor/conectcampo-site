@@ -42,11 +42,11 @@ export function ProductShowcase() {
               Painel de controle
             </span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white [text-wrap:balance]">
-              Tudo sobre sua operação, num só lugar
+              Seu painel de comando do agro
             </h2>
             <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-lg">
-              Dashboards desenhados por perfil — produtor, empresa, cooperativa e instituição
-              financeira. Além do crédito: satélite, clima, cotações e marketplace no mesmo painel.
+              Dashboards por perfil — produtor, empresa, cooperativa e instituição financeira.
+              Crédito, satélite, clima, cotações e marketplace integrados num único lugar.
             </p>
 
             <div className="mt-8 space-y-4">

@@ -42,7 +42,7 @@ export function Hero() {
               className="inline-flex items-center gap-2 rounded-full bg-brand-500/10 px-4 py-1.5 text-sm font-semibold text-brand-700 dark:text-brand-400 ring-1 ring-brand-500/20"
             >
               <Zap className="h-3.5 w-3.5" />
-              7 dias grátis · marketplace de crédito agro multi-financiador
+              Pré-análise em 48h · 7 dias grátis
             </motion.div>
 
             <motion.h1

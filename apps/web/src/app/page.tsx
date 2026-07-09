@@ -102,13 +102,21 @@ export default function LandingPage() {
       />
       <Header />
       <Hero />
-      <SocialProof />
+      {/* 1. Hook: você se identificou? */}
       <AudienceSplit />
-      <ProductShowcase />
-      <Platform />
+      {/* 2. Como funciona (agenda mental clara) */}
       <HowItWorks />
+      {/* 3. Veja a plataforma em ação */}
+      <ProductShowcase />
+      {/* 4. Expansão: todas as ferramentas */}
+      <Platform />
+      {/* 5. Para cada porte */}
       <Segments />
+      {/* 6. Prova social (só depois de entender o produto) */}
+      <SocialProof />
+      {/* 7. Segurança (remove objeção antes do preço) */}
       <Security />
+      {/* 8. Planos + FAQ + CTA */}
       <Plans />
       <FAQ />
       <CTA />
