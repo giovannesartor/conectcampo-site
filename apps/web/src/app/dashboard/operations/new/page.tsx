@@ -11,7 +11,9 @@ import {
   MapPin,
   Upload,
   Loader2,
+  HelpCircle,
 } from 'lucide-react';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -207,7 +209,12 @@ export default function NewOperationWizard() {
               />
             </div>
             <div>
-              <label className="label mb-1.5 block">Prazo (meses) *</label>
+              <label className="label mb-1.5 block">
+                Prazo (meses) *
+                <Tooltip content="Prazo para pagamento da operação. Quanto maior o prazo, menores as parcelas.">
+                  <HelpCircle className="h-3.5 w-3.5 inline ml-1 text-gray-400 cursor-help" />
+                </Tooltip>
+              </label>
               <select
                 value={form.termMonths}
                 onChange={(e) => update('termMonths', e.target.value)}
@@ -219,7 +226,12 @@ export default function NewOperationWizard() {
               </select>
             </div>
             <div>
-              <label className="label mb-1.5 block">Finalidade *</label>
+              <label className="label mb-1.5 block">
+                Finalidade *
+                <Tooltip content="Custeio: despesas da safra. Investimento: máquinas/benfeitorias. Giro: capital de trabalho. Mercado de Capitais: captação via CRA/FIAGRO.">
+                  <HelpCircle className="h-3.5 w-3.5 inline ml-1 text-gray-400 cursor-help" />
+                </Tooltip>
+              </label>
               <select
                 value={form.purpose}
                 onChange={(e) => update('purpose', e.target.value)}
@@ -286,7 +298,12 @@ export default function NewOperationWizard() {
               />
             </div>
             <div>
-              <label className="label mb-1.5 block">Garantias (opcional)</label>
+              <label className="label mb-1.5 block">
+                Garantias (opcional)
+                <Tooltip content="Ex: aval bancário, hipoteca de imóvel, penhor da safra, alienação de máquinas. Quanto mais garantias, melhor o score.">
+                  <HelpCircle className="h-3.5 w-3.5 inline ml-1 text-gray-400 cursor-help" />
+                </Tooltip>
+              </label>
               <textarea
                 value={form.guaranteeDescription}
                 onChange={(e) => update('guaranteeDescription', e.target.value)}
