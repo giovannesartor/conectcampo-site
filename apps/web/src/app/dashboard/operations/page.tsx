@@ -1,9 +1,9 @@
 'use client';
 
 import { useAuth } from '@/lib/auth-context';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileText, Plus, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
+import { FileText, Plus, Search, Filter, Loader2 } from 'lucide-react';
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { EmptyState } from '@/components/dashboard/EmptyState';
@@ -38,31 +38,58 @@ export default function OperationsPage() {
   const router = useRouter();
   const [operations, setOperations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [allLoaded, setAllLoaded] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
   const perPage = 10;
+  const loaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    loadOperations();
-  }, [page, statusFilter]);
-
-  async function loadOperations() {
+    setOperations([]);
+    setPage(1);
+    setAllLoaded(false);
     setLoading(true);
+    loadOperations(1, true);
+  }, [statusFilter]);
+
+  useEffect(() => {
+    if (page > 1 && !allLoaded) {
+      loadOperations(page, false);
+    }
+  }, [page]);
+
+  useEffect(() => {
+    if (!loaderRef.current || allLoaded) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting && !loadingMore && !allLoaded) setPage((p) => p + 1); },
+      { threshold: 0.1 },
+    );
+    observer.observe(loaderRef.current);
+    return () => observer.disconnect();
+  }, [allLoaded, loadingMore]);
+
+  async function loadOperations(pageNum = 1, reset = false) {
+    if (reset) setLoading(true);
+    else setLoadingMore(true);
     try {
-      const params: any = { page, perPage };
+      const params: any = { page: pageNum, perPage };
       if (statusFilter) params.status = statusFilter;
       const { data } = await api.get('/operations', { params });
-      setOperations(data.data || data || []);
+      const items = data.data || data || [];
+      setOperations((prev) => reset ? items : [...prev, ...items]);
       setTotal(data.meta?.total || data.total || 0);
+      if (items.length < perPage) setAllLoaded(true);
     } catch {
       toast.error('Ocorreu um erro. Tente novamente.');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   }
 
-  const totalPages = Math.ceil(total / perPage);
+  const hasMore = !allLoaded && operations.length < total;
 
   return (
     <div className="space-y-6">
@@ -73,6 +100,7 @@ export default function OperationsPage() {
         </div>
         <button
           onClick={() => router.push('/dashboard/operations/new')}
+          onMouseEnter={() => router.prefetch('/dashboard/operations/new')}
           className="btn-primary flex items-center gap-2"
         >
           <Plus className="h-4 w-4" />
@@ -144,20 +172,14 @@ export default function OperationsPage() {
             ))}
           </div>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Página {page} de {totalPages}
-              </p>
-              <div className="flex gap-2">
-                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="btn-ghost px-3 py-1.5 text-sm disabled:opacity-40">
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="btn-ghost px-3 py-1.5 text-sm disabled:opacity-40">
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
+          {hasMore && (
+            <div ref={loaderRef} className="flex items-center justify-center py-6">
+              {loadingMore && <Loader2 className="h-6 w-6 animate-spin text-brand-600" />}
+              {!loadingMore && <p className="text-sm text-gray-400">Role para carregar mais</p>}
             </div>
+          )}
+          {!hasMore && operations.length > 0 && (
+            <p className="text-center text-sm text-gray-400 py-4">Todas as {total} operações carregadas</p>
           )}
         </>
       )}
