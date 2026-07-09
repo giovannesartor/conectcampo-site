@@ -264,7 +264,7 @@ export default function SettingsPage() {
                 }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white dark:bg-gray-300 transition-transform ${
                     notifications[item.key] ? 'translate-x-4' : 'translate-x-0.5'
                   }`}
                 />

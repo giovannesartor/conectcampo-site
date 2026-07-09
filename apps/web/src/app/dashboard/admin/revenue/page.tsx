@@ -150,7 +150,7 @@ export default function AdminRevenuePage() {
                 return (
                   <div
                     key={i}
-                    className={`p-4 rounded-xl border-2 ${planColors[s.plan] || 'border-gray-200'} bg-white dark:bg-dark-card`}
+                    className={`p-4 rounded-xl border-2 ${planColors[s.plan] || 'border-gray-200 dark:border-gray-700'} bg-white dark:bg-dark-card`}
                   >
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       {planLabels[s.plan] || s.plan}

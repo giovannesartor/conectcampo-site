@@ -90,6 +90,8 @@ export default function QuotesPage() {
         <div className="flex items-center justify-center min-h-[40vh]">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
         </div>
+      ) : !loading && quotes.length === 0 ? (
+        <EmptyState icon={Activity} title="Nenhuma cotação disponível" description="As cotações de commodities e câmbio aparecerão aqui automaticamente." />
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
