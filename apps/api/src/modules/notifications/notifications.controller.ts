@@ -41,7 +41,7 @@ export class NotificationsController {
   stream(@Query('token') token: string): Observable<MessageEvent> {
     let userId: string | null = null;
     try {
-      const payload = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+      const payload = this.jwtService.verify(token);
       userId = payload?.sub ?? null;
     } catch {
       userId = null;

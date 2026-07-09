@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -41,6 +41,8 @@ export default function NewOperationWizard() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     type: '',
     amount: '',
@@ -90,9 +92,8 @@ export default function NewOperationWizard() {
         .join('\n');
 
       await api.post('/operations', {
-        // `form.purpose` guarda a Finalidade (CUSTEIO | INVESTIMENTO | GIRO | MERCADO_CAPITAIS),
-        // que corresponde ao enum OperationType do backend.
-        type: form.purpose,
+        type: form.type,
+        operationType: form.purpose,
         requestedAmount,
         termMonths: parseInt(form.termMonths),
         purpose,
@@ -306,15 +307,37 @@ export default function NewOperationWizard() {
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Você pode enviar documentos agora ou após a criação da operação.
             </p>
-            <div className="rounded-xl border-2 border-dashed border-gray-300 dark:border-dark-border p-8 text-center">
+            <div
+              className="rounded-xl border-2 border-dashed border-gray-300 dark:border-dark-border p-8 text-center cursor-pointer hover:border-brand-400 transition-colors"
+              onClick={() => fileInputRef.current?.click()}
+            >
               <Upload className="h-10 w-10 text-gray-300 mx-auto mb-3" />
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                Arraste arquivos ou clique para selecionar
+                {files.length > 0
+                  ? `${files.length} arquivo${files.length > 1 ? 's' : ''} selecionado${files.length > 1 ? 's' : ''}`
+                  : 'Arraste arquivos ou clique para selecionar'}
               </p>
               <p className="text-xs text-gray-400">
                 PDF, JPG ou PNG · Máx. 10 MB por arquivo
               </p>
-              <button className="btn-ghost mt-4 text-sm">Selecionar arquivos</button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png"
+                className="hidden"
+                onChange={(e) => {
+                  const selected = Array.from(e.target.files || []);
+                  setFiles((prev) => [...prev, ...selected]);
+                }}
+              />
+              <button
+                type="button"
+                className="btn-ghost mt-4 text-sm"
+                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+              >
+                Selecionar arquivos
+              </button>
             </div>
             <div>
               <label className="label mb-1.5 block">Observações adicionais</label>

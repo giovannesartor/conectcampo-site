@@ -34,6 +34,7 @@ export interface PlanetScene {
 export class SatelliteService {
   private readonly logger = new Logger(SatelliteService.name);
   private token: { value: string; expiresAt: number } | null = null;
+  private tokenPromise: Promise<string> | null = null;
 
   private get baseUrl(): string {
     return process.env.SENTINELHUB_BASE_URL || 'https://services.sentinel-hub.com';
@@ -65,6 +66,18 @@ export class SatelliteService {
       return this.token.value;
     }
 
+    if (this.tokenPromise) {
+      return this.tokenPromise;
+    }
+
+    this.tokenPromise = this.fetchToken().finally(() => {
+      this.tokenPromise = null;
+    });
+
+    return this.tokenPromise;
+  }
+
+  private async fetchToken(): Promise<string> {
     const body = new URLSearchParams({
       grant_type: 'client_credentials',
       client_id: process.env.SENTINELHUB_CLIENT_ID as string,

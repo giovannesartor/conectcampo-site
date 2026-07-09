@@ -229,7 +229,7 @@ export function DashboardPro() {
                   <div className="flex items-center gap-2">
                     {(op._count?.proposals ?? 0) > 0 && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 dark:bg-purple-950/30 px-2 py-0.5 text-xs font-semibold text-purple-700 dark:text-purple-300">
-                        <Bell className="h-3 w-3" /> {op._count!.proposals}
+                        <Bell className="h-3 w-3" /> {op._count?.proposals}
                       </span>
                     )}
                     <StatusBadge status={op.status} />

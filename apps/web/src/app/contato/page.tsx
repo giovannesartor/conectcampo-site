@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { PublicLayout } from '@/components/landing/PublicLayout';
-import { Mail, MessageSquare, Building2, Phone } from 'lucide-react';
+import { Mail, MessageSquare, Building2, Phone, Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 const contacts = [
   { icon: Mail, label: 'E-mail geral', value: 'contato@conectcampo.com.br', href: 'mailto:contato@conectcampo.com.br' },
@@ -13,12 +15,24 @@ const contacts = [
 
 export default function ContatoPage() {
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Placeholder — wire to a real email service or API later
-    setSent(true);
+    setSending(true);
+    try {
+      await api.post('/leads', {
+        name: form.name,
+        email: form.email,
+        source: `contato: ${form.subject}`,
+      });
+      setSent(true);
+    } catch {
+      toast.error('Erro ao enviar mensagem. Tente novamente mais tarde.');
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -122,8 +136,9 @@ export default function ContatoPage() {
                     placeholder="Conte o que você precisa..."
                   />
                 </div>
-                <button type="submit" className="btn-primary w-full">
-                  Enviar mensagem
+                <button type="submit" disabled={sending} className="btn-primary w-full">
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> : null}
+                  {sending ? 'Enviando...' : 'Enviar mensagem'}
                 </button>
               </form>
             )}

@@ -74,7 +74,8 @@ export default function ProposalsPage() {
     for (const p of proposals) {
       const opId = p.operation?.id ?? 'sem-operacao';
       if (!map.has(opId)) map.set(opId, { opId, opType: p.operation?.type ?? 'Operação', items: [] });
-      map.get(opId)!.items.push(p);
+      const group = map.get(opId);
+      if (group) group.items.push(p);
     }
     return Array.from(map.values());
   }, [proposals]);

@@ -94,16 +94,20 @@ export class NdviService {
   /** Geometria efetiva: contorno desenhado, ou AOI aproximada por coordenada + área. */
   private resolveGeometry(plot: {
     geometry: unknown;
-    latitude: number | null;
-    longitude: number | null;
-    areaHa: any;
-    farm?: { latitude: number | null; longitude: number | null };
+    latitude: number | null | { toNumber(): number };
+    longitude: number | null | { toNumber(): number };
+    areaHa: number | string | { toNumber(): number };
+    farm?: { latitude: number | null | { toNumber(): number }; longitude: number | null | { toNumber(): number } };
   }): unknown | null {
     if (plot.geometry) return plot.geometry;
-    const lat = plot.latitude ?? plot.farm?.latitude ?? null;
-    const lon = plot.longitude ?? plot.farm?.longitude ?? null;
+    const lat = plot.latitude != null ? Number(plot.latitude) : null;
+    const lon = plot.longitude != null ? Number(plot.longitude) : null;
+    const latFarm = plot.farm?.latitude != null ? Number(plot.farm?.latitude) : null;
+    const lonFarm = plot.farm?.longitude != null ? Number(plot.farm?.longitude) : null;
+    const finalLat = lat ?? latFarm;
+    const finalLon = lon ?? lonFarm;
     const area = Number(plot.areaHa);
-    if (lat != null && lon != null && area > 0) return this.approxPolygon(lat, lon, area);
+    if (finalLat != null && finalLon != null && area > 0) return this.approxPolygon(finalLat, finalLon, area);
     return null;
   }
 

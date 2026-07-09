@@ -62,17 +62,24 @@ export default function WeatherPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     Promise.all([
       api.get(`/weather/forecast?state=${state}`),
       api.get(`/weather/planting-window?crop=${crop}&state=${state}`),
     ])
       .then(([f, p]) => {
+        if (cancelled) return;
         setData(f.data);
         setPlanting(p.data);
       })
-      .catch(() => toast.error('Não foi possível carregar a previsão do tempo.'))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (!cancelled) toast.error('Não foi possível carregar a previsão do tempo.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [state, crop]);
 
   const weekday = (d: string) =>

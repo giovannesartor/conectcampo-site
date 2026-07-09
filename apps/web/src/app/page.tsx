@@ -12,6 +12,18 @@ import { FAQ } from '@/components/landing/FAQ';
 import { CTA } from '@/components/landing/CTA';
 import { Footer } from '@/components/landing/Footer';
 import { RevealInit } from '@/components/landing/RevealInit';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Marketplace de Crédito Agro | ConectCampo',
+  description:
+    'Conectamos produtores rurais a bancos, cooperativas, FIDCs, securitizadoras e FIAGROs. Crédito rural, CPR, carbon credits e marketplace de grãos.',
+  openGraph: {
+    title: 'Marketplace de Crédito Agro | ConectCampo',
+    description:
+      'Conectamos produtores rurais a bancos, cooperativas, FIDCs, securitizadoras e FIAGROs.',
+  },
+};
 
 // JSON-LD (Schema.org) para indexação e rich results
 const jsonLd = {

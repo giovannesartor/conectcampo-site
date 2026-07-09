@@ -146,7 +146,10 @@ export class AuthService {
     // Acesso liberado imediatamente. A cobrança fica disponível desde já e
     // vence/é cobrada ao fim do trial (dia 7), no CPF/CNPJ informado, com o
     // cliente escolhendo o meio de pagamento (PIX, cartão ou boleto).
-    const cpfCnpj = (dto.cpf ?? dto.cnpj)!;
+    const cpfCnpj = dto.cpf ?? dto.cnpj;
+    if (!cpfCnpj) {
+      throw new BadRequestException('CPF ou CNPJ é obrigatório para criar assinatura');
+    }
     const gateway = dto.gateway ?? PaymentGateway.VALSA;
 
     let invoiceUrl: string | null = null;

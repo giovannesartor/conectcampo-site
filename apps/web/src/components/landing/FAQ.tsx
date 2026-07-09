@@ -129,7 +129,7 @@ export function FAQ() {
         >
           {faqs.map((faq, i) => (
             <FAQItem
-              key={i}
+              key={faq.question}
               question={faq.question}
               answer={faq.answer}
               isOpen={openIndex === i}
