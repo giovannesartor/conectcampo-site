@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TrendingUp, TrendingDown, RefreshCw, DollarSign, Bell, Trash2, Sprout } from 'lucide-react';
+import { TrendingUp, TrendingDown, RefreshCw, DollarSign, Bell, Trash2, Sprout, Activity } from 'lucide-react';
+import { EmptyState } from '@/components/dashboard/EmptyState';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import { Modal } from '@/components/dashboard/Modal';

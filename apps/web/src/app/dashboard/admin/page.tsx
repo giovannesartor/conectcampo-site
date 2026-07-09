@@ -24,10 +24,20 @@ import { api } from '@/lib/api';
 import { RevenueAreaChart, OperationsBarChart, UsersPieChart, GMVChart } from '@/components/dashboard/AdminCharts';
 
 interface AdminStats {
-  usersByRole?: { role: string; _count: number }[];
-  operationsByStatus?: { status: string; _count: number }[];
-  recentOperations?: { id: string; type: string; amount: number; status: string; createdAt: string }[];
-  [key: string]: unknown;
+  totalUsers: number;
+  activeUsers: number;
+  totalOperations: number;
+  totalPartners: number;
+  gmv: number;
+  avgTicket: number;
+  totalCommissions: number;
+  usersByRole: { role: string; count: number }[];
+  operationsByStatus: { status: string; count: number }[];
+  subscriptionsByPlan: { plan: string; count: number }[];
+  recentOperations: { id: string; type: string; requestedAmount: number; status: string; createdAt: string; userName: string; userEmail: string }[];
+  recentUsers: { id: string; name: string; email: string; role: string; createdAt: string }[];
+  monthlyRevenue: { month: string; commissions: number; subscriptions: number }[];
+  monthlyGMV: { month: string; volume: number; count: number }[];
 }
 
 export default function AdminDashboardPage() {
