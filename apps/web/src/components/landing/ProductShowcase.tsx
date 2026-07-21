@@ -19,8 +19,8 @@ const MODULES = [
 export function ProductShowcase() {
   return (
     <section className="relative overflow-hidden py-24 bg-white dark:bg-dark-bg">
-      {/* Contour lines subtle */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.04] contour-lines" />
+      {/* Subtle contour lines only — no mesh-glow */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.025] dark:opacity-[0.04] contour-pattern" />
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
         <div className="grid items-center gap-14 lg:grid-cols-2">
           {/* Copy */}
@@ -33,8 +33,8 @@ export function ProductShowcase() {
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600 dark:text-brand-400">
               Painel de controle
             </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white [text-wrap:balance] font-serif">
-              Toda sua operação num só lugar
+            <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white [text-wrap:balance]">
+              Toda sua operação em um só lugar
             </h2>
             <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-lg">
               Dashboards por perfil — produtor, empresa, cooperativa e instituição financeira.
@@ -44,7 +44,7 @@ export function ProductShowcase() {
             <div className="mt-8 space-y-4">
               {FEATURES.map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="flex gap-3">
-                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-palha-100 dark:bg-palha-900/15 text-brand-600 dark:text-brand-400">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-warm-100 dark:bg-warm-900/20 text-brand-600 dark:text-brand-400">
                     <Icon className="h-5 w-5" />
                   </span>
                   <div>
@@ -61,7 +61,7 @@ export function ProductShowcase() {
             </Link>
           </motion.div>
 
-          {/* Device mockup */}
+          {/* Device mockup — cleaner, simplified */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}

@@ -8,7 +8,7 @@ const faqs = [
   {
     question: 'O que é a ConectCampo?',
     answer:
-      'A ConectCampo é um marketplace de crédito rural que conecta produtores rurais e empresas do agronegócio diretamente a bancos, cooperativas, FIDCs, securitizadoras e FIAGROs. Usamos inteligência para fazer o matching ideal entre quem precisa de crédito e quem oferece as melhores condições.',
+      'A ConectCampo é um marketplace de crédito rural que conecta produtores rurais e empresas do agronegócio diretamente a bancos, cooperativas, FIDCs, securitizadoras e FIAGROs. Usamos inteligência artificial para fazer o matching ideal entre quem precisa de crédito e quem oferece as melhores condições.',
   },
   {
     question: 'Quais tipos de crédito estão disponíveis?',
@@ -43,7 +43,7 @@ const faqs = [
   {
     question: 'O que é o monitoramento por satélite (NDVI)?',
     answer:
-      'Cadastrando os talhões da sua fazenda, a plataforma acompanha a saúde da lavoura por imagens de satélite (índice NDVI), mostrando o vigor da vegetação ao longo da safra. Isso ajuda a identificar problemas cedo, compõe o score de risco de safra e fortalece a análise de crédito. Usamos Planet Insights Platform (Sentinel-2), com série temporal por talhão.',
+      'Cadastrando os talhões da sua fazenda, a plataforma acompanha a saúde da lavoura por imagens de satélite (índice NDVI), mostrando o vigor da vegetação ao longo da safra. Isso ajuda a identificar problemas cedo, compõe o score de risco de safra e fortalece a análise de crédito. Usamos a Planet Insights Platform (Sentinel-2), com série temporal por talhão.',
   },
   {
     question: 'Meus dados estão seguros?',
@@ -64,7 +64,7 @@ function FAQItem({
   onToggle: () => void;
 }) {
   return (
-    <div className="border-b border-palha-200 dark:border-dark-border last:border-b-0">
+    <div className="border-b border-gray-200 dark:border-dark-border last:border-b-0">
       <button
         onClick={onToggle}
         className="flex w-full items-center justify-between py-5 text-left transition-colors hover:text-brand-600"
@@ -101,7 +101,7 @@ export function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="py-24 px-6 lg:px-8 bg-palha-50 dark:bg-dark-bg">
+    <section className="py-24 px-6 lg:px-8 bg-white dark:bg-dark-bg">
       <div className="mx-auto max-w-3xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -125,7 +125,7 @@ export function FAQ() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="rounded-2xl border border-palha-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 sm:p-8"
+          className="rounded-2xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 sm:p-8"
         >
           {faqs.map((faq, i) => (
             <FAQItem

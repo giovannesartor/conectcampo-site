@@ -43,6 +43,7 @@ export function HowItWorks() {
         </div>
 
         <div className="mt-16 grid grid-cols-1 md:grid-cols-5 gap-8 relative">
+          {/* Connection line */}
           <div className="hidden md:block absolute top-12 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-brand-500/20 via-brand-500 to-brand-500/20" />
 
           {steps.map((step, index) => (

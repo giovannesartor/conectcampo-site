@@ -19,31 +19,34 @@
 }
 
 @layer components {
+  /* Botão primário premium: gradiente da marca + glow + micro-lift */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-white transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:opacity-50 disabled:cursor-not-allowed;
-    background-color: #006830;
-    box-shadow: 0 1px 4px rgba(0, 40, 24, 0.25);
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:opacity-50 disabled:cursor-not-allowed;
+    background-color: #008c3c;
+    box-shadow: 0 2px 8px rgba(0, 60, 40, 0.25);
   }
   .btn-primary:hover {
-    background-color: #005228;
-    box-shadow: 0 4px 12px rgba(0, 40, 24, 0.35);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 60, 40, 0.35);
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-brand-600 bg-transparent px-6 py-3 text-sm font-semibold text-brand-700 transition-all hover:bg-brand-50 dark:hover:bg-brand-950/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-brand-600 bg-transparent px-6 py-3 text-sm font-semibold text-brand-600 shadow-sm transition-all hover:bg-brand-50 dark:hover:bg-brand-950/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-gray-100 dark:hover:bg-gray-800;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-gray-100 dark:hover:bg-gray-800;
   }
 
+  /* Card premium: borda + sombra em camadas + hover lift */
   .card {
-    @apply rounded-xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card p-4 sm:p-6 transition-colors;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    @apply rounded-2xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card p-4 sm:p-6 transition-all duration-200;
+    box-shadow: 0 1px 2px rgba(0, 40, 24, 0.06), 0 1px 1px rgba(0, 40, 24, 0.04);
   }
   .card-hover:hover {
-    border-color: rgba(0, 104, 48, 0.3);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -12px rgba(0, 40, 24, 0.15);
+    border-color: rgba(0, 128, 60, 0.25);
   }
 
   .input {
@@ -55,8 +58,7 @@
   }
 
   .section-title {
-    @apply text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl;
-    font-family: var(--font-playfair), Georgia, serif;
+    @apply text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl;
   }
 
   .section-subtitle {
@@ -64,11 +66,12 @@
   }
 }
 
-/* Scroll */
+/* Scroll suave */
 html {
   scroll-behavior: smooth;
 }
 
+/* Scrollbar custom */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -81,14 +84,16 @@ html {
   @apply bg-gray-300 dark:bg-dark-border rounded-full;
 }
 
-/* Focus */
+/* ── Premium polish (aplicado a Home + Dashboard) ─────────────────────── */
+
+/* Foco visível consistente com a cor da marca (acessibilidade AA) */
 :where(a, button, [role='button'], input, select, textarea):focus-visible {
-  outline: 2px solid #008c3c;
+  outline: 2px solid #00a03c;
   outline-offset: 2px;
   border-radius: 8px;
 }
 
-/* Scroll-reveal */
+/* Scroll-reveal: elementos entram suavemente ao aparecer na viewport */
 .reveal {
   opacity: 0;
   transform: translateY(24px);
@@ -103,65 +108,38 @@ html {
   .reveal { opacity: 1; transform: none; transition: none; }
 }
 
-/* ─── Texturas agrícolas (CSS puro) ──────────────────────────────────── */
-
-/* Linhas de plantio — sulcos vistos de cima/corte */
-.crop-rows {
-  background-image: repeating-linear-gradient(
-    75deg,
-    transparent,
-    transparent 3px,
-    rgba(0, 104, 48, 0.06) 3px,
-    rgba(0, 104, 48, 0.06) 4px
-  );
+/* Gradiente de texto da marca (verde → dourado) reutilizável */
+.text-gradient-brand {
+  background-image: linear-gradient(120deg, #006830, #008c3c 55%, #b48c3c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-.crop-rows-dark {
-  background-image: repeating-linear-gradient(
-    75deg,
-    transparent,
-    transparent 3px,
-    rgba(0, 104, 48, 0.04) 3px,
-    rgba(0, 104, 48, 0.04) 4px
-  ),
-  repeating-linear-gradient(
-    165deg,
-    transparent,
-    transparent 3px,
-    rgba(0, 104, 48, 0.04) 3px,
-    rgba(0, 104, 48, 0.04) 4px
-  );
+/* Warm gradient — natural, earthy, sem glow artificial */
+.warm-gradient {
+  background:
+    radial-gradient(1100px 600px at 85% -5%, rgba(0, 128, 60, 0.06), transparent 55%),
+    radial-gradient(800px 500px at 5% 30%, rgba(180, 140, 60, 0.05), transparent 50%);
 }
 
-/* Curvas de nível — topografia sutil */
-.contour-lines {
-  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 30 Q25 10 40 25 T60 35 T50 60 Q35 60 25 45' fill='none' stroke='%237A4F2E' stroke-width='0.5' opacity='0.08'/%3E%3Cpath d='M5 50 Q20 30 35 45' fill='none' stroke='%237A4F2E' stroke-width='0.4' opacity='0.06'/%3E%3C/svg%3E");
-  background-size: 80px 80px;
-}
-
-/* Grão de terra — ruído orgânico */
-.soil-grain {
-  position: relative;
-}
-.soil-grain::after {
+/* Grain texture overlay — textura de filme/grão natural */
+.grain-overlay::after {
   content: '';
   position: absolute;
   inset: 0;
-  opacity: 0.03;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
   pointer-events: none;
 }
 
-/* Talhão / grid de cultivo — para cards ou fundos */
-.plot-grid {
-  background-image:
-    linear-gradient(rgba(0, 104, 48, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 104, 48, 0.06) 1px, transparent 1px);
-  background-size: 40px 40px;
+/* Topographic / contour lines — referência sutil a mapas agrícolas */
+.contour-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 Q45 20 30 35 Q15 20 30 5' fill='none' stroke='%23008c3c' stroke-width='0.4' opacity='0.12'/%3E%3Cpath d='M30 20 Q45 30 30 45 Q15 30 30 20' fill='none' stroke='%23008c3c' stroke-width='0.3' opacity='0.08'/%3E%3C/svg%3E");
 }
 
-/* ─── Conteúdo de blog ────────────────────────────────────────────────── */
-
+/* Conteúdo de artigos do blog */
 .blog-content h2 { font-size: 1.35rem; font-weight: 700; margin: 1.75rem 0 0.75rem; color: #003c28; }
 .dark .blog-content h2 { color: #d0f9e4; }
 .blog-content p { margin: 0 0 1rem; }
@@ -170,3 +148,12 @@ html {
 .blog-content ul { list-style: disc; }
 .blog-content strong { color: inherit; font-weight: 700; }
 .blog-content em { color: #6b7280; }
+
+/* Sparkline / mini-barras para KPIs */
+.spark { display: flex; align-items: flex-end; gap: 3px; height: 30px; }
+.spark > i {
+  flex: 1;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, #29ce72, #006830);
+  opacity: 0.85;
+}

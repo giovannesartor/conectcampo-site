@@ -7,52 +7,29 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Paleta derivada das cores reais da logo ConectCampo
         brand: {
           50:  '#f0fdf5',
           100: '#d0f9e4',
           200: '#a0f2c8',
           300: '#5de6a0',
           400: '#29ce72',
-          500: '#00a03c',
-          600: '#008c3c',
+          500: '#00a03c', // verde vivo da logo (C direito, claro)
+          600: '#008c3c', // verde vivo da logo (C direito, core)
           700: '#006830',
-          800: '#003c28',
+          800: '#003c28', // verde escuro da logo (C esquerdo)
           900: '#002818',
           950: '#001410',
         },
         agro: {
           earth: '#8B6914',
           sky:   '#87CEEB',
-          field: '#003c28',
-          gold:  '#b48c3c',
+          field: '#003c28', // verde escuro da logo
+          gold:  '#b48c3c', // dourado do ponto da logo
           sunset:'#d97706',
           wheat: '#F5E6C8',
           soil:  '#A67C52',
           leaf:  '#2D6A3F',
-        },
-        terra: {
-          50:  '#FDF8F0',
-          100: '#F8F0E0',
-          200: '#EDD8B8',
-          300: '#DDB88A',
-          400: '#C4945E',
-          500: '#A07242',
-          600: '#7A4F2E',
-          700: '#5C3820',
-          800: '#3E2416',
-          900: '#2A160E',
-        },
-        palha: {
-          50:  '#FEFDF8',
-          100: '#FCF8ED',
-          200: '#F7EFD6',
-          300: '#F0E2B8',
-          400: '#E6CF93',
-          500: '#D4B06A',
-          600: '#B48C3C',
-          700: '#8B6B2E',
-          800: '#6B5224',
-          900: '#4A3819',
         },
         warm: {
           50:  '#FEFDF8',
@@ -76,12 +53,11 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        serif: ['var(--font-playfair)', 'Georgia', 'serif'],
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'hero-pattern': 'linear-gradient(135deg, #2A160E 0%, #3E2416 55%, #5C3820 100%)',
-        'soil-gradient': 'linear-gradient(180deg, #7A4F2E 0%, #5C3820 40%, #3E2416 100%)',
+        // Gradiente usando os verdes escuros da logo (C esquerdo)
+        'hero-pattern': 'linear-gradient(135deg, #001410 0%, #003c28 55%, #006830 100%)',
       },
     },
   },
