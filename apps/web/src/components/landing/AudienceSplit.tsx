@@ -63,14 +63,17 @@ const LENDER_FEATURES = [
 
 export function AudienceSplit() {
   return (
-    <section className="relative py-12 pb-20 bg-warm-50 dark:bg-dark-bg">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <section className="relative py-20 bg-palha-50 dark:bg-dark-bg">
+      {/* Contour lines subtle */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.04] contour-lines" />
+
+      <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
         <motion.p
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400 mb-8"
+          className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-terra-500 dark:text-terra-400 mb-8"
         >
           Para quem é o ConectCampo?
         </motion.p>
@@ -83,7 +86,7 @@ export function AudienceSplit() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="group relative flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-brand-700 to-brand-900 p-8 lg:p-10 shadow-lg shadow-brand-900/20"
+            className="group relative flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 to-brand-900 p-8 lg:p-10 shadow-lg shadow-brand-900/20"
           >
             <div className="relative flex-1">
               <div className="flex items-start justify-between mb-6">
@@ -95,9 +98,9 @@ export function AudienceSplit() {
                 </span>
               </div>
 
-              <h2 className="text-2xl lg:text-3xl font-extrabold text-white leading-tight">
+              <h2 className="text-2xl lg:text-3xl font-extrabold text-white leading-tight font-serif">
                 Preciso de{' '}
-                <span className="text-agro-gold">crédito</span>{' '}
+                <span className="text-palha-400">crédito</span>{' '}
                 para o meu negócio
               </h2>
               <p className="mt-3 text-brand-200/80 text-sm leading-relaxed">
@@ -109,7 +112,7 @@ export function AudienceSplit() {
                 {BORROWER_FEATURES.map((f) => (
                   <li key={f} className="flex items-center gap-2.5 text-sm text-brand-200/80">
                     <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/10">
-                      <CheckSVG className="h-3 w-3 text-agro-gold" />
+                      <CheckSVG className="h-3 w-3 text-palha-400" />
                     </span>
                     {f}
                   </li>
@@ -142,33 +145,33 @@ export function AudienceSplit() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
-            className="group relative flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-950 p-8 lg:p-10 shadow-lg shadow-black/20"
+            className="group relative flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-terra-800 to-terra-950 p-8 lg:p-10 shadow-lg shadow-black/20"
           >
             <div className="relative flex-1">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15">
                   <BankSVG className="h-8 w-8 text-white" />
                 </div>
-                <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-400 ring-1 ring-emerald-500/25">
+                <span className="rounded-full bg-palha-500/20 px-3 py-1 text-xs font-semibold text-palha-400 ring-1 ring-palha-500/25">
                   Acesso gratuito
                 </span>
               </div>
 
-              <h2 className="text-2xl lg:text-3xl font-extrabold text-white leading-tight">
+              <h2 className="text-2xl lg:text-3xl font-extrabold text-white leading-tight font-serif">
                 Quero{' '}
-                <span className="text-slate-200">oferecer crédito</span>{' '}
+                <span className="text-terra-200">oferecer crédito</span>{' '}
                 ao agronegócio
               </h2>
-              <p className="mt-3 text-slate-400 text-sm leading-relaxed">
+              <p className="mt-3 text-terra-300 text-sm leading-relaxed">
                 Bancos, FIDCs, securitizadoras e FIAGROs. Acesse uma base de tomadores
                 qualificados, verificados e com score detalhado — sem pagar nada.
               </p>
 
               <ul className="mt-6 space-y-3">
                 {LENDER_FEATURES.map((f) => (
-                  <li key={f} className="flex items-center gap-2.5 text-sm text-slate-300">
+                  <li key={f} className="flex items-center gap-2.5 text-sm text-terra-200">
                     <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/10">
-                      <CheckSVG className="h-3 w-3 text-emerald-400" />
+                      <CheckSVG className="h-3 w-3 text-palha-400" />
                     </span>
                     {f}
                   </li>
@@ -177,7 +180,7 @@ export function AudienceSplit() {
 
               <div className="mt-5 flex gap-2 flex-wrap">
                 {['Banco', 'FIDC', 'Securitizadora', 'FIAGRO'].map((tag) => (
-                  <span key={tag} className="rounded-full bg-white/8 px-3 py-1 text-xs text-slate-400 ring-1 ring-white/10">
+                  <span key={tag} className="rounded-full bg-white/6 px-3 py-1 text-xs text-terra-300 ring-1 ring-white/8">
                     {tag}
                   </span>
                 ))}

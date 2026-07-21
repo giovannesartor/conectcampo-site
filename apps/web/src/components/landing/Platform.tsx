@@ -15,7 +15,7 @@ const TOOLS = [
   { icon: ShieldAlert, title: 'Risco de Safra', desc: 'Score climático que cruza clima e NDVI por talhão.' },
   { icon: DollarSign, title: 'Cotações & Preços', desc: 'Soja, milho, boi e dólar (CEPEA/B3) direto no painel.' },
   { icon: Store, title: 'Marketplace de Grãos', desc: 'Compre e venda com pagamento seguro em custódia.', badge: 'Novo', highlight: true },
-  { icon: Wallet, title: 'Fluxo de Caixa', desc: 'Receitas × despesas por safra, com projeção e gráficos.' },
+  { icon: Wallet, title: 'Fluxo de Caixa', desc: 'Receitas x despesas por safra, com projeção e gráficos.' },
   { icon: CalendarClock, title: 'Calendário', desc: 'Parcelas, CPRs e seguros num só lugar, com lembretes.' },
   { icon: Leaf, title: 'Crédito de Carbono', desc: 'Projetos de carbono e acesso ao mercado voluntário.' },
   { icon: ScrollText, title: 'CPR Digital', desc: 'Emita e assine Cédulas de Produto Rural eletronicamente.' },
@@ -25,8 +25,8 @@ const TOOLS = [
 
 export function Platform() {
   return (
-    <section id="plataforma" className="relative overflow-hidden py-24 bg-warm-50 dark:bg-dark-bg">
-      <div className="pointer-events-none absolute inset-0 opacity-[0.02] dark:opacity-[0.04] contour-pattern" />
+    <section id="plataforma" className="relative overflow-hidden py-24 bg-palha-50 dark:bg-dark-bg">
+      <div className="pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.04] contour-lines" />
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
         <div className="text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600 dark:text-brand-400">
@@ -48,17 +48,17 @@ export function Platform() {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: (i % 3) * 0.08 }}
               className={`card card-hover group relative flex gap-4 ${
-                t.highlight ? 'ring-1 ring-brand-500/30 bg-gradient-to-br from-warm-100/60 to-transparent dark:from-warm-900/10' : ''
+                t.highlight ? 'ring-1 ring-brand-500/30 bg-gradient-to-br from-palha-100/60 to-transparent dark:from-palha-900/10' : ''
               }`}
             >
-              <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-warm-100 dark:bg-warm-900/20 text-brand-600 dark:text-brand-400 transition-transform group-hover:-translate-y-0.5">
+              <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-palha-100 dark:bg-palha-900/20 text-brand-600 dark:text-brand-400">
                 <t.icon className="h-5 w-5" />
               </span>
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="font-bold text-gray-900 dark:text-white">{t.title}</h3>
                   {t.badge && (
-                    <span className="rounded-full bg-agro-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-agro-gold">
+                    <span className="rounded-full bg-brand-600/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-600">
                       {t.badge}
                     </span>
                   )}
@@ -69,9 +69,8 @@ export function Platform() {
           ))}
         </div>
 
-        {/* Faixa de destaque — pagamento seguro */}
-        <div className="mt-14 flex flex-col items-center gap-4 rounded-2xl border border-emerald-200 dark:border-emerald-900 bg-gradient-to-r from-emerald-50 to-transparent dark:from-emerald-950/30 p-6 text-center sm:flex-row sm:text-left">
-          <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white">
+        <div className="mt-14 flex flex-col items-center gap-4 rounded-2xl border border-brand-200 dark:border-brand-900 bg-gradient-to-r from-brand-50 to-transparent dark:from-brand-950/30 p-6 text-center sm:flex-row sm:text-left">
+          <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white">
             <ShieldCheck className="h-6 w-6" />
           </span>
           <div className="flex-1">

@@ -38,7 +38,7 @@ const features = [
 
 export function Security() {
   return (
-    <section id="seguranca" className="py-24 bg-warm-50 dark:bg-dark-card/30">
+    <section id="seguranca" className="py-24 bg-palha-50 dark:bg-dark-card/20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="text-center">
           <h2 className="section-title">Segurança de nível bancário</h2>
@@ -57,7 +57,7 @@ export function Security() {
               transition={{ duration: 0.4, delay: index * 0.08 }}
               className="flex gap-4"
             >
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-warm-100 dark:bg-warm-900/10">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-palha-100 dark:bg-palha-900/10">
                 <feature.icon className="h-6 w-6 text-brand-600 dark:text-brand-400" />
               </div>
               <div>

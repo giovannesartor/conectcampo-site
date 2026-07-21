@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Playfair_Display } from 'next/font/google';
 import { Providers } from './providers';
 import { WebVitals } from '@/components/WebVitals';
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', weight: ['700', '800', '900'] });
 
 export const metadata: Metadata = {
   title: {
@@ -98,7 +99,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className={inter.className}>
+      <body className={`${inter.className} ${playfair.variable}`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

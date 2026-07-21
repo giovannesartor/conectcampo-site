@@ -2,13 +2,6 @@
 
 import { Landmark, Users2, Layers, FileText, Sprout, Clock, ShieldCheck, Network } from 'lucide-react';
 
-/**
- * Faixa de confiança + métricas.
- * Observação: os números abaixo são posicionamento/ilustrativos — substituir por
- * métricas reais (GMV intermediado, operações fechadas, parceiros ativos) assim
- * que houver tração.
- */
-
 const PARTNERS = [
   { icon: Landmark, label: 'Bancos' },
   { icon: Users2, label: 'Cooperativas' },
@@ -26,9 +19,8 @@ const METRICS = [
 
 export function SocialProof() {
   return (
-    <section className="border-y border-gray-200 dark:border-dark-border bg-warm-100/50 dark:bg-dark-card/20">
+    <section className="border-y border-palha-200 dark:border-dark-border bg-palha-100/50 dark:bg-dark-card/20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 py-12">
-        {/* Trust strip */}
         <p className="text-center text-xs font-semibold uppercase tracking-[0.12em] text-gray-400 dark:text-gray-500">
           Conectando produtores às principais fontes de crédito do agro
         </p>
@@ -44,14 +36,13 @@ export function SocialProof() {
           ))}
         </div>
 
-        {/* Metrics band */}
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {METRICS.map(({ icon: Icon, value, label }) => (
             <div
               key={label}
               className="reveal card card-hover flex flex-col items-center text-center"
             >
-              <span className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-warm-100 dark:bg-warm-900/20 text-brand-600 dark:text-brand-400">
+              <span className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-palha-100 dark:bg-palha-900/20 text-brand-600 dark:text-brand-400">
                 <Icon className="h-5 w-5" aria-hidden="true" />
               </span>
               <span className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">

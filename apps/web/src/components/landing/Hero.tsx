@@ -13,12 +13,15 @@ const HIGHLIGHTS = [
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pt-28 pb-20 sm:pt-36 bg-warm-50 dark:bg-dark-bg">
-      {/* Grain texture overlay */}
-      <div className="grain-overlay absolute inset-0" />
+    <section className="relative overflow-hidden pt-28 pb-20 sm:pt-36 bg-gradient-to-b from-terra-900 via-terra-800 to-terra-700">
+      {/* Crop rows — sulcos de plantio como fundo */}
+      <div className="pointer-events-none absolute inset-0 crop-rows-dark opacity-30" />
 
-      {/* Contour pattern — subtle agricultural reference */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.05] contour-pattern" />
+      {/* Soil grain texture */}
+      <div className="soil-grain absolute inset-0" />
+
+      {/* Gradiente de luz vindo do topo */}
+      <div className="pointer-events-none absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-terra-50/8 to-transparent" />
 
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
@@ -28,9 +31,9 @@ export function Hero() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-dark-card border border-warm-200 dark:border-dark-border px-4 py-1.5 text-sm font-medium text-brand-700 dark:text-brand-400 shadow-sm"
+              className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 px-4 py-1.5 text-sm font-medium text-white/90"
             >
-              <Zap className="h-3.5 w-3.5 text-agro-gold" />
+              <Zap className="h-3.5 w-3.5 text-palha-400" />
               Pré-análise em 48h · 7 dias grátis
             </motion.div>
 
@@ -38,19 +41,17 @@ export function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.08 }}
-              className="mt-6 text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl [text-wrap:balance]"
+              className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl [text-wrap:balance] font-serif"
             >
-              Crédito rural sem{' '}
-              <span className="text-brand-600 dark:text-brand-400">burocracia</span>
-              ,{' '}
-              <span className="text-agro-gold">sem balcão</span>.
+              O crédito que o campo{' '}
+              <span className="text-palha-400">merece</span>.
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.16 }}
-              className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400 sm:text-xl max-w-xl mx-auto lg:mx-0 [text-wrap:pretty]"
+              className="mt-6 text-lg leading-8 text-terra-200 sm:text-xl max-w-xl mx-auto lg:mx-0 [text-wrap:pretty]"
             >
               Conectamos sua operação a bancos, cooperativas, FIDCs, securitizadoras e ao
               mercado de capitais — com gestão da fazenda, satélite, cotações e marketplace na mesma plataforma.
@@ -62,13 +63,13 @@ export function Hero() {
               transition={{ duration: 0.5, delay: 0.24 }}
               className="mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3"
             >
-              <Link href="/register" className="btn-primary text-base px-7 py-3.5">
+              <Link href="/register" className="inline-flex items-center justify-center gap-2 rounded-lg bg-palha-500 px-7 py-3.5 text-base font-semibold text-terra-900 transition-all hover:bg-palha-400 shadow-md shadow-black/20">
                 Simular meu crédito
                 <ArrowRight className="h-5 w-5" />
               </Link>
               <Link
                 href="/register?plan=CORPORATE"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card px-7 py-3.5 text-base font-semibold text-gray-700 dark:text-gray-200 transition-all hover:border-brand-400 hover:-translate-y-0.5 shadow-sm"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/5 backdrop-blur-sm px-7 py-3.5 text-base font-semibold text-white transition-all hover:bg-white/10 hover:border-white/30"
               >
                 Sou instituição financeira
               </Link>
@@ -78,14 +79,14 @@ export function Hero() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.34 }}
-              className="mt-5 flex items-center justify-center lg:justify-start gap-2 text-xs text-gray-500 dark:text-gray-400"
+              className="mt-5 flex items-center justify-center lg:justify-start gap-2 text-xs text-terra-200"
             >
-              <span className="inline-flex items-center gap-0.5 text-agro-gold">
+              <span className="inline-flex items-center gap-0.5 text-palha-500">
                 {[0, 1, 2, 3, 4].map((i) => (
                   <Star key={i} className="h-3.5 w-3.5 fill-current" />
                 ))}
               </span>
-              Comece com <span className="font-semibold text-brand-600 dark:text-brand-400">7 dias grátis</span> · PIX, cartão ou boleto
+              Comece com <span className="font-semibold text-palha-400">7 dias grátis</span> · PIX, cartão ou boleto
             </motion.div>
 
             {/* Mini highlights */}
@@ -98,11 +99,11 @@ export function Hero() {
               {HIGHLIGHTS.map(({ icon: Icon, value, label }) => (
                 <div
                   key={label}
-                  className="rounded-2xl border border-warm-200 dark:border-dark-border bg-white dark:bg-dark-card px-3 py-4 text-center shadow-sm"
+                  className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-3 py-4 text-center"
                 >
-                  <Icon className="h-5 w-5 mx-auto text-brand-600 dark:text-brand-400" />
-                  <p className="mt-2 text-xl font-extrabold text-gray-900 dark:text-white leading-none">{value}</p>
-                  <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400 leading-tight">{label}</p>
+                  <Icon className="h-5 w-5 mx-auto text-palha-400" />
+                  <p className="mt-2 text-xl font-extrabold text-white leading-none">{value}</p>
+                  <p className="mt-1 text-[11px] text-terra-200 leading-tight">{label}</p>
                 </div>
               ))}
             </motion.div>
