@@ -6,13 +6,8 @@ import { ArrowRight } from 'lucide-react';
 
 export function CTA() {
   return (
-    <section className="relative overflow-hidden py-24 bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700">
-      {/* depth: radial glow + dot grid */}
-      <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(600px 300px at 50% -10%, rgba(41,206,114,0.35), transparent 60%)' }} />
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.06]"
-        style={{ backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '28px 28px' }}
-      />
+    <section className="relative overflow-hidden py-24 bg-gradient-to-br from-brand-800 to-brand-950">
+      <div className="grain-overlay absolute inset-0" />
       <div className="relative mx-auto max-w-4xl px-6 lg:px-8 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

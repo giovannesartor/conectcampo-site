@@ -81,7 +81,7 @@ const plans = [
 
 export function Plans() {
   return (
-    <section id="planos" className="py-24">
+    <section id="planos" className="py-24 bg-warm-50 dark:bg-dark-bg">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="text-center">
           <h2 className="section-title">Planos que cabem na sua operação</h2>
@@ -124,7 +124,7 @@ export function Plans() {
                 )}
               </div>
               {plan.period && (
-                <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-brand-50 dark:bg-brand-950/20 px-2.5 py-0.5 text-xs font-semibold text-brand-700 dark:text-brand-300">
+                <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-warm-100 dark:bg-warm-900/20 px-2.5 py-0.5 text-xs font-semibold text-brand-700 dark:text-brand-300">
                   7 dias grátis
                 </p>
               )}

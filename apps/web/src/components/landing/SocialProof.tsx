@@ -26,7 +26,7 @@ const METRICS = [
 
 export function SocialProof() {
   return (
-    <section className="border-y border-gray-200 dark:border-dark-border bg-gray-50/60 dark:bg-dark-card/40">
+    <section className="border-y border-gray-200 dark:border-dark-border bg-warm-100/50 dark:bg-dark-card/20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 py-12">
         {/* Trust strip */}
         <p className="text-center text-xs font-semibold uppercase tracking-[0.12em] text-gray-400 dark:text-gray-500">
@@ -51,7 +51,7 @@ export function SocialProof() {
               key={label}
               className="reveal card card-hover flex flex-col items-center text-center"
             >
-              <span className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400">
+              <span className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-warm-100 dark:bg-warm-900/20 text-brand-600 dark:text-brand-400">
                 <Icon className="h-5 w-5" aria-hidden="true" />
               </span>
               <span className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">

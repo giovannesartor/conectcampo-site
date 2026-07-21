@@ -25,8 +25,8 @@ const TOOLS = [
 
 export function Platform() {
   return (
-    <section id="plataforma" className="relative overflow-hidden py-24">
-      <div className="pointer-events-none absolute inset-0 mesh-glow opacity-60" />
+    <section id="plataforma" className="relative overflow-hidden py-24 bg-warm-50 dark:bg-dark-bg">
+      <div className="pointer-events-none absolute inset-0 opacity-[0.02] dark:opacity-[0.04] contour-pattern" />
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
         <div className="text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600 dark:text-brand-400">
@@ -48,10 +48,10 @@ export function Platform() {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: (i % 3) * 0.08 }}
               className={`card card-hover group relative flex gap-4 ${
-                t.highlight ? 'ring-1 ring-brand-500/30 bg-gradient-to-br from-brand-50/60 to-transparent dark:from-brand-950/20' : ''
+                t.highlight ? 'ring-1 ring-brand-500/30 bg-gradient-to-br from-warm-100/60 to-transparent dark:from-warm-900/10' : ''
               }`}
             >
-              <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 transition-transform group-hover:-translate-y-0.5">
+              <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-warm-100 dark:bg-warm-900/20 text-brand-600 dark:text-brand-400 transition-transform group-hover:-translate-y-0.5">
                 <t.icon className="h-5 w-5" />
               </span>
               <div>

@@ -27,6 +27,21 @@ module.exports = {
           field: '#003c28', // verde escuro da logo
           gold:  '#b48c3c', // dourado do ponto da logo
           sunset:'#d97706',
+          wheat: '#F5E6C8',
+          soil:  '#A67C52',
+          leaf:  '#2D6A3F',
+        },
+        warm: {
+          50:  '#FEFDF8',
+          100: '#FCF8ED',
+          200: '#F7EFD6',
+          300: '#F0E2B8',
+          400: '#E6CF93',
+          500: '#D4B06A',
+          600: '#B48C3C',
+          700: '#8B6B2E',
+          800: '#6B5224',
+          900: '#4A3819',
         },
         dark: {
           bg:     '#0a0f0c',

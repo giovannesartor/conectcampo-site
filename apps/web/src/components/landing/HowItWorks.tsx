@@ -33,7 +33,7 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section id="como-funciona" className="py-24 bg-gray-50 dark:bg-dark-card/30">
+    <section id="como-funciona" className="py-24 bg-white dark:bg-dark-bg">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="text-center">
           <h2 className="section-title">Como funciona</h2>

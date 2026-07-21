@@ -60,7 +60,7 @@ const segments = [
 
 export function Segments() {
   return (
-    <section id="segmentacao" className="py-24">
+    <section id="segmentacao" className="py-24 bg-warm-50 dark:bg-dark-card/20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="text-center">
           <h2 className="section-title">Para cada tamanho, a solução certa</h2>
@@ -85,7 +85,7 @@ export function Segments() {
               </div>
 
               {/* Divider that creates clear separation from icon */}
-              <div className="mt-5 mb-4 border-t border-gray-100 dark:border-dark-border" />
+              <div className="mt-5 mb-4 border-t border-warm-200 dark:border-dark-border" />
 
               {/* Tier badge + title + range */}
               <div>
