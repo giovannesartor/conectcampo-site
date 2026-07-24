@@ -4,9 +4,9 @@ import Link from 'next/link';
 
 const escrowSteps = [
   { icon: ShoppingCart, title: '1. Comprador paga', desc: 'O pagamento é feito via ValsaPay (PIX, cartão ou boleto), sem taxas de gateway.' },
-  { icon: ShieldCheck, title: '2. ConectCampo retém', desc: 'O valor fica em custódia (escrow) — o vendedor ainda não recebe.' },
+  { icon: ShieldCheck, title: '2. Valor fica em custódia', desc: 'O valor é mantido em conta de custódia (escrow) pela instituição de pagamento parceira — o vendedor ainda não recebe.' },
   { icon: Truck, title: '3. Vendedor entrega', desc: 'O vendedor envia o produto e marca o pedido como enviado.' },
-  { icon: HandCoins, title: '4. Comprador confirma', desc: 'Ao confirmar o recebimento, o valor é liberado ao vendedor. A taxa é de 1% (0,5% de cada parte).' },
+  { icon: HandCoins, title: '4. Comprador confirma', desc: 'Ao confirmar o recebimento, o valor é liberado ao vendedor pela instituição de pagamento. A taxa da plataforma é de 1% (0,5% de cada parte).' },
 ];
 
 const steps = [
@@ -39,7 +39,7 @@ const steps = [
     icon: TrendingUp,
     title: 'Feche a operação e cresça',
     description:
-      'Compare as propostas, negocie condições e formalize a operação direto pela plataforma. Tudo documentado, rastreável e em conformidade com regulamentos do Banco Central.',
+      'Compare as propostas, negocie condições e formalize a operação direto pela plataforma. Tudo documentado e rastreável. A operação de crédito é concedida e formalizada pela instituição financeira parceira, responsável pela observância das normas do Banco Central.',
     items: ['Comparação lado a lado das propostas', 'Assinatura digital integrada', 'Gestão pós-operação no dashboard'],
   },
 ];

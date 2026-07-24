@@ -2,10 +2,10 @@ import { PublicLayout } from '@/components/landing/PublicLayout';
 import { ShieldCheck, Scale, Building2, FileCheck } from 'lucide-react';
 
 const frameworks = [
-  { icon: Scale, title: 'Banco Central do Brasil', description: 'Operamos em conformidade com as normativas do BCB para marketplaces de crédito, incluindo a Resolução CMN 4.656/2018 (SCDs e SEPs).' },
-  { icon: ShieldCheck, title: 'LGPD & ANPD', description: 'Processos de governança de dados alinhados à Lei 13.709/2018. DPO designado, registro de operações de tratamento e avaliação de impacto (DPIA).' },
-  { icon: Building2, title: 'CVM & Mercado de Capitais', description: 'Estruturação de CRAs, FIAGROs e outros instrumentos seguindo as instruções da CVM vigentes.' },
-  { icon: FileCheck, title: 'COAF / AML / KYC', description: 'Políticas de prevenção à lavagem de dinheiro (PLD-FT) compliant com as normativas do COAF e recomendações do GAFI.' },
+  { icon: Scale, title: 'Banco Central do Brasil', description: 'A ConectCampo atua como plataforma de tecnologia que conecta produtores a instituições financeiras. As operações de crédito são concedidas e formalizadas pelas instituições parceiras, que respondem por suas próprias autorizações e pela observância das normas do BCB, incluindo a Resolução CMN 4.656/2018 (SCDs e SEPs).' },
+  { icon: ShieldCheck, title: 'LGPD & ANPD', description: 'Processos de governança de dados alinhados à Lei 13.709/2018, sob responsabilidade da AG Digital como controladora. DPO designado e registro das operações de tratamento.' },
+  { icon: Building2, title: 'CVM & Mercado de Capitais', description: 'Instrumentos como CRAs e FIAGROs são estruturados e distribuídos por instituições parceiras habilitadas, observando as instruções da CVM vigentes. A ConectCampo não emite nem distribui valores mobiliários.' },
+  { icon: FileCheck, title: 'COAF / AML / KYC', description: 'Adotamos políticas internas de prevenção à lavagem de dinheiro (PLD-FT), com processos de KYC e verificação alinhados às boas práticas do setor e às recomendações do GAFI.' },
 ];
 
 export default function CompliancePage() {
@@ -17,11 +17,12 @@ export default function CompliancePage() {
             Compliance
           </span>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
-            Conformidade regulatória é nossa base
+            Compliance é parte do nosso design
           </h1>
           <p className="mt-6 text-lg text-gray-600 dark:text-gray-400">
-            Operamos com rigorosa conformidade às regulamentações do setor financeiro e agronegócio
-            brasileiro. Transparência e segurança jurídica em cada operação.
+            A plataforma foi desenhada para observar as regulamentações do setor financeiro e do
+            agronegócio brasileiro, sempre operando em conjunto com instituições parceiras
+            reguladas. Transparência e segurança jurídica em cada operação.
           </p>
         </div>
       </section>

@@ -15,8 +15,9 @@ export default function TermosDeUsoPage() {
 
           <h2>1. Aceitação dos Termos</h2>
           <p>
-            Ao acessar ou utilizar a plataforma ConectCampo ("Plataforma"), operada pela
-            ConectCampo Tecnologia Ltda. ("Empresa"), você concorda em cumprir e estar vinculado a
+            Ao acessar ou utilizar a plataforma ConectCampo ("Plataforma"), um produto operado pela
+            AG Participações Societárias Ltda. — AG Digital, inscrita no CNPJ sob o nº
+            54.079.299/0001-40 ("Empresa"), você concorda em cumprir e estar vinculado a
             estes Termos de Uso ("Termos"). Se você não concordar com qualquer parte destes Termos,
             não poderá utilizar a Plataforma.
           </p>

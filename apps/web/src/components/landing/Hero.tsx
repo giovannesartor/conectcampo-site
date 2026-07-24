@@ -7,7 +7,7 @@ import { CreditSimulator } from './CreditSimulator';
 
 const HIGHLIGHTS = [
   { icon: Clock, value: '48h', label: 'Pré-análise' },
-  { icon: Network, value: '+50', label: 'Financiadores' },
+  { icon: Network, value: 'Rede', label: 'de financiadores' },
   { icon: ShieldCheck, value: '100%', label: 'Digital' },
 ];
 

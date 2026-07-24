@@ -19,8 +19,8 @@ const PARTNERS = [
 
 const METRICS = [
   { icon: Clock, value: '48h', label: 'Pré-análise média' },
-  { icon: Network, value: '+50', label: 'instituições parceiras' },
-  { icon: Layers, value: 'R$500M+', label: 'em operações habilitadas' },
+  { icon: Network, value: '5+', label: 'tipos de fontes de crédito' },
+  { icon: Layers, value: 'CPR', label: 'emissão e assinatura digital' },
   { icon: ShieldCheck, value: '100%', label: 'digital, da CPR ao crédito' },
 ];
 

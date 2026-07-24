@@ -15,8 +15,9 @@ export default function PrivacidadePage() {
 
           <h2>1. Quem somos</h2>
           <p>
-            A ConectCampo Tecnologia Ltda. é controladora dos dados pessoais coletados por meio da
-            Plataforma ConectCampo. CNPJ: [em constituição]. Contato do encarregado (DPO):
+            A AG Participações Societárias Ltda. — AG Digital, inscrita no CNPJ sob o nº
+            54.079.299/0001-40, é a controladora dos dados pessoais coletados por meio da
+            Plataforma ConectCampo, um produto da AG Digital. Contato do encarregado (DPO):
             privacidade@conectcampo.com.br
           </p>
 

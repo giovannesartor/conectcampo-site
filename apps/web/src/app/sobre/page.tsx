@@ -22,16 +22,16 @@ const timeline = [
   { year: '2023', title: 'Fundação', description: 'ConectCampo é fundada com a missão de simplificar o crédito rural no Brasil.' },
   { year: '2024 Q1', title: 'MVP e primeiros parceiros', description: 'Lançamento da plataforma beta com 5 instituições financeiras parceiras.' },
   { year: '2024 Q3', title: 'Score ConectCampo', description: 'Lançamento do scoring proprietário com IA para avaliação de risco agro.' },
-  { year: '2025 Q1', title: 'R$ 100M em operações', description: 'Marca de R$ 100 milhões em crédito transacionado pela plataforma.' },
-  { year: '2025 Q3', title: '50+ parceiros', description: 'Expansão para mais de 50 instituições financeiras na rede de parceiros.' },
-  { year: '2026', title: 'Expansão nacional', description: 'Cobertura em todos os estados do Brasil com foco no Matopiba e Centro-Oeste.' },
+  { year: '2025 Q1', title: 'Marketplace e CPR digital', description: 'Lançamento do marketplace de grãos com pagamento em custódia e emissão digital de CPR.' },
+  { year: '2025 Q3', title: 'Ampliação da rede de parceiros', description: 'Expansão da rede de instituições financeiras: bancos, cooperativas, FIDCs, securitizadoras e FIAGROs.' },
+  { year: '2026', title: 'Expansão nacional', description: 'Foco na expansão de cobertura pelo Brasil, com prioridade no Matopiba e no Centro-Oeste.' },
 ];
 
 const numbers = [
-  { value: 'R$ 500M+', label: 'Volume transacionado' },
-  { value: '50+', label: 'Parceiros financeiros' },
-  { value: '2.500+', label: 'Produtores atendidos' },
-  { value: '24 estados', label: 'Cobertura nacional' },
+  { value: '48h', label: 'Pré-análise média' },
+  { value: '100%', label: 'Processo digital, da CPR ao crédito' },
+  { value: 'CPR', label: 'Emissão e assinatura digital' },
+  { value: '5+', label: 'Tipos de fontes de crédito conectadas' },
 ];
 
 export default function SobrePage() {
