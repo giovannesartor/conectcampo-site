@@ -9,8 +9,9 @@ export function generateStaticParams() {
   return AGRO_CITIES.map((c) => ({ cidade: c.slug }));
 }
 
-export function generateMetadata({ params }: { params: { cidade: string } }): Metadata {
-  const c = getCity(params.cidade);
+export async function generateMetadata({ params }: { params: Promise<{ cidade: string }> }): Promise<Metadata> {
+  const { cidade } = await params;
+  const c = getCity(cidade);
   if (!c) return { title: 'Crédito Rural' };
   const title = `Crédito Rural em ${c.name} (${c.uf}) — ConectCampo`;
   const description = `Organize uma solicitação de crédito rural em ${c.name}/${c.uf}, polo de ${c.destaque}, e apresente a operação a diferentes perfis de financiadores.`;
@@ -18,8 +19,9 @@ export function generateMetadata({ params }: { params: { cidade: string } }): Me
   return { title, description, alternates: { canonical: url }, openGraph: { title, description, url } };
 }
 
-export default function CidadePage({ params }: { params: { cidade: string } }) {
-  const c = getCity(params.cidade);
+export default async function CidadePage({ params }: { params: Promise<{ cidade: string }> }) {
+  const { cidade } = await params;
+  const c = getCity(cidade);
   if (!c) notFound();
 
   const jsonLd = {
