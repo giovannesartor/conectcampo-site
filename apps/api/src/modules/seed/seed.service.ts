@@ -11,8 +11,21 @@ export class SeedService implements OnApplicationBootstrap {
 
   async onApplicationBootstrap() {
     try {
-      await this.seedAdminUser();
-      await this.seedTestUsers();
+      const isProduction = process.env.NODE_ENV === 'production';
+      const seedAdmins = process.env.SEED_ADMIN_USERS === 'true';
+      const seedTestUsers = process.env.SEED_TEST_USERS === 'true';
+
+      if (!isProduction || seedAdmins) {
+        await this.seedAdminUser();
+      } else {
+        this.logger.log('Production admin seed disabled.');
+      }
+
+      if (!isProduction || seedTestUsers) {
+        await this.seedTestUsers();
+      } else {
+        this.logger.log('Production test-user seed disabled.');
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       this.logger.error(`Seed failed (non-fatal): ${msg}`);
@@ -45,7 +58,7 @@ export class SeedService implements OnApplicationBootstrap {
       },
     });
 
-    this.logger.log(`Admin user ready: ${user.email} (${user.role})`);
+    this.logger.log(`Primary admin user ready (${user.role}).`);
 
     // Second admin
     const jeanPassword = process.env.JEAN_ADMIN_PASSWORD;
@@ -63,7 +76,7 @@ export class SeedService implements OnApplicationBootstrap {
           consentLgpdAt: new Date(),
         },
       });
-      this.logger.log(`Admin user ready: ${secondAdmin.email} (${secondAdmin.role})`);
+      this.logger.log(`Secondary admin user ready (${secondAdmin.role}).`);
     }
   }
 
@@ -115,9 +128,7 @@ export class SeedService implements OnApplicationBootstrap {
       });
     }
 
-    this.logger.log(
-      `Test user ready: ${investidor.email} (${investidor.role}) — oferece crédito`,
-    );
+    this.logger.log(`Test financial user ready (${investidor.role}).`);
 
     // ── 2. Empresa (busca crédito) — PRODUCER ───────────────────────────────
     const empresaEmail = 'empresa@teste.conectcampo.com';
@@ -153,8 +164,6 @@ export class SeedService implements OnApplicationBootstrap {
       });
     }
 
-    this.logger.log(
-      `Test user ready: ${empresa.email} (${empresa.role}) — busca crédito`,
-    );
+    this.logger.log(`Test producer user ready (${empresa.role}).`);
   }
 }
