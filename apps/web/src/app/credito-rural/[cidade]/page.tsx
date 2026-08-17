@@ -13,10 +13,15 @@ export async function generateMetadata({ params }: { params: Promise<{ cidade: s
   const { cidade } = await params;
   const c = getCity(cidade);
   if (!c) return { title: 'Crédito Rural' };
-  const title = `Crédito Rural em ${c.name} (${c.uf}) — ConectCampo`;
+  const title = `Crédito Rural em ${c.name} (${c.uf})`;
   const description = `Organize uma solicitação de crédito rural em ${c.name}/${c.uf}, polo de ${c.destaque}, e apresente a operação a diferentes perfis de financiadores.`;
   const url = `https://conectcampo.digital/credito-rural/${c.slug}`;
-  return { title, description, alternates: { canonical: url }, openGraph: { title, description, url } };
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title: `${title} — ConectCampo`, description, url },
+  };
 }
 
 export default async function CidadePage({ params }: { params: Promise<{ cidade: string }> }) {
