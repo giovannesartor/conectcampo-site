@@ -79,8 +79,8 @@ export function AudienceSplit() {
 
           {/* ── Card: Borrower ── */}
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
             className="group relative flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-brand-700 to-brand-900 p-8 lg:p-10 shadow-lg shadow-brand-900/20"
@@ -138,8 +138,8 @@ export function AudienceSplit() {
 
           {/* ── Card: Lender ── */}
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
             className="group relative flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-950 p-8 lg:p-10 shadow-lg shadow-black/20"
