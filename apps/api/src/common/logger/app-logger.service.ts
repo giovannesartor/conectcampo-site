@@ -1,4 +1,5 @@
-import { ConsoleLogger, Injectable, LogLevel } from '@nestjs/common';
+import { ConsoleLogger, Injectable } from '@nestjs/common';
+import { redactSensitiveData, redactString } from '../logging/redact';
 
 /**
  * AppLogger — structured JSON in production (Railway), pretty colored output in dev.
@@ -37,7 +38,10 @@ export class AppLogger extends ConsoleLogger {
   }
 
   private emit(level: string, message: any, context?: string, trace?: string) {
-    const msg = typeof message === 'object' ? JSON.stringify(message) : String(message);
+    const msg = typeof message === 'object'
+      ? JSON.stringify(redactSensitiveData(message))
+      : redactString(String(message));
+    const safeTrace = trace ? redactString(trace) : undefined;
 
     if (this.isProduction) {
       // ── Structured JSON for Railway / log aggregators ──────────────────────
@@ -47,7 +51,7 @@ export class AppLogger extends ConsoleLogger {
         context: context ?? this.context ?? 'App',
         message: msg,
       };
-      if (trace) entry.trace = trace;
+      if (safeTrace) entry.trace = safeTrace;
       process.stdout.write(JSON.stringify(entry) + '\n');
     } else {
       // ── Pretty colored output for local dev ────────────────────────────────
@@ -67,7 +71,7 @@ export class AppLogger extends ConsoleLogger {
       const ts    = new Date().toISOString().slice(11, 23); // HH:MM:SS.mmm
 
       process.stdout.write(
-        `${DIM}${ts}${RESET} ${color}${BOLD}[${level.toUpperCase()}]${RESET} ${BOLD}[${ctx}]${RESET} ${msg}${trace ? `\n${DIM}${trace}${RESET}` : ''}\n`,
+        `${DIM}${ts}${RESET} ${color}${BOLD}[${level.toUpperCase()}]${RESET} ${BOLD}[${ctx}]${RESET} ${msg}${safeTrace ? `\n${DIM}${safeTrace}${RESET}` : ''}\n`,
       );
     }
   }

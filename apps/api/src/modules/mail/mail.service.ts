@@ -53,6 +53,7 @@ export class MailService {
       this.logger.log(`Email sent to ${to}: ${subject}`);
     } catch (err) {
       this.logger.error(`Failed to send email to ${to}: ${(err as Error).message}`);
+      throw err;
     }
   }
 
@@ -78,6 +79,7 @@ export class MailService {
       this.logger.log(`Email sent via Resend to ${to}: ${subject}`);
     } catch (err) {
       this.logger.error(`Resend falhou para ${to}: ${(err as Error).message}`);
+      throw err;
     }
   }
 

@@ -488,7 +488,7 @@ export class QuantovaleService {
         const raw = await res.text();
         const ct = res.headers.get('content-type') ?? '';
 
-        this.logger.log(`Token response [${res.status}] ct=${ct} body=${raw.substring(0, 500)}`);
+        this.logger.debug(`Token endpoint response [${res.status}] ct=${ct || 'unknown'} bytes=${raw.length}`);
 
         if (raw.trimStart().startsWith('<!') || raw.trimStart().startsWith('<html')) {
           lastError = `HTML from ${this.tokenUrl} (${attempt.ct})`;

@@ -54,7 +54,22 @@ export class AuthService {
     return this.adminEmails.includes(email.toLowerCase()) ? UserRole.ADMIN : requested;
   }
 
+  private roleForPlan(plan: SubscriptionPlan): UserRole {
+    const roles: Record<SubscriptionPlan, UserRole> = {
+      [SubscriptionPlan.START]: UserRole.PRODUCER,
+      [SubscriptionPlan.PRO]: UserRole.COMPANY,
+      [SubscriptionPlan.COOPERATIVE]: UserRole.COMPANY,
+      [SubscriptionPlan.CORPORATE]: UserRole.FINANCIAL_INSTITUTION,
+    };
+    return roles[plan];
+  }
+
   async register(dto: RegisterDto, meta: AuthAuditMeta = {}) {
+    const planRole = this.roleForPlan(dto.plan);
+    if (dto.role !== planRole) {
+      throw new BadRequestException('Perfil incompatível com o plano selecionado');
+    }
+
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -77,7 +92,9 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
-    const role = this.resolveRole(dto.email, dto.role);
+    // O perfil público é sempre derivado do plano no servidor. O único caminho
+    // de elevação para ADMIN é a allowlist ADMIN_EMAILS do ambiente.
+    const role = this.resolveRole(dto.email, planRole);
     const isFree = dto.plan === SubscriptionPlan.CORPORATE;
 
     // Todos os planos pagos ganham 7 dias grátis com acesso imediato; o plano
@@ -120,7 +137,7 @@ export class AuthService {
       newValue: { email: user.email, name: user.name, role: user.role },
       ipAddress: meta.ip,
       userAgent: meta.userAgent,
-    });
+    }).catch(() => undefined);
 
     // ── Plano gratuito (Instituição Financeira) ──────────────────────────────
     if (isFree) {
@@ -254,7 +271,7 @@ export class AuthService {
         entityId: user.id,
         ipAddress: meta.ip,
         userAgent: meta.userAgent,
-      });
+      }).catch(() => undefined);
 
       return {
         user: {
@@ -298,7 +315,7 @@ export class AuthService {
         entity: 'auth',
         entityId: stored.userId,
         newValue: { event: 'refresh_token_reuse_detected' },
-      });
+      }).catch(() => undefined);
       throw new UnauthorizedException('Sessão expirada por segurança. Faça login novamente.');
     }
 
@@ -335,7 +352,7 @@ export class AuthService {
       entityId: userId,
       ipAddress: meta.ip,
       userAgent: meta.userAgent,
-    });
+    }).catch(() => undefined);
 
     return { message: 'Logout realizado com sucesso' };
   }
@@ -355,6 +372,10 @@ export class AuthService {
     const token = uuidv4();
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
 
+    await this.prisma.passwordResetToken.updateMany({
+      where: { userId: user.id, usedAt: null },
+      data: { usedAt: new Date() },
+    });
     await this.prisma.passwordResetToken.create({
       data: { token, userId: user.id, expiresAt },
     });
@@ -372,7 +393,11 @@ export class AuthService {
       include: { user: true },
     });
 
-    if (!record || record.usedAt || record.expiresAt < new Date()) {
+    if (!record) {
+      throw new BadRequestException('Token inválido ou expirado');
+    }
+
+    if (record.usedAt || record.expiresAt < new Date()) {
       throw new BadRequestException('Token inválido ou expirado');
     }
 
@@ -405,7 +430,7 @@ export class AuthService {
       entityId: record.userId,
       ipAddress: meta.ip,
       userAgent: meta.userAgent,
-    });
+    }).catch(() => undefined);
 
     return { message: 'Senha redefinida com sucesso. Faça login com a nova senha.' };
   }
@@ -418,7 +443,20 @@ export class AuthService {
       include: { user: true },
     });
 
-    if (!record || record.usedAt || record.expiresAt < new Date()) {
+    if (!record) {
+      throw new BadRequestException('Token inválido ou expirado');
+    }
+
+    // Links de e-mail podem ser pré-abertos por clientes e filtros de segurança.
+    // Se a conta já foi confirmada, repetir a URL deve continuar sendo sucesso.
+    if (record.user.emailVerified) {
+      return {
+        message: 'Este e-mail já estava confirmado. Você já pode acessar a plataforma.',
+        alreadyVerified: true,
+      };
+    }
+
+    if (record.usedAt || record.expiresAt < new Date()) {
       throw new BadRequestException('Token inválido ou expirado');
     }
 
@@ -442,9 +480,25 @@ export class AuthService {
       entityId: record.userId,
       ipAddress: meta.ip,
       userAgent: meta.userAgent,
+    }).catch(() => undefined);
+
+    return { message: 'E-mail confirmado com sucesso!', alreadyVerified: false };
+  }
+
+  async resendVerificationByToken(token: string) {
+    const record = await this.prisma.emailVerificationToken.findUnique({
+      where: { token },
+      include: { user: true },
     });
 
-    return { message: 'E-mail confirmado com sucesso!' };
+    if (!record) throw new BadRequestException('Token inválido ou expirado');
+    if (record.user.emailVerified) {
+      return { message: 'Este e-mail já está confirmado. Você já pode entrar.' };
+    }
+
+    const newToken = await this.createEmailVerificationToken(record.userId);
+    await this.mailService.sendEmailVerification(record.user.email, record.user.name, newToken);
+    return { message: 'Enviamos um novo link de confirmação para o seu e-mail.' };
   }
 
   async resendVerification(userId: string) {
@@ -505,6 +559,10 @@ export class AuthService {
   async createEmailVerificationToken(userId: string): Promise<string> {
     const token = uuidv4();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+    await this.prisma.emailVerificationToken.updateMany({
+      where: { userId, usedAt: null },
+      data: { usedAt: new Date() },
+    });
     await this.prisma.emailVerificationToken.create({
       data: { token, userId, expiresAt },
     });
@@ -544,4 +602,3 @@ export class AuthService {
     };
   }
 }
-

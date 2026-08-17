@@ -2,6 +2,7 @@ import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bull';
 import { MatchingService } from '../matching/matching.service';
+import { UserRole } from '@prisma/client';
 
 @Processor('matching')
 export class MatchingProcessor {
@@ -14,7 +15,11 @@ export class MatchingProcessor {
     this.logger.log(`Processing matching job for operation ${job.data.operationId}`);
 
     try {
-      const result = await this.matchingService.runMatch(job.data.operationId);
+      const result = await this.matchingService.runMatch(
+        job.data.operationId,
+        'system',
+        UserRole.ADMIN,
+      );
       this.logger.log(
         `Matching completed: ${result.totalPartners} partners for operation ${job.data.operationId}`,
       );

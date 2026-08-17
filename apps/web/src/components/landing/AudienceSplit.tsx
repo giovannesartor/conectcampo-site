@@ -48,14 +48,14 @@ function CheckSVG({ className = '' }: { className?: string }) {
 }
 
 const BORROWER_FEATURES = [
-  'Matching inteligente com centenas de instituições',
+  'Matching por perfil, objetivo e critérios de elegibilidade',
   'Score ConectCampo exclusivo',
   'Gestão de documentos e operações',
   'Acompanhamento em tempo real',
 ];
 
 const LENDER_FEATURES = [
-  'Base de tomadores qualificados e verificados',
+  'Solicitações com dados e documentos organizados',
   'Filtros avançados de risco e perfil',
   'API completa de integração',
   'Dashboards de portfólio e compliance',
@@ -101,8 +101,8 @@ export function AudienceSplit() {
                 para o meu negócio
               </h2>
               <p className="mt-3 text-brand-200/80 text-sm leading-relaxed">
-                Produtor rural, empresa do agronegócio ou cooperativa. Conecte-se a dezenas de
-                instituições e encontre as melhores condições do mercado.
+                Produtor rural, empresa do agronegócio ou cooperativa. Organize sua operação,
+                encontre fontes compatíveis e compare propostas quando disponíveis.
               </p>
 
               <ul className="mt-6 space-y-3">
@@ -127,7 +127,7 @@ export function AudienceSplit() {
 
             <Link
               href="/#planos"
-              className="relative mt-8 flex items-center justify-between rounded-xl bg-white px-6 py-4 font-semibold text-brand-700 shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 group/btn"
+              className="relative mt-8 flex items-center justify-between rounded-xl bg-white px-6 py-4 font-semibold text-brand-700 shadow-md transition-all hover:shadow-lg group/btn"
             >
               <span>Ver planos e preços</span>
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 transition-transform group-hover/btn:translate-x-1">
@@ -160,8 +160,8 @@ export function AudienceSplit() {
                 ao agronegócio
               </h2>
               <p className="mt-3 text-slate-400 text-sm leading-relaxed">
-                Bancos, FIDCs, securitizadoras e FIAGROs. Acesse uma base de tomadores
-                qualificados, verificados e com score detalhado — sem pagar nada.
+                Bancos, FIDCs, securitizadoras e FIAGROs. Analise perfis e operações
+                organizadas em um fluxo digital — com acesso gratuito ao plano institucional.
               </p>
 
               <ul className="mt-6 space-y-3">
@@ -186,7 +186,7 @@ export function AudienceSplit() {
 
             <Link
               href="/register?plan=CORPORATE"
-              className="relative mt-8 flex items-center justify-between rounded-xl bg-white/10 px-6 py-4 font-semibold text-white ring-1 ring-white/15 transition-all hover:bg-white/15 hover:-translate-y-0.5 group/btn"
+              className="relative mt-8 flex items-center justify-between rounded-xl bg-white/10 px-6 py-4 font-semibold text-white ring-1 ring-white/15 transition-all hover:bg-white/15 group/btn"
             >
               <span>Cadastre-se gratuitamente</span>
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/20 transition-transform group-hover/btn:translate-x-1">

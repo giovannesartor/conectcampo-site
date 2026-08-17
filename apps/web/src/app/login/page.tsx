@@ -24,7 +24,11 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.push('/dashboard');
+      const requestedPath = new URLSearchParams(window.location.search).get('next');
+      const safeNext = requestedPath?.startsWith('/dashboard') && !requestedPath.startsWith('//')
+        ? requestedPath
+        : '/dashboard';
+      router.push(safeNext);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erro ao fazer login');
     } finally {
@@ -113,6 +117,8 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-pressed={showPassword}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>

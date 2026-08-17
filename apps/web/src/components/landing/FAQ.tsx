@@ -8,7 +8,7 @@ const faqs = [
   {
     question: 'O que é a ConectCampo?',
     answer:
-      'A ConectCampo é um marketplace de crédito rural que conecta produtores rurais e empresas do agronegócio diretamente a bancos, cooperativas, FIDCs, securitizadoras e FIAGROs. Usamos inteligência artificial para fazer o matching ideal entre quem precisa de crédito e quem oferece as melhores condições.',
+      'A ConectCampo é uma plataforma de crédito rural que organiza operações de produtores e empresas do agronegócio e aplica critérios de perfil e elegibilidade para aproximá-las de fontes compatíveis. A decisão e as condições finais pertencem a cada instituição.',
   },
   {
     question: 'Quais tipos de crédito estão disponíveis?',
@@ -28,12 +28,12 @@ const faqs = [
   {
     question: 'Qual o prazo médio para aprovação?',
     answer:
-      'O prazo médio de aprovação na ConectCampo é de 48 horas, significativamente menor que o processo tradicional que pode levar semanas. Após enviar a documentação, nosso sistema faz a pré-análise automaticamente e conecta sua operação às instituições mais adequadas.',
+      'O prazo depende da documentação, do perfil da operação e da instituição responsável pela decisão. A plataforma agiliza o envio, a organização e o acompanhamento da pré-análise, mas não promete aprovação nem um prazo único.',
   },
   {
     question: 'Como funciona para instituições financeiras?',
     answer:
-      'Instituições parceiras têm acesso a uma base curada de tomadores de crédito com scoring pré-qualificado, dados de produção validados e operações já documentadas. Oferecemos API RESTful para integração, dashboard de gestão, conformidade com regulação do Banco Central e gerente de conta dedicado.',
+      'Instituições cadastradas podem analisar operações organizadas, aplicar filtros de perfil e risco, gerir propostas e integrar fluxos pela API. O acesso aos dados respeita as permissões e os consentimentos definidos na plataforma.',
   },
   {
     question: 'Como funciona o marketplace de grãos e o pagamento seguro?',
@@ -48,16 +48,18 @@ const faqs = [
   {
     question: 'Meus dados estão seguros?',
     answer:
-      'Sim. A ConectCampo utiliza criptografia end-to-end, está em conformidade com a LGPD, implementa autenticação multi-fator e passa por auditorias de segurança regulares. Toda a infraestrutura segue padrões bancários de proteção de dados e as operações possuem rastreabilidade completa.',
+      'A plataforma usa HTTPS/TLS em produção, autenticação por token, controle de acesso por função, consentimento LGPD e trilha de auditoria para ações relevantes. Nenhum sistema elimina todo risco; por isso os controles e registros são revisados continuamente.',
   },
 ];
 
 function FAQItem({
+  id,
   question,
   answer,
   isOpen,
   onToggle,
 }: {
+  id: string;
   question: string;
   answer: string;
   isOpen: boolean;
@@ -66,7 +68,10 @@ function FAQItem({
   return (
     <div className="border-b border-gray-200 dark:border-dark-border last:border-b-0">
       <button
+        type="button"
         onClick={onToggle}
+        aria-expanded={isOpen}
+        aria-controls={`${id}-answer`}
         className="flex w-full items-center justify-between py-5 text-left transition-colors hover:text-brand-600"
       >
         <span className="text-base font-medium text-gray-900 dark:text-white pr-4">
@@ -81,6 +86,7 @@ function FAQItem({
       <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div
+            id={`${id}-answer`}
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -130,6 +136,7 @@ export function FAQ() {
           {faqs.map((faq, i) => (
             <FAQItem
               key={faq.question}
+              id={`faq-${i}`}
               question={faq.question}
               answer={faq.answer}
               isOpen={openIndex === i}

@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { redactUrl } from '../logging/redact';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -55,7 +56,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       error,
       message,
       timestamp: new Date().toISOString(),
-      path: request.url,
+      path: redactUrl(request.url),
     };
 
     response.status(status).json(body);

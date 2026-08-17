@@ -53,7 +53,7 @@ const jsonLd = {
           name: 'O que é a ConectCampo?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Um marketplace de crédito rural que conecta produtores e empresas do agro a bancos, cooperativas, FIDCs, securitizadoras e FIAGROs, usando inteligência para o matching ideal.',
+            text: 'Uma plataforma que organiza operações de crédito rural e aplica critérios de perfil e elegibilidade para aproximá-las de fontes compatíveis. A decisão final pertence a cada instituição.',
           },
         },
         {
@@ -69,7 +69,7 @@ const jsonLd = {
           name: 'Qual o prazo médio de aprovação?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'A pré-análise automática sai em até 48h. A aprovação final depende da instituição parceira.',
+            text: 'O prazo depende da documentação, do perfil da operação e da instituição responsável. A plataforma agiliza o envio e o acompanhamento, sem prometer aprovação ou prazo único.',
           },
         },
         {

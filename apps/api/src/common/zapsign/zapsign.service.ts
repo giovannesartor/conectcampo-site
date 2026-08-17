@@ -23,6 +23,17 @@ export interface ZapSignCreatedDoc {
   signers: ZapSignCreatedSigner[];
 }
 
+export interface ZapSignDocumentDetails {
+  status?: string;
+  signedFile?: string;
+  signers: Array<{
+    externalId?: string;
+    token?: string;
+    status?: string;
+    signedAt?: string;
+  }>;
+}
+
 /**
  * Integração com a ZapSign para assinatura eletrônica.
  * Habilitada quando ZAPSIGN_API_KEY está definido. Sem a chave, o chamador
@@ -111,14 +122,30 @@ export class ZapSignService {
    * Detalha um documento na ZapSign para obter o link (temporário) do arquivo
    * assinado mais recente. Retorna null em caso de falha.
    */
-  async getDocument(docToken: string): Promise<{ status?: string; signedFile?: string } | null> {
+  async getDocument(docToken: string): Promise<ZapSignDocumentDetails | null> {
     if (!this.isEnabled() || !docToken) return null;
     try {
       const { data } = await axios.get(`${this.baseUrl}/docs/${docToken}/`, {
         headers: { Authorization: `Bearer ${this.apiKey}` },
         timeout: 20000,
       });
-      return { status: data?.status, signedFile: data?.signed_file ?? undefined };
+      return {
+        status: data?.status,
+        signedFile: data?.signed_file ?? undefined,
+        signers: (data?.signers ?? []).map(
+          (signer: {
+            external_id?: string;
+            token?: string;
+            status?: string;
+            signed_at?: string;
+          }) => ({
+            externalId: signer.external_id,
+            token: signer.token,
+            status: signer.status,
+            signedAt: signer.signed_at,
+          }),
+        ),
+      };
     } catch (err) {
       const e = err as { response?: { status?: number }; message?: string };
       this.logger.warn(`ZapSign: falha ao detalhar documento (${e?.response?.status ?? e?.message})`);

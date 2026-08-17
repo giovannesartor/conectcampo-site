@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { RiskProfile, PartnerType, OperationStatus } from '@prisma/client';
+import { RiskProfile, PartnerType, OperationStatus, UserRole } from '@prisma/client';
 import { AiService } from '../../common/ai/ai.service';
 
 interface ScoreFactor {
@@ -43,7 +43,7 @@ export class ScoringService {
   /**
    * Calcula o risk score para uma operação
    */
-  async calculateScore(operationId: string) {
+  async calculateScore(operationId: string, userId: string, role: string) {
     const operation = await this.prisma.operationRequest.findUnique({
       where: { id: operationId },
       include: {
@@ -53,7 +53,8 @@ export class ScoringService {
       },
     });
 
-    if (!operation) throw new NotFoundException('Operação não encontrada');
+    if (!operation || operation.deletedAt) throw new NotFoundException('Operação não encontrada');
+    this.assertOperationAccess(operation, userId, role, false);
 
     const profile = operation.producerProfile;
     const financial = profile.financialProfile;
@@ -160,15 +161,25 @@ export class ScoringService {
     const eligibility = this.calculateEligibility(totalScore, profile.tier, Number(operation.requestedAmount));
 
     // ── Salvar ──
-    const riskScore = await this.prisma.riskScore.create({
-      data: {
+    const scoreData = {
+      producerProfileId: profile.id,
+      operationId,
+      score: totalScore,
+      profile: riskProfile,
+      factors,
+      eligibility,
+      validUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+    };
+    const riskScore = await this.prisma.riskScore.upsert({
+      where: { operationId },
+      create: scoreData,
+      update: {
         producerProfileId: profile.id,
-        operationId,
         score: totalScore,
         profile: riskProfile,
         factors,
         eligibility,
-        validUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 dias
+        validUntil: scoreData.validUntil,
       },
     });
 
@@ -183,10 +194,35 @@ export class ScoringService {
     return riskScore;
   }
 
-  async getScoreByOperation(operationId: string) {
+  async getScoreByOperation(operationId: string, userId: string, role: string) {
+    const operation = await this.prisma.operationRequest.findUnique({
+      where: { id: operationId },
+      include: { producerProfile: true },
+    });
+    if (!operation || operation.deletedAt) throw new NotFoundException('Operação não encontrada');
+    this.assertOperationAccess(operation, userId, role, true);
     return this.prisma.riskScore.findUnique({
       where: { operationId },
     });
+  }
+
+  private assertOperationAccess(
+    operation: { status: OperationStatus; producerProfile: { userId: string } },
+    userId: string,
+    role: string,
+    allowFinancialRead: boolean,
+  ) {
+    if (role === UserRole.ADMIN || operation.producerProfile.userId === userId) return;
+    const visibleStatuses: OperationStatus[] = [
+      OperationStatus.SUBMITTED,
+      OperationStatus.SCORING,
+      OperationStatus.MATCHING,
+      OperationStatus.PROPOSALS_RECEIVED,
+    ];
+    const isAnalyst = role === UserRole.CREDIT_ANALYST;
+    const isFinancialReader = allowFinancialRead && role === UserRole.FINANCIAL_INSTITUTION;
+    if ((isAnalyst || isFinancialReader) && visibleStatuses.includes(operation.status)) return;
+    throw new ForbiddenException('Acesso não autorizado a esta operação');
   }
 
   private normalizeRevenue(revenue: number): number {
@@ -257,7 +293,13 @@ export class ScoringService {
 
   // ── Explicação do score por IA (com fallback determinístico) ──────────────
 
-  async explainScore(operationId: string): Promise<ScoreExplanation> {
+  async explainScore(operationId: string, userId: string, role: string): Promise<ScoreExplanation> {
+    const operation = await this.prisma.operationRequest.findUnique({
+      where: { id: operationId },
+      include: { producerProfile: true },
+    });
+    if (!operation || operation.deletedAt) throw new NotFoundException('Operação não encontrada');
+    this.assertOperationAccess(operation, userId, role, true);
     const riskScore = await this.prisma.riskScore.findUnique({
       where: { operationId },
     });

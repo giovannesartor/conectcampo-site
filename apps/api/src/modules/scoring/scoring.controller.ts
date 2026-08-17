@@ -4,6 +4,7 @@ import { ScoringService } from './scoring.service';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('scoring')
 @ApiBearerAuth()
@@ -15,20 +16,33 @@ export class ScoringController {
   @Post(':operationId')
   @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN, UserRole.CREDIT_ANALYST)
   @ApiOperation({ summary: 'Calcular risk score para uma operação' })
-  async calculateScore(@Param('operationId') operationId: string) {
-    return this.scoringService.calculateScore(operationId);
+  async calculateScore(
+    @Param('operationId') operationId: string,
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    return this.scoringService.calculateScore(operationId, userId, role);
   }
 
   @Get(':operationId')
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.ADMIN, UserRole.CREDIT_ANALYST)
   @ApiOperation({ summary: 'Obter score de uma operação' })
-  async getScore(@Param('operationId') operationId: string) {
-    return this.scoringService.getScoreByOperation(operationId);
+  async getScore(
+    @Param('operationId') operationId: string,
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    return this.scoringService.getScoreByOperation(operationId, userId, role);
   }
 
   @Get(':operationId/explain')
-  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN, UserRole.CREDIT_ANALYST)
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.ADMIN, UserRole.CREDIT_ANALYST)
   @ApiOperation({ summary: 'Explicação do score por IA (com fallback em regras)' })
-  async explainScore(@Param('operationId') operationId: string) {
-    return this.scoringService.explainScore(operationId);
+  async explainScore(
+    @Param('operationId') operationId: string,
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    return this.scoringService.explainScore(operationId, userId, role);
   }
 }

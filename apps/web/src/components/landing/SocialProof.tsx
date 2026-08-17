@@ -2,12 +2,7 @@
 
 import { Landmark, Users2, Layers, FileText, Sprout, Clock, ShieldCheck, Network } from 'lucide-react';
 
-/**
- * Faixa de confiança + métricas.
- * Observação: os números abaixo são posicionamento/ilustrativos — substituir por
- * métricas reais (GMV intermediado, operações fechadas, parceiros ativos) assim
- * que houver tração.
- */
+/** Capacidades e tipos de fonte atendidos, sem métricas comerciais inventadas. */
 
 const PARTNERS = [
   { icon: Landmark, label: 'Bancos' },
@@ -18,10 +13,10 @@ const PARTNERS = [
 ];
 
 const METRICS = [
-  { icon: Clock, value: '48h', label: 'Pré-análise média' },
-  { icon: Network, value: '5+', label: 'tipos de fontes de crédito' },
+  { icon: Clock, value: 'Online', label: 'envio e acompanhamento' },
+  { icon: Network, value: '5', label: 'tipos de fonte mapeados' },
   { icon: Layers, value: 'CPR', label: 'emissão e assinatura digital' },
-  { icon: ShieldCheck, value: '100%', label: 'digital, da CPR ao crédito' },
+  { icon: ShieldCheck, value: 'LGPD', label: 'consentimento e controle' },
 ];
 
 export function SocialProof() {
@@ -30,7 +25,7 @@ export function SocialProof() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8 py-12">
         {/* Trust strip */}
         <p className="text-center text-xs font-semibold uppercase tracking-[0.12em] text-gray-400 dark:text-gray-500">
-          Conectando produtores às principais fontes de crédito do agro
+          Estrutura preparada para diferentes fontes de crédito do agro
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
           {PARTNERS.map(({ icon: Icon, label }) => (

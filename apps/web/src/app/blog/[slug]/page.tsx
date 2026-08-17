@@ -61,7 +61,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
         <div className="mt-12 rounded-2xl bg-gradient-to-br from-brand-800 to-brand-950 p-8 text-center">
           <h3 className="text-xl font-bold text-white">Pronto para conectar sua operação ao crédito certo?</h3>
-          <p className="mt-2 text-sm text-brand-200">Simule em minutos e receba propostas de dezenas de instituições.</p>
+          <p className="mt-2 text-sm text-brand-200">Organize os dados da sua operação e acompanhe propostas em um só lugar.</p>
           <Link href="/register" className="btn-primary mt-5 inline-flex">Simular meu crédito</Link>
         </div>
       </article>

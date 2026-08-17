@@ -37,10 +37,10 @@ interface OperationItem {
   id: string;
   type: string;
   status: string;
-  amount: number;
+  requestedAmount: number;
   termMonths: number;
   createdAt: string;
-  riskScore?: { totalScore: number };
+  riskScore?: { score: number };
   _count?: { proposals: number };
 }
 
@@ -168,13 +168,13 @@ export default function OperationsPage() {
                         <StatusBadge status={op.status} />
                       </div>
                       <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                        {formatCurrency(op.amount)} · {op.termMonths} meses · {formatDate(op.createdAt)}
+                        {formatCurrency(op.requestedAmount)} · {op.termMonths} meses · {formatDate(op.createdAt)}
                       </p>
                     </div>
                   </div>
                   <div className="text-right hidden sm:block">
                     {op.riskScore && (
-                      <p className="text-sm font-medium text-brand-600">Score: {op.riskScore.totalScore}</p>
+                      <p className="text-sm font-medium text-brand-600">Score: {op.riskScore.score}</p>
                     )}
                     <p className="text-xs text-gray-400">{op._count?.proposals || 0} propostas</p>
                   </div>

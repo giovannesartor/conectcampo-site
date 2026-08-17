@@ -15,8 +15,8 @@ const steps = [
     icon: FileText,
     title: 'Cadastre-se e envie documentos',
     description:
-      'Crie sua conta em minutos. Envie documentos como balanço patrimonial, CPF/CNPJ, comprovante de propriedade e histórico produtivo. Nossa plataforma é 100% digital e segura.',
-    items: ['Cadastro online em menos de 10 minutos', 'Upload seguro de documentos', 'Validação automática por IA'],
+      'Crie sua conta e envie documentos como balanço patrimonial, CPF/CNPJ, comprovante de propriedade e histórico produtivo em um fluxo online.',
+    items: ['Cadastro online', 'Upload organizado de documentos', 'Apoio automatizado à análise'],
   },
   {
     number: '02',
@@ -24,14 +24,14 @@ const steps = [
     title: 'Análise e Score de Crédito',
     description:
       'Nossa engine analisa seu perfil com base em dados agronômicos, histórico de produção, localização e indicadores financeiros. Você recebe um Score ConectCampo transparente.',
-    items: ['Score baseado em dados reais do campo', 'Análise multivariável proprietária', 'Resultado em até 24 horas'],
+    items: ['Score baseado nos dados cadastrados', 'Análise multivariável proprietária', 'Acompanhamento pelo dashboard'],
   },
   {
     number: '03',
     icon: Handshake,
     title: 'Matching com parceiros financeiros',
     description:
-      'Com base no seu score e perfil, o sistema encontra automaticamente as melhores oportunidades de crédito entre bancos, cooperativas, FIDCs, securitizadoras e FIAGROs.',
+      'Com base no seu score e perfil, o sistema identifica compatibilidade com os critérios cadastrados por bancos, cooperativas, FIDCs, securitizadoras e FIAGROs.',
     items: ['Matching inteligente por IA', 'Múltiplas instituições simultaneamente', 'Sem necessidade de bater de porta em porta'],
   },
   {

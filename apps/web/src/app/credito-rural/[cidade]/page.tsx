@@ -13,7 +13,7 @@ export function generateMetadata({ params }: { params: { cidade: string } }): Me
   const c = getCity(params.cidade);
   if (!c) return { title: 'Crédito Rural' };
   const title = `Crédito Rural em ${c.name} (${c.uf}) — ConectCampo`;
-  const description = `Encontre crédito rural em ${c.name}/${c.uf}, polo de ${c.destaque}. Conecte sua operação a bancos, cooperativas, FIDCs e securitizadoras. Pré-análise em 48h, 100% digital.`;
+  const description = `Organize uma solicitação de crédito rural em ${c.name}/${c.uf}, polo de ${c.destaque}, e apresente a operação a diferentes perfis de financiadores.`;
   const url = `https://conectcampo.digital/credito-rural/${c.slug}`;
   return { title, description, alternates: { canonical: url }, openGraph: { title, description, url } };
 }
@@ -42,14 +42,14 @@ export default function CidadePage({ params }: { params: { cidade: string } }) {
         <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
           {c.name} é um dos polos do agronegócio brasileiro, com destaque em <strong>{c.destaque}</strong>. Na ConectCampo,
           produtores e empresas da região conectam sua operação a bancos, cooperativas, FIDCs, securitizadoras e FIAGROs —
-          e comparam as melhores condições de crédito em um só lugar.
+          e centralizam a análise de propostas de crédito em um só lugar.
         </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           {[
-            { v: '48h', l: 'Pré-análise automática' },
-            { v: '100% digital', l: 'Da CPR ao crédito' },
-            { v: 'Multi-parceiros', l: 'Sua operação enviada a vários financiadores' },
+            { v: 'Online', l: 'Cadastro e organização da operação' },
+            { v: 'Comparável', l: 'Propostas reunidas em um só fluxo' },
+            { v: 'Multi-perfil', l: 'Diferentes tipos de financiadores' },
           ].map((k) => (
             <div key={k.l} className="card">
               <p className="text-xl font-extrabold text-brand-700 dark:text-brand-400">{k.v}</p>

@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, Mail } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -12,8 +12,9 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? '';
 
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'resent'>('loading');
   const [message, setMessage] = useState('');
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -22,8 +23,12 @@ function VerifyEmailContent() {
       return;
     }
 
+    // O token continua disponível neste componente, mas sai da barra de
+    // endereço para não permanecer no histórico nem vazar por referrer.
+    window.history.replaceState(window.history.state, '', '/verify-email');
+
     api
-      .get(`/auth/verify-email?token=${token}`)
+      .get('/auth/verify-email', { params: { token } })
       .then((res) => {
         setStatus('success');
         setMessage(res.data?.message ?? 'E-mail confirmado com sucesso!');
@@ -35,6 +40,20 @@ function VerifyEmailContent() {
         );
       });
   }, [token]);
+
+  async function handleResend() {
+    if (!token || resending) return;
+    setResending(true);
+    try {
+      const { data } = await api.post('/auth/resend-verification-link', { token });
+      setMessage(data?.message ?? 'Enviamos um novo link para o seu e-mail.');
+      setStatus('resent');
+    } catch (err: any) {
+      setMessage(err.response?.data?.message ?? 'Não foi possível enviar um novo link agora.');
+    } finally {
+      setResending(false);
+    }
+  }
 
   if (status === 'loading') {
     return (
@@ -60,6 +79,21 @@ function VerifyEmailContent() {
     );
   }
 
+  if (status === 'resent') {
+    return (
+      <div className="text-center" role="status">
+        <Mail className="h-16 w-16 text-brand-600 mx-auto mb-4" />
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+          Novo link enviado
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">{message}</p>
+        <Link href="/login" className="btn-primary inline-block">
+          Ir para o login
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="text-center">
       <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
@@ -67,8 +101,14 @@ function VerifyEmailContent() {
         Não foi possível verificar
       </h1>
       <p className="text-gray-600 dark:text-gray-400 mb-6">{message}</p>
-      <Link href="/dashboard" className="btn-primary inline-block">
-        Ir para o dashboard
+      {token && (
+        <button type="button" onClick={handleResend} disabled={resending} className="btn-primary w-full">
+          {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+          {resending ? 'Enviando...' : 'Enviar novo link'}
+        </button>
+      )}
+      <Link href="/login" className="btn-ghost mt-3 w-full">
+        Voltar ao login
       </Link>
     </div>
   );

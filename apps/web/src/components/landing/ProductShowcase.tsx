@@ -79,6 +79,12 @@ export function ProductShowcase() {
               </div>
               {/* body */}
               <div className="p-5">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">Exemplo de visão geral</p>
+                  <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+                    Dados demonstrativos
+                  </span>
+                </div>
                 <div className="grid grid-cols-3 gap-3">
                   {[
                     { label: 'Operações ativas', value: '12', sub: 'Em andamento' },

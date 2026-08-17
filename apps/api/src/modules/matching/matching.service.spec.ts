@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MatchingService } from './matching.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotFoundException } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 
 describe('MatchingService', () => {
   let service: MatchingService;
@@ -91,7 +92,7 @@ describe('MatchingService', () => {
       }));
       prisma.operationRequest.update.mockResolvedValue({});
 
-      const result = await service.runMatch('op-1');
+      const result = await service.runMatch('op-1', 'admin', UserRole.ADMIN);
 
       expect(result.totalPartners).toBeGreaterThan(0);
       expect(result.matches).toBeInstanceOf(Array);
@@ -101,7 +102,7 @@ describe('MatchingService', () => {
     it('should throw if operation not found', async () => {
       prisma.operationRequest.findUnique.mockResolvedValue(null);
 
-      await expect(service.runMatch('non-existent')).rejects.toThrow(
+      await expect(service.runMatch('non-existent', 'admin', UserRole.ADMIN)).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -112,7 +113,7 @@ describe('MatchingService', () => {
         riskScore: null,
       });
 
-      await expect(service.runMatch('op-1')).rejects.toThrow(
+      await expect(service.runMatch('op-1', 'admin', UserRole.ADMIN)).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -133,7 +134,7 @@ describe('MatchingService', () => {
       });
       prisma.operationRequest.update.mockResolvedValue({});
 
-      const result = await service.runMatch('op-1');
+      const result = await service.runMatch('op-1', 'admin', UserRole.ADMIN);
 
       // Verify ranking is assigned
       if (result.matches.length >= 2) {
@@ -149,9 +150,10 @@ describe('MatchingService', () => {
         { id: 'match-1', operationId: 'op-1', rank: 1, partner: {} },
         { id: 'match-2', operationId: 'op-1', rank: 2, partner: {} },
       ];
+      prisma.operationRequest.findUnique.mockResolvedValue({ id: 'op-1', producerProfile: {} });
       prisma.matchResult.findMany.mockResolvedValue(mockMatches);
 
-      const result = await service.getMatches('op-1');
+      const result = await service.getMatches('op-1', 'admin', UserRole.ADMIN);
 
       expect(result).toHaveLength(2);
       expect(prisma.matchResult.findMany).toHaveBeenCalledWith({

@@ -17,6 +17,7 @@ import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/format';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { useAuth } from '@/lib/auth-context';
 
 const TYPE_LABELS: Record<string, string> = {
   CUSTEIO: 'Custeio',
@@ -51,12 +52,8 @@ interface Operation {
   updatedAt: string;
   riskScore?: {
     id: string;
-    totalScore: number;
-    riskProfile: string;
-    financialScore: number;
-    operationalScore: number;
-    documentScore: number;
-    marketScore: number;
+    score: number;
+    profile: string;
   };
   matchResults?: {
     id: string;
@@ -87,6 +84,7 @@ interface Operation {
 }
 
 export default function OperationDetailPage() {
+  const { user } = useAuth();
   const params = useParams();
   const router = useRouter();
   const [operation, setOperation] = useState<Operation | null>(null);
@@ -139,8 +137,13 @@ export default function OperationDetailPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
-          onClick={() => router.push('/dashboard/operations')}
+          onClick={() => router.push(
+            user?.role === 'FINANCIAL_INSTITUTION' || user?.role === 'CREDIT_ANALYST'
+              ? '/dashboard/matching'
+              : '/dashboard/operations',
+          )}
           className="btn-ghost p-2"
+          aria-label="Voltar"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -155,7 +158,7 @@ export default function OperationDetailPage() {
             Criada em {formatDate(operation.createdAt)} · Atualizada em {formatDateTime(operation.updatedAt)}
           </p>
         </div>
-        {operation.status === 'DRAFT' && (
+        {operation.status === 'DRAFT' && (user?.role === 'PRODUCER' || user?.role === 'COMPANY') && (
           <button
             onClick={handleSubmit}
             disabled={submitting}
@@ -209,7 +212,7 @@ export default function OperationDetailPage() {
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400">Score</p>
               <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                {operation.riskScore.totalScore}/100
+                {operation.riskScore.score}/100
               </p>
             </div>
           </div>
@@ -257,27 +260,20 @@ export default function OperationDetailPage() {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500 dark:text-gray-400">Perfil de Risco</span>
-                <StatusBadge status={operation.riskScore.riskProfile} />
+                <StatusBadge status={operation.riskScore.profile} />
               </div>
-              {[
-                { label: 'Financeiro', value: operation.riskScore.financialScore },
-                { label: 'Operacional', value: operation.riskScore.operationalScore },
-                { label: 'Documental', value: operation.riskScore.documentScore },
-                { label: 'Mercado', value: operation.riskScore.marketScore },
-              ].map(({ label, value }) => (
-                <div key={label}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-500 dark:text-gray-400">{label}</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{value}/25</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-800">
-                    <div
-                      className="h-full rounded-full bg-brand-500"
-                      style={{ width: `${(value / 25) * 100}%` }}
-                    />
-                  </div>
+              <div>
+                <div className="mb-1 flex justify-between text-sm">
+                  <span className="text-gray-500 dark:text-gray-400">Pontuação consolidada</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{operation.riskScore.score}/100</span>
                 </div>
-              ))}
+                <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-800">
+                  <div
+                    className="h-full rounded-full bg-brand-500"
+                    style={{ width: `${Math.max(0, Math.min(100, operation.riskScore.score))}%` }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )}

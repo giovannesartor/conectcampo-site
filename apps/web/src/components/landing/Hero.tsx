@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, Zap, Clock, Network, ShieldCheck, Star } from 'lucide-react';
+import { ArrowRight, Zap, Clock, Network, ShieldCheck } from 'lucide-react';
 import { CreditSimulator } from './CreditSimulator';
 
 const HIGHLIGHTS = [
-  { icon: Clock, value: '48h', label: 'Pré-análise' },
-  { icon: Network, value: 'Rede', label: 'de financiadores' },
-  { icon: ShieldCheck, value: '100%', label: 'Digital' },
+  { icon: Clock, value: 'Online', label: 'envio e acompanhamento' },
+  { icon: Network, value: 'Rede', label: 'fontes de crédito' },
+  { icon: ShieldCheck, value: 'LGPD', label: 'consentimento e controle' },
 ];
 
 export function Hero() {
@@ -25,17 +25,17 @@ export function Hero() {
           {/* ── Left: copy ── */}
           <div className="text-center lg:text-left">
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-dark-card border border-warm-200 dark:border-dark-border px-4 py-1.5 text-sm font-medium text-brand-700 dark:text-brand-400 shadow-sm"
             >
               <Zap className="h-3.5 w-3.5 text-agro-gold" />
-              Pré-análise em 48h · 7 dias grátis
+              Pré-análise digital · 7 dias grátis
             </motion.div>
 
             <motion.h1
-              initial={{ opacity: 0, y: 20 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.08 }}
               className="mt-6 text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl [text-wrap:balance]"
@@ -47,7 +47,7 @@ export function Hero() {
             </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.16 }}
               className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400 sm:text-xl max-w-xl mx-auto lg:mx-0 [text-wrap:pretty]"
@@ -57,7 +57,7 @@ export function Hero() {
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.24 }}
               className="mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3"
@@ -75,22 +75,18 @@ export function Hero() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0 }}
+              initial={false}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.34 }}
               className="mt-5 flex items-center justify-center lg:justify-start gap-2 text-xs text-gray-500 dark:text-gray-400"
             >
-              <span className="inline-flex items-center gap-0.5 text-agro-gold">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-current" />
-                ))}
-              </span>
-              Comece com <span className="font-semibold text-brand-600 dark:text-brand-400">7 dias grátis</span> · PIX, cartão ou boleto
+              <ShieldCheck className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+              Simulação sem compromisso · <span className="font-semibold text-brand-600 dark:text-brand-400">7 dias grátis</span>
             </motion.div>
 
             {/* Mini highlights */}
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.42 }}
               className="mt-10 grid grid-cols-3 gap-4 max-w-md mx-auto lg:mx-0"
@@ -110,7 +106,7 @@ export function Hero() {
 
           {/* ── Right: simulator ── */}
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.98 }}
+            initial={false}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
             className="relative"

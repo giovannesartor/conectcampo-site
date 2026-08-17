@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { OperationStatus, PartnerType, ProposalStatus } from '@prisma/client';
+import { OperationStatus, PartnerType, ProposalStatus, UserRole } from '@prisma/client';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -62,7 +62,16 @@ export class OperationsService {
       where: { id: dto.operationId, deletedAt: null },
       include: { producerProfile: { select: { userId: true } } },
     });
-    if (!operation) throw new NotFoundException('Operação não encontrada');
+    if (!operation || operation.deletedAt) throw new NotFoundException('Operação não encontrada');
+    const proposalStatuses: OperationStatus[] = [
+      OperationStatus.SUBMITTED,
+      OperationStatus.SCORING,
+      OperationStatus.MATCHING,
+      OperationStatus.PROPOSALS_RECEIVED,
+    ];
+    if (!proposalStatuses.includes(operation.status)) {
+      throw new ForbiddenException('Esta operação ainda não está disponível para propostas');
+    }
 
     const partner = await this.resolvePartnerForUser(user);
 
@@ -104,7 +113,7 @@ export class OperationsService {
         title: 'Nova proposta recebida',
         message: `${partner.name} enviou uma proposta para sua operação.`,
         link: '/dashboard/proposals',
-      });
+      }).catch(() => undefined);
     }
 
     return proposal;
@@ -189,15 +198,25 @@ export class OperationsService {
   }
 
 
-  async findAll(userId: string, page = 1, perPage = 10) {
+  async findAll(userId: string, page = 1, perPage = 10, role?: string, status?: string) {
+    page = Math.max(1, Number(page) || 1);
+    perPage = Math.min(100, Math.max(1, Number(perPage) || 10));
     const profile = await this.prisma.producerProfile.findUnique({
       where: { userId },
     });
-    if (!profile) return { data: [], meta: { total: 0, page, perPage, totalPages: 0 } };
+    if (!profile && role !== UserRole.ADMIN) {
+      return { data: [], meta: { total: 0, page, perPage, totalPages: 0 } };
+    }
+    const where: any = role === UserRole.ADMIN
+      ? { deletedAt: null }
+      : { producerProfileId: profile!.id, deletedAt: null };
+    if (status && Object.values(OperationStatus).includes(status as OperationStatus)) {
+      where.status = status as OperationStatus;
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.operationRequest.findMany({
-        where: { producerProfileId: profile.id, deletedAt: null },
+        where,
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * perPage,
         take: perPage,
@@ -208,7 +227,7 @@ export class OperationsService {
         },
       }),
       this.prisma.operationRequest.count({
-        where: { producerProfileId: profile.id, deletedAt: null },
+        where,
       }),
     ]);
 
@@ -242,9 +261,37 @@ export class OperationsService {
       },
     });
 
-    if (!operation) throw new NotFoundException('Operação não encontrada');
-    if (userRole !== 'ADMIN' && operation.producerProfile.user.id !== userId) {
+    if (!operation || operation.deletedAt) throw new NotFoundException('Operação não encontrada');
+    const isOwner = operation.producerProfile.user.id === userId;
+    const isAdmin = userRole === 'ADMIN';
+    const isReviewer = userRole === 'FINANCIAL_INSTITUTION' || userRole === 'CREDIT_ANALYST';
+    const visibleStatuses: OperationStatus[] = [
+      OperationStatus.SUBMITTED,
+      OperationStatus.SCORING,
+      OperationStatus.MATCHING,
+      OperationStatus.PROPOSALS_RECEIVED,
+    ];
+    if (!isAdmin && !isOwner && !(isReviewer && visibleStatuses.includes(operation.status))) {
       throw new ForbiddenException('Acesso não autorizado');
+    }
+
+    if (userRole === UserRole.FINANCIAL_INSTITUTION) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { cnpj: true },
+      });
+      const partner = user?.cnpj
+        ? await this.prisma.partnerInstitution.findUnique({ where: { cnpj: user.cnpj } })
+        : null;
+      return {
+        ...operation,
+        proposals: partner
+          ? operation.proposals.filter((proposal) => proposal.partnerId === partner.id)
+          : [],
+        matchResults: partner
+          ? operation.matchResults.filter((match) => match.partnerId === partner.id)
+          : [],
+      };
     }
 
     return operation;
@@ -274,6 +321,8 @@ export class OperationsService {
    * Returns submitted/scoring/matching operations with producer info and score.
    */
   async findAvailable(page = 1, perPage = 20) {
+    page = Math.max(1, Number(page) || 1);
+    perPage = Math.min(100, Math.max(1, Number(perPage) || 20));
     const visibleStatuses: OperationStatus[] = [
       OperationStatus.SUBMITTED,
       OperationStatus.SCORING,
@@ -312,6 +361,8 @@ export class OperationsService {
         guarantees: op.guarantees,
         createdAt: op.createdAt,
         producerName: op.producerProfile?.user?.name ?? null,
+        crop: op.producerProfile?.crops?.[0] ?? null,
+        farmLocation: op.producerProfile?.state ?? null,
         score: op.riskScore?.score ?? null,
         riskProfile: op.riskScore?.profile ?? null,
       })),

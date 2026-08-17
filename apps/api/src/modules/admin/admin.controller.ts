@@ -21,6 +21,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '@prisma/client';
 import { AdminService } from './admin.service';
+import { ChangeUserRoleDto } from './dto/change-user-role.dto';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -66,12 +67,12 @@ export class AdminController {
   @ApiOperation({ summary: 'Alterar role do usuário' })
   async changeUserRole(
     @Param('id') id: string,
-    @Body('role') role: UserRole,
+    @Body() dto: ChangeUserRoleDto,
     @CurrentUser('sub') actorId: string,
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string,
   ) {
-    return this.adminService.changeUserRole(id, role, { actorId, ip, userAgent });
+    return this.adminService.changeUserRole(id, dto.role, { actorId, ip, userAgent });
   }
 
   // ─── Operations ─────────────────────────────────────────────────────

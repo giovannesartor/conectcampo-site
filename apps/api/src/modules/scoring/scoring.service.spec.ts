@@ -3,7 +3,7 @@ import { ScoringService } from './scoring.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AiService } from '../../common/ai/ai.service';
 import { NotFoundException } from '@nestjs/common';
-import { RiskProfile } from '@prisma/client';
+import { RiskProfile, UserRole } from '@prisma/client';
 
 describe('ScoringService', () => {
   let service: ScoringService;
@@ -16,6 +16,7 @@ describe('ScoringService', () => {
     },
     riskScore: {
       create: jest.fn(),
+      upsert: jest.fn(),
       findUnique: jest.fn(),
     },
   };
@@ -61,13 +62,13 @@ describe('ScoringService', () => {
 
     it('should calculate score correctly for a strong profile', async () => {
       prisma.operationRequest.findUnique.mockResolvedValue(mockOperation);
-      prisma.riskScore.create.mockImplementation(({ data }: any) => ({
+      prisma.riskScore.upsert.mockImplementation(({ create }: any) => ({
         id: 'score-1',
-        ...data,
+        ...create,
       }));
       prisma.operationRequest.update.mockResolvedValue({});
 
-      const result = await service.calculateScore('op-1');
+      const result = await service.calculateScore('op-1', 'admin', UserRole.ADMIN);
 
       expect(result.score).toBeGreaterThan(0);
       expect(result.score).toBeLessThanOrEqual(100);
@@ -78,13 +79,13 @@ describe('ScoringService', () => {
 
     it('should assign CONSERVADOR profile for high scores', async () => {
       prisma.operationRequest.findUnique.mockResolvedValue(mockOperation);
-      prisma.riskScore.create.mockImplementation(({ data }: any) => ({
+      prisma.riskScore.upsert.mockImplementation(({ create }: any) => ({
         id: 'score-1',
-        ...data,
+        ...create,
       }));
       prisma.operationRequest.update.mockResolvedValue({});
 
-      const result = await service.calculateScore('op-1');
+      const result = await service.calculateScore('op-1', 'admin', UserRole.ADMIN);
 
       // With the strong mock profile, expect a high score
       expect(result.score).toBeGreaterThanOrEqual(70);
@@ -94,7 +95,7 @@ describe('ScoringService', () => {
     it('should throw if operation not found', async () => {
       prisma.operationRequest.findUnique.mockResolvedValue(null);
 
-      await expect(service.calculateScore('non-existent')).rejects.toThrow(
+      await expect(service.calculateScore('non-existent', 'admin', UserRole.ADMIN)).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -108,7 +109,7 @@ describe('ScoringService', () => {
         },
       });
 
-      await expect(service.calculateScore('op-1')).rejects.toThrow(
+      await expect(service.calculateScore('op-1', 'admin', UserRole.ADMIN)).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -117,9 +118,10 @@ describe('ScoringService', () => {
   describe('getScoreByOperation', () => {
     it('should return score by operation id', async () => {
       const mockScore = { id: 'score-1', operationId: 'op-1', score: 75 };
+      prisma.operationRequest.findUnique.mockResolvedValue({ id: 'op-1', producerProfile: {} });
       prisma.riskScore.findUnique.mockResolvedValue(mockScore);
 
-      const result = await service.getScoreByOperation('op-1');
+      const result = await service.getScoreByOperation('op-1', 'admin', UserRole.ADMIN);
 
       expect(result).toEqual(mockScore);
     });

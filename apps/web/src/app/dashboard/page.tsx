@@ -137,6 +137,41 @@ export default function DashboardPage() {
 
   // ── Role router ──────────────────────────────────────────────
   if (user.role === 'FINANCIAL_INSTITUTION') return <DashboardCorporate />;
+  if (user.role === 'CREDIT_ANALYST') {
+    const analystActions = [
+      { title: 'Fila de operações', description: 'Revise operações submetidas sem alterar propostas.', href: '/dashboard/matching', icon: FileText },
+      { title: 'Score & risco', description: 'Calcule e explique a pontuação das operações em análise.', href: '/dashboard/scoring', icon: BarChart3 },
+      { title: 'Documentos inteligentes', description: 'Extraia e confira campos dos documentos recebidos.', href: '/dashboard/smart-docs', icon: Shield },
+      { title: 'CPR', description: 'Acompanhe instrumentos e o status das assinaturas.', href: '/dashboard/cpr', icon: CreditCard },
+    ];
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Central de Análise</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Priorize operações submetidas, confira documentos e registre sua análise de risco.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {analystActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link key={action.href} href={action.href} className="card group flex items-start gap-4">
+                <span className="rounded-xl bg-brand-50 p-3 text-brand-700 dark:bg-brand-950/30 dark:text-brand-400">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="font-semibold text-gray-900 dark:text-white">{action.title}</span>
+                  <span className="mt-1 block text-sm text-gray-500 dark:text-gray-400">{action.description}</span>
+                </span>
+                <ArrowRight className="mt-1 h-4 w-4 text-gray-400 transition-colors group-hover:text-brand-600" />
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
   if (user.role === 'COMPANY' && plan === 'COOPERATIVE') return <DashboardCooperative />;
   if (user.role === 'COMPANY') return <DashboardPro />;
   if (user.role === 'PRODUCER') return <DashboardStart />;
@@ -181,7 +216,7 @@ export default function DashboardPage() {
               Painel Admin
             </Link>
           )}
-          <Link href="/dashboard/operations" className="btn-primary text-sm">
+          <Link href="/dashboard/operations/new" className="btn-primary text-sm">
             <Plus className="h-4 w-4 mr-2" />
             Nova Operação
           </Link>
@@ -244,7 +279,7 @@ export default function DashboardPage() {
                 description="Crie seu perfil de produtor e comece sua primeira operação de crédito."
                 action={{
                   label: 'Criar Primeira Operação',
-                  onClick: () => router.push('/dashboard/operations'),
+                  onClick: () => router.push('/dashboard/operations/new'),
                 }}
               />
             ) : (

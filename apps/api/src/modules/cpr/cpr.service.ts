@@ -5,7 +5,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { createHash, randomUUID } from 'crypto';
+import { createHash, randomInt, randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCprDto } from './dto/create-cpr.dto';
 import { UpdateCprDto } from './dto/update-cpr.dto';
@@ -45,9 +45,7 @@ export class CprService {
 
   private generateNumeroCpr(): string {
     const year = new Date().getFullYear();
-    // Use crypto-safe random to avoid collision-prone Math.random()
-    const bytes = crypto.getRandomValues(new Uint32Array(1));
-    const seq = (bytes[0] % 900000) + 100000; // 6 dígitos
+    const seq = randomInt(100000, 1000000);
     return `CPR-${year}-${seq}`;
   }
 
@@ -385,19 +383,6 @@ export class CprService {
       return { ignored: true };
     }
 
-    // Idempotência: cada assinatura gera um evento; dedup por (doc, signatário, timestamp)
-    const externalId = `${payload.token}:${payload.signer_who_signed?.token ?? ''}:${payload.last_update_at ?? payload.status ?? ''}`;
-    const dup = await this.prisma.webhookEvent.findUnique({
-      where: { provider_externalId: { provider: 'ZAPSIGN', externalId } },
-    });
-    if (dup) {
-      this.logger.warn(`ZapSign webhook duplicado ignorado (${externalId})`);
-      return { deduped: true };
-    }
-    await this.prisma.webhookEvent
-      .create({ data: { provider: 'ZAPSIGN', externalId, type: 'doc_signed' } })
-      .catch(() => null);
-
     const cpr = await this.prisma.cprDocument.findFirst({
       where: {
         deletedAt: null,
@@ -412,28 +397,49 @@ export class CprService {
       return { ignored: true };
     }
 
+    // Nunca confia no status recebido pelo endpoint público: a ZapSign é
+    // consultada com a credencial privada e passa a ser a fonte autoritativa.
+    const doc = await this.zapsign.getDocument(cpr.zapsignDocToken ?? '');
+    if (!doc) {
+      this.logger.warn(`ZapSign webhook: não foi possível validar o documento da CPR ${cpr.id}`);
+      throw new BadRequestException('Não foi possível validar o evento de assinatura.');
+    }
+
+    // Idempotência só é registrada depois da validação, impedindo que uma
+    // chamada forjada bloqueie o evento legítimo antes de ele chegar.
+    const externalId = `${cpr.zapsignDocToken}:${payload.signer_who_signed?.token ?? ''}:${payload.last_update_at ?? doc.status ?? ''}`;
+    const dup = await this.prisma.webhookEvent.findUnique({
+      where: { provider_externalId: { provider: 'ZAPSIGN', externalId } },
+    });
+    if (dup) {
+      this.logger.warn(`ZapSign webhook duplicado ignorado (${externalId})`);
+      return { deduped: true };
+    }
+
     const data: Record<string, unknown> = {};
-    for (const s of payload.signers ?? []) {
-      const isSigned = s.status === 'signed' && s.signed_at;
+    for (const s of doc.signers) {
+      const isSigned = s.status === 'signed' && s.signedAt;
       if (!isSigned) continue;
-      const geo = s.geo_latitude ? `geo:${s.geo_latitude},${s.geo_longitude}` : 'zapsign';
-      if (s.external_id === 'emitente' || s.token === cpr.emitenteSignToken) {
-        data.emitenteSignedAt = new Date(s.signed_at);
-        data.emitenteSignIp = geo;
-      } else if (s.external_id === 'credor' || s.token === cpr.credorSignToken) {
-        data.credorSignedAt = new Date(s.signed_at);
-        data.credorSignIp = geo;
+      if (s.externalId === 'emitente' || s.token === cpr.emitenteSignToken) {
+        data.emitenteSignedAt = new Date(s.signedAt!);
+        data.emitenteSignIp = 'zapsign';
+      } else if (s.externalId === 'credor' || s.token === cpr.credorSignToken) {
+        data.credorSignedAt = new Date(s.signedAt!);
+        data.credorSignIp = 'zapsign';
       }
     }
 
-    const fullySigned = payload.status === 'signed';
+    const fullySigned = doc.status === 'signed';
     data.signatureStatus = fullySigned ? 'ASSINADA' : 'PARCIAL';
     if (fullySigned) {
       data.signedAt = new Date();
-      if (payload.signed_file) data.signedFileUrl = payload.signed_file;
+      if (doc.signedFile) data.signedFileUrl = doc.signedFile;
     }
 
     await this.prisma.cprDocument.update({ where: { id: cpr.id }, data });
+    await this.prisma.webhookEvent
+      .create({ data: { provider: 'ZAPSIGN', externalId, type: 'doc_signed' } })
+      .catch(() => null);
 
     if (fullySigned) {
       void this.notifications.create({
@@ -442,7 +448,7 @@ export class CprService {
         title: 'CPR assinada',
         message: `A CPR ${cpr.numeroCpr ?? ''} foi assinada por todas as partes.`.trim(),
         link: '/dashboard/cpr',
-      });
+      }).catch(() => undefined);
     }
 
     this.logger.log(`ZapSign webhook: CPR ${cpr.id} -> ${data.signatureStatus}`);
@@ -516,7 +522,7 @@ export class CprService {
         title: 'CPR assinada',
         message: `A CPR ${cpr.numeroCpr ?? ''} foi assinada por todas as partes.`.trim(),
         link: '/dashboard/cpr',
-      });
+      }).catch(() => undefined);
     }
 
     return {

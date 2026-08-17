@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { OperationStatus } from '@prisma/client';
+import { OperationStatus, UserRole } from '@prisma/client';
 
 const MATCH_WEIGHTS = {
   ticketFit: 0.25,
@@ -20,7 +20,7 @@ export class MatchingService {
   /**
    * Motor de match: cruza operação com parceiros elegíveis
    */
-  async runMatch(operationId: string) {
+  async runMatch(operationId: string, userId: string, role: string) {
     const operation = await this.prisma.operationRequest.findUnique({
       where: { id: operationId },
       include: {
@@ -29,7 +29,8 @@ export class MatchingService {
       },
     });
 
-    if (!operation) throw new NotFoundException('Operação não encontrada');
+    if (!operation || operation.deletedAt) throw new NotFoundException('Operação não encontrada');
+    this.assertOperationAccess(operation, userId, role, false);
     if (!operation.riskScore) {
       throw new NotFoundException('Score não calculado. Execute o scoring primeiro.');
     }
@@ -191,11 +192,36 @@ export class MatchingService {
     };
   }
 
-  async getMatches(operationId: string) {
+  async getMatches(operationId: string, userId: string, role: string) {
+    const operation = await this.prisma.operationRequest.findUnique({
+      where: { id: operationId },
+      include: { producerProfile: true },
+    });
+    if (!operation || operation.deletedAt) throw new NotFoundException('Operação não encontrada');
+    this.assertOperationAccess(operation, userId, role, true);
     return this.prisma.matchResult.findMany({
       where: { operationId },
       include: { partner: true },
       orderBy: { rank: 'asc' },
     });
+  }
+
+  private assertOperationAccess(
+    operation: { status: OperationStatus; producerProfile: { userId: string } },
+    userId: string,
+    role: string,
+    allowFinancialRead: boolean,
+  ) {
+    if (role === UserRole.ADMIN || operation.producerProfile.userId === userId) return;
+    const visibleStatuses: OperationStatus[] = [
+      OperationStatus.SUBMITTED,
+      OperationStatus.SCORING,
+      OperationStatus.MATCHING,
+      OperationStatus.PROPOSALS_RECEIVED,
+    ];
+    const isAnalyst = role === UserRole.CREDIT_ANALYST;
+    const isFinancialReader = allowFinancialRead && role === UserRole.FINANCIAL_INSTITUTION;
+    if ((isAnalyst || isFinancialReader) && visibleStatuses.includes(operation.status)) return;
+    throw new ForbiddenException('Acesso não autorizado a esta operação');
   }
 }

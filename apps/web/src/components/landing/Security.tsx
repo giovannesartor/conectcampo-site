@@ -6,18 +6,18 @@ import { Shield, Lock, Eye, FileCheck, Scale, UserCheck } from 'lucide-react';
 const features = [
   {
     icon: Shield,
-    title: 'LGPD Compliant',
-    description: 'Totalmente aderente à Lei Geral de Proteção de Dados.',
+    title: 'Privacidade e LGPD',
+    description: 'Consentimento explícito e controles para acesso e gestão de dados pessoais.',
   },
   {
     icon: Lock,
-    title: 'Criptografia total',
-    description: 'Dados criptografados em repouso e em trânsito (TLS).',
+    title: 'Transporte protegido',
+    description: 'Comunicação em produção protegida por HTTPS/TLS.',
   },
   {
     icon: Eye,
-    title: 'Auditoria completa',
-    description: 'Logs imutáveis de todas as ações na plataforma.',
+    title: 'Trilha de auditoria',
+    description: 'Eventos administrativos e ações relevantes registrados para rastreabilidade.',
   },
   {
     icon: FileCheck,
@@ -26,13 +26,13 @@ const features = [
   },
   {
     icon: Scale,
-    title: 'Compliance regulatório',
-    description: 'Arquitetado para operação como correspondente bancário ou fintech regulada.',
+    title: 'Controles administrativos',
+    description: 'Perfis de acesso e rotas administrativas protegidas por função.',
   },
   {
     icon: UserCheck,
-    title: 'KYC integrado',
-    description: 'Verificação de identidade e consentimento explícito.',
+    title: 'Verificação cadastral',
+    description: 'Dados de CPF/CNPJ, perfil e documentos organizados para análise.',
   },
 ];
 
@@ -41,9 +41,9 @@ export function Security() {
     <section id="seguranca" className="py-24 bg-warm-50 dark:bg-dark-card/30">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="section-title">Segurança de nível bancário</h2>
+          <h2 className="section-title">Segurança e controle por padrão</h2>
           <p className="section-subtitle">
-            Seus dados e documentos protegidos com os mais altos padrões de segurança do mercado financeiro.
+            Camadas objetivas de autenticação, autorização, privacidade e rastreabilidade em toda a plataforma.
           </p>
         </div>
 

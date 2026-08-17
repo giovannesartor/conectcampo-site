@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UserRole, OperationStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService, AuditFilters } from '../audit/audit.service';
@@ -141,6 +141,8 @@ export class AdminService {
   // ─── Users ───────────────────────────────────────────────────────────────────
 
   async getUsers(page: number, perPage: number, role?: string, search?: string) {
+    page = Math.max(1, Number.isFinite(page) ? page : 1);
+    perPage = Math.min(100, Math.max(1, Number.isFinite(perPage) ? perPage : 20));
     const where: any = { deletedAt: null };
     if (role && role !== 'ALL') {
       where.role = role as UserRole;
@@ -186,6 +188,9 @@ export class AdminService {
   }
 
   async toggleUserActive(id: string, meta?: AdminActionMeta) {
+    if (meta?.actorId === id) {
+      throw new BadRequestException('Você não pode desativar sua própria conta administrativa');
+    }
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('Usuário não encontrado');
 
@@ -204,13 +209,16 @@ export class AdminService {
       newValue: { isActive: updated.isActive },
       ipAddress: meta?.ip,
       userAgent: meta?.userAgent,
-    });
+    }).catch(() => undefined);
 
     this.logger.log(`User ${updated.name} ${updated.isActive ? 'activated' : 'deactivated'}`);
     return updated;
   }
 
   async changeUserRole(id: string, role: UserRole, meta?: AdminActionMeta) {
+    if (meta?.actorId === id) {
+      throw new BadRequestException('Você não pode alterar o próprio perfil administrativo');
+    }
     const before = await this.prisma.user.findUnique({
       where: { id },
       select: { role: true },
@@ -232,7 +240,7 @@ export class AdminService {
       newValue: { role: updated.role },
       ipAddress: meta?.ip,
       userAgent: meta?.userAgent,
-    });
+    }).catch(() => undefined);
 
     this.logger.log(`User ${updated.name} role changed: ${before.role} -> ${role}`);
     return updated;
@@ -241,6 +249,8 @@ export class AdminService {
   // ─── Operations ──────────────────────────────────────────────────────────────
 
   async getOperations(page: number, perPage: number, status?: string) {
+    page = Math.max(1, Number.isFinite(page) ? page : 1);
+    perPage = Math.min(100, Math.max(1, Number.isFinite(perPage) ? perPage : 20));
     const where: any = { deletedAt: null };
     if (status && status !== 'ALL') {
       where.status = status as OperationStatus;
@@ -334,10 +344,16 @@ export class AdminService {
           l.entity,
           l.entityId,
           l.ipAddress ?? '',
-        ].join(','),
+        ].map((value) => this.escapeCsvCell(value)).join(','),
       )
       .join('\n');
     return header + rows;
+  }
+
+  private escapeCsvCell(value: unknown): string {
+    let text = String(value ?? '').replace(/\r?\n/g, ' ');
+    if (/^[=+\-@]/.test(text)) text = `'${text}`;
+    return `"${text.replace(/"/g, '""')}"`;
   }
 
   // ─── Revenue ─────────────────────────────────────────────────────────────────

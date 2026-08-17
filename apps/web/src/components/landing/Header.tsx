@@ -30,7 +30,7 @@ export function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-dark-bg/90 backdrop-blur-xl border-b border-gray-200 dark:border-dark-border">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8">
+      <nav aria-label="Navegação principal" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8">
         {/* Logo */}
         <Logo size="md" href="/" />
 
@@ -41,17 +41,29 @@ export function Header() {
             className="relative"
             onMouseEnter={() => setDropdownOpen(true)}
             onMouseLeave={() => setDropdownOpen(false)}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDropdownOpen(false);
+            }}
           >
-            <button className="flex items-center gap-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-500 transition-colors py-2">
+            <button
+              type="button"
+              onClick={() => setDropdownOpen((open) => !open)}
+              className="flex items-center gap-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-500 transition-colors py-2"
+              aria-haspopup="menu"
+              aria-expanded={dropdownOpen}
+              aria-controls="platform-menu"
+            >
               Plataforma <ChevronDown className={`h-4 w-4 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             {dropdownOpen && (
               <div className="absolute left-0 top-full pt-1">
-              <div className="w-48 rounded-xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card shadow-lg overflow-hidden">
+              <div id="platform-menu" role="menu" className="w-48 rounded-xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card shadow-lg overflow-hidden">
                 {plataformaLinks.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
+                    role="menuitem"
+                    onClick={() => setDropdownOpen(false)}
                     className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 transition-colors"
                   >
                     {item.name}
@@ -88,6 +100,9 @@ export function Header() {
             type="button"
             className="-m-2.5 p-2.5 text-gray-700 dark:text-gray-300"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -96,7 +111,7 @@ export function Header() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-gray-200 dark:border-dark-border">
+        <div id="mobile-navigation" className="lg:hidden border-t border-gray-200 dark:border-dark-border">
           <div className="space-y-1 px-6 py-4">
             {mobileNavLinks.map((item) => (
               <Link

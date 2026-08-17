@@ -8,7 +8,7 @@ import { AsaasService } from '../subscriptions/asaas.service';
 import { ValsaService } from '../subscriptions/valsa.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { AuditService } from '../audit/audit.service';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { UserRole, SubscriptionPlan } from '@prisma/client';
 
@@ -36,16 +36,21 @@ describe('AuthService', () => {
     },
     emailVerificationToken: {
       create: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
     },
     passwordResetToken: {
       create: jest.fn(),
       findUnique: jest.fn(),
+      updateMany: jest.fn(),
     },
     subscription: {
       findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
     },
+    $transaction: jest.fn((operations: unknown[]) => Promise.all(operations)),
   };
 
   const mockAsaasService = {
@@ -88,7 +93,7 @@ describe('AuthService', () => {
         { provide: AsaasService, useValue: mockAsaasService },
         { provide: ValsaService, useValue: { createCustomerAndSubscription: jest.fn(), verifyWebhookSignature: jest.fn() } },
         { provide: SubscriptionsService, useValue: mockSubscriptionsService },
-        { provide: AuditService, useValue: { log: jest.fn() } },
+        { provide: AuditService, useValue: { log: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 
@@ -106,7 +111,7 @@ describe('AuthService', () => {
       email: 'test@example.com',
       password: 'Senha@123',
       name: 'Test User',
-      role: UserRole.PRODUCER,
+      role: UserRole.FINANCIAL_INSTITUTION,
       plan: SubscriptionPlan.CORPORATE,
     };
 
@@ -118,7 +123,7 @@ describe('AuthService', () => {
         id: 'user-1',
         email: registerDto.email,
         name: registerDto.name,
-        role: UserRole.PRODUCER,
+        role: UserRole.FINANCIAL_INSTITUTION,
       };
       prisma.user.create.mockResolvedValue(createdUser);
       prisma.refreshToken.create.mockResolvedValue({});
@@ -143,7 +148,14 @@ describe('AuthService', () => {
         ConflictException,
       );
     });
-  });
+
+    it('should reject a role that does not belong to the selected plan', async () => {
+      await expect(service.register({
+        ...registerDto,
+        role: UserRole.ADMIN,
+      })).rejects.toThrow(BadRequestException);
+      expect(prisma.user.create).not.toHaveBeenCalled();
+    });
 
   describe('login', () => {
     const loginDto = { email: 'test@example.com', password: 'Senha@123' };
@@ -233,6 +245,37 @@ describe('AuthService', () => {
       await expect(service.refreshToken('expired')).rejects.toThrow(
         UnauthorizedException,
       );
+    });
+  });
+
+  describe('verifyEmail', () => {
+    it('should be idempotent when the account is already verified', async () => {
+      prisma.emailVerificationToken.findUnique.mockResolvedValue({
+        id: 'verification-1',
+        token: 'mock-uuid',
+        userId: 'user-1',
+        usedAt: new Date(),
+        expiresAt: new Date(Date.now() + 3600000),
+        user: { id: 'user-1', email: 'test@example.com', emailVerified: true },
+      });
+
+      await expect(service.verifyEmail('mock-uuid')).resolves.toMatchObject({
+        alreadyVerified: true,
+      });
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('should reject an expired token for an unverified account', async () => {
+      prisma.emailVerificationToken.findUnique.mockResolvedValue({
+        id: 'verification-1',
+        token: 'mock-uuid',
+        userId: 'user-1',
+        usedAt: null,
+        expiresAt: new Date(Date.now() - 1000),
+        user: { id: 'user-1', email: 'test@example.com', emailVerified: false },
+      });
+
+      await expect(service.verifyEmail('mock-uuid')).rejects.toThrow(BadRequestException);
     });
   });
 });

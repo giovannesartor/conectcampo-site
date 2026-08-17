@@ -8,9 +8,10 @@ import { formatCurrency, formatDate } from '@/lib/format';
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
 
 const CROPS = ['Todos', 'Soja', 'Milho', 'Café', 'Algodão', 'Arroz', 'Trigo', 'Cana-de-açúcar', 'Feijão', 'Pecuária (Corte)', 'Outro'];
-const STATUS_OPTIONS = ['Todos', 'SUBMITTED', 'UNDER_REVIEW', 'APPROVED'];
+const STATUS_OPTIONS = ['Todos', 'SUBMITTED', 'SCORING', 'MATCHING', 'PROPOSALS_RECEIVED'];
 
 const OP_TYPE_LABELS: Record<string, string> = {
   CPR_FINANCIAL: 'CPR Financeira',
@@ -22,6 +23,8 @@ const OP_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function MatchingPage() {
+  const { user } = useAuth();
+  const canSubmitProposal = user?.role === 'FINANCIAL_INSTITUTION' || user?.role === 'ADMIN';
   const [operations, setOperations] = useState<any[]>([]);
   const [filtered, setFiltered] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -152,7 +155,9 @@ export default function MatchingPage() {
             className="input text-sm"
           >
             {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>{s === 'Todos' ? 'Todos' : s === 'SUBMITTED' ? 'Submetida' : s === 'UNDER_REVIEW' ? 'Em análise' : 'Aprovada'}</option>
+              <option key={s} value={s}>
+                {s === 'Todos' ? 'Todos' : s === 'SUBMITTED' ? 'Submetida' : s === 'SCORING' ? 'Em scoring' : s === 'MATCHING' ? 'Em matching' : 'Com propostas'}
+              </option>
             ))}
           </select>
         </div>
@@ -230,12 +235,14 @@ export default function MatchingPage() {
                   >
                     Detalhes <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
-                  <button
-                    onClick={() => setProposalOp(op)}
-                    className="btn-primary text-sm"
-                  >
-                    Enviar Proposta
-                  </button>
+                  {canSubmitProposal && (
+                    <button
+                      onClick={() => setProposalOp(op)}
+                      className="btn-primary text-sm"
+                    >
+                      Enviar Proposta
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -244,7 +251,7 @@ export default function MatchingPage() {
       )}
 
       {/* Proposal modal */}
-      {proposalOp && (
+      {canSubmitProposal && proposalOp && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-xl w-full max-w-md">
             <div className="p-6 border-b border-gray-100 dark:border-dark-border">

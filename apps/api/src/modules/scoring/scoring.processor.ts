@@ -2,6 +2,7 @@ import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bull';
 import { ScoringService } from '../scoring/scoring.service';
+import { UserRole } from '@prisma/client';
 
 @Processor('scoring')
 export class ScoringProcessor {
@@ -14,7 +15,11 @@ export class ScoringProcessor {
     this.logger.log(`Processing scoring job for operation ${job.data.operationId}`);
 
     try {
-      const result = await this.scoringService.calculateScore(job.data.operationId);
+      const result = await this.scoringService.calculateScore(
+        job.data.operationId,
+        'system',
+        UserRole.ADMIN,
+      );
       this.logger.log(`Scoring completed: score ${result.score} for operation ${job.data.operationId}`);
       return result;
     } catch (error) {

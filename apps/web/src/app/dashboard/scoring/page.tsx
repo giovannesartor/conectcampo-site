@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { BarChart3, Info, RefreshCw, ChevronDown, Sparkles, Lightbulb, TrendingUp, Loader2, CheckCircle2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { useAuth } from '@/lib/auth-context';
 
 interface ScoreFactor {
   name: string;
@@ -52,6 +53,9 @@ function ScoreGauge({ score, label }: { score: number; label: string }) {
 }
 
 export default function ScoringPage() {
+  const { user } = useAuth();
+  const isReviewer = user?.role === 'CREDIT_ANALYST' || user?.role === 'FINANCIAL_INSTITUTION';
+  const canCalculate = user?.role !== 'FINANCIAL_INSTITUTION';
   const [operations, setOperations] = useState<any[]>([]);
 interface OperationOption {
   id: string;
@@ -76,8 +80,9 @@ interface ScoreResult {
   const [explaining, setExplaining] = useState(false);
 
   useEffect(() => {
+    if (!user) return;
     loadOperations();
-  }, []);
+  }, [isReviewer, user]);
 
   useEffect(() => {
     setExplanation(null);
@@ -87,7 +92,10 @@ interface ScoreResult {
 
   async function loadOperations() {
     try {
-      const { data } = await api.get('/operations?page=1&perPage=50');
+      const endpoint = isReviewer
+        ? '/operations/available?page=1&perPage=50'
+        : '/operations?page=1&perPage=50';
+      const { data } = await api.get(endpoint);
       const ops = data.data || data;
       setOperations(ops);
       if (ops.length > 0) setSelectedOpId(ops[0].id);
@@ -175,14 +183,16 @@ interface ScoreResult {
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             </div>
           )}
-          <button
-            onClick={handleCalculate}
-            disabled={calculating || !selectedOpId}
-            className="btn-secondary flex items-center gap-2 text-sm disabled:opacity-50"
-          >
-            <RefreshCw className={`h-4 w-4 ${calculating ? 'animate-spin' : ''}`} />
-            Calcular Score
-          </button>
+          {canCalculate && (
+            <button
+              onClick={handleCalculate}
+              disabled={calculating || !selectedOpId}
+              className="btn-secondary flex items-center gap-2 text-sm disabled:opacity-50"
+            >
+              <RefreshCw className={`h-4 w-4 ${calculating ? 'animate-spin' : ''}`} />
+              Calcular Score
+            </button>
+          )}
         </div>
       </div>
 
@@ -196,7 +206,9 @@ interface ScoreResult {
           <BarChart3 className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto" />
           <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">Nenhuma operação encontrada</h3>
           <p className="mt-2 text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-            Crie uma operação de crédito para calcular seu score.
+            {isReviewer
+              ? 'Nenhuma operação submetida está disponível para análise.'
+              : 'Crie uma operação de crédito para calcular seu score.'}
           </p>
         </div>
       ) : loadingScore ? (
@@ -209,16 +221,20 @@ interface ScoreResult {
           <BarChart3 className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto" />
           <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">Score não calculado</h3>
           <p className="mt-2 text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-            Clique em <strong>Calcular Score</strong> para gerar a pontuação desta operação.
+            {canCalculate
+              ? <>Clique em <strong>Calcular Score</strong> para gerar a pontuação desta operação.</>
+              : 'A pontuação ainda não foi calculada pelo responsável pela análise.'}
           </p>
-          <button
-            onClick={handleCalculate}
-            disabled={calculating}
-            className="btn-primary mt-6 flex items-center gap-2 mx-auto"
-          >
-            <RefreshCw className={`h-4 w-4 ${calculating ? 'animate-spin' : ''}`} />
-            Calcular Score
-          </button>
+          {canCalculate && (
+            <button
+              onClick={handleCalculate}
+              disabled={calculating}
+              className="btn-primary mt-6 flex items-center gap-2 mx-auto"
+            >
+              <RefreshCw className={`h-4 w-4 ${calculating ? 'animate-spin' : ''}`} />
+              Calcular Score
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

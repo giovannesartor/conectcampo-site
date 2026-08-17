@@ -32,7 +32,7 @@ export class OperationsController {
   }
 
   @Get('available')
-  @Roles(UserRole.FINANCIAL_INSTITUTION, UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
+  @Roles(UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.PRODUCER, UserRole.COMPANY, UserRole.ADMIN)
   @ApiOperation({ summary: 'Deal flow: operações disponíveis para instituições financeiras' })
   async findAvailable(
     @Query('page') page?: number,
@@ -46,10 +46,12 @@ export class OperationsController {
   @ApiOperation({ summary: 'Listar operações do produtor' })
   async findAll(
     @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
     @Query('page') page?: number,
     @Query('perPage') perPage?: number,
+    @Query('status') status?: string,
   ) {
-    return this.operationsService.findAll(userId, page, perPage);
+    return this.operationsService.findAll(userId, page, perPage, role, status);
   }
 
   @Get('proposals')
@@ -96,8 +98,9 @@ export class OperationsController {
   async findById(
     @Param('id') id: string,
     @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
   ) {
-    return this.operationsService.findById(id, userId);
+    return this.operationsService.findById(id, userId, role);
   }
 
   @Patch(':id/submit')

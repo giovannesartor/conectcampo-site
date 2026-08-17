@@ -55,7 +55,7 @@ export class AuditInterceptor implements NestInterceptor {
             entityId: entityId || '',
             ipAddress: req.ip,
             userAgent: req.headers?.['user-agent'],
-          });
+          }).catch(() => undefined);
         } catch {
           // auditoria nunca pode quebrar a requisição
         }

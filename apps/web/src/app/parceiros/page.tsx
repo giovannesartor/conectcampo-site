@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Parceiros Financeiros',
-  description: 'Torne-se parceiro ConectCampo. Acesse produtores rurais pré-qualificados com scoring, dados e compliance integrados.',
+  description: 'Torne-se parceiro ConectCampo. Analise operações rurais com scoring, documentos e dados organizados em um só fluxo.',
   openGraph: {
     title: 'Parceiros Financeiros — ConectCampo',
     description: 'Bancos, FIDCs, FIAGROs e cooperativas: acesse o melhor do crédito rural sem burocracia.',
@@ -18,37 +18,37 @@ const partnerTypes = [
     icon: Building2,
     title: 'Bancos e Financeiras',
     description:
-      'Acesse uma base curada de produtores rurais e empresas do agro com scoring pré-qualificado. Reduza o CAC e aumente volume de crédito rural com eficiência operacional.',
+      'Analise solicitações de produtores rurais e empresas do agro com scoring e documentação organizados para apoiar a decisão de crédito.',
   },
   {
     icon: Shield,
     title: 'FIDCs e Securitizadoras',
     description:
-      'Originação de recebíveis do agronegócio com rastreabilidade completa. CPRs, CDCAs e CRAs estruturados com transparência e conformidade regulatória.',
+      'Apoio à originação de recebíveis do agronegócio com histórico da operação e documentos centralizados.',
   },
   {
     icon: TrendingUp,
     title: 'FIAGROs',
     description:
-      'Diversifique o portfólio com ativos de crédito rural de alta qualidade. Acesse dados de produção, scoring e garantias em tempo real.',
+      'Avalie oportunidades de crédito rural com dados de produção, scoring e garantias apresentados de forma estruturada.',
   },
   {
     icon: Users,
     title: 'Cooperativas de Crédito',
     description:
-      'Expanda o alcance dos seus produtos de crédito rural além da sua base atual. A plataforma conecta sua cooperativa a novos associados qualificados.',
+      'Organize a análise dos produtos de crédito rural e acompanhe solicitações apresentadas à sua cooperativa.',
   },
 ];
 
 const benefits = [
-  'Tomadores pré-qualificados via scoring proprietário',
-  'Dados de produção e garantias validados',
+  'Solicitações organizadas com apoio do scoring proprietário',
+  'Dados de produção, documentos e garantias centralizados',
   'API RESTful para integração com seus sistemas',
-  'Dashboard de gestão de portfólio em tempo real',
-  'Conformidade com regulamentações do Banco Central',
+  'Dashboard de acompanhamento da carteira',
+  'Trilha de auditoria para apoiar processos de conformidade',
   'Relatórios de risco e performance',
-  'Gerente de conta dedicado',
-  'SLA 99,9% de disponibilidade',
+  'Atendimento especializado para integração',
+  'Monitoramento do ambiente e suporte operacional',
 ];
 
 export default function ParceirosPage() {
@@ -65,8 +65,8 @@ export default function ParceirosPage() {
             <span className="text-brand-600">sem a burocracia</span>
           </h1>
           <p className="mt-6 text-lg text-gray-600 dark:text-gray-400">
-            A ConectCampo é o canal mais eficiente para conectar instituições financeiras a
-            tomadores de crédito rural qualificados, com dados, scoring e compliance integrados.
+            A ConectCampo organiza a conexão entre instituições financeiras e solicitantes de
+            crédito rural, reunindo dados, scoring e documentos para apoiar a análise.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/contato" className="btn-primary inline-flex items-center gap-2">

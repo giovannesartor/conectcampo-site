@@ -14,7 +14,7 @@ const plans = [
       'Perfil e gestão da propriedade (talhões e safras)',
       'Score ConectCampo de crédito',
       'Monitoramento por satélite (NDVI) e alertas de clima',
-      'Cotações de mercado em tempo real',
+      'Cotações de commodities e câmbio',
       'Até 2 operações de crédito simultâneas',
       'Matching automático com financiadores',
       'Gestão de documentos',
@@ -28,7 +28,7 @@ const plans = [
     name: 'Plano Empresa',
     price: 'R$ 799',
     period: '/mês',
-    description: 'Para empresas do agronegócio que buscam as melhores condições de crédito em escala.',
+    description: 'Para empresas do agronegócio que precisam organizar crédito e documentos em escala.',
     features: [
       'Tudo do Plano Produtor Rural',
       'Operações de crédito ilimitadas',
@@ -65,13 +65,13 @@ const plans = [
     price: 'Grátis',
     description: 'Para bancos, FIDCs, securitizadoras e FIAGROs que fornecem crédito aos produtores.',
     features: [
-      'Acesso à base de tomadores qualificados',
+      'Acesso a solicitações com dados organizados',
       'Filtros avançados de risco e perfil',
       'API completa de integração',
       'Dashboards de portfólio',
       'Gestão de propostas',
       'Compliance e rastreabilidade',
-      'SLA garantido + gerente dedicado',
+      'Suporte por e-mail e acompanhamento comercial',
     ],
     cta: 'Cadastre-se grátis',
     highlighted: false,
@@ -106,7 +106,7 @@ export function Plans() {
             >
               {plan.highlighted && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-brand-600 px-4 py-1 text-xs font-bold text-white">
-                  Mais Popular
+                  Mais completo
                 </div>
               )}
 

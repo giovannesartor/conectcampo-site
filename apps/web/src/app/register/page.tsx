@@ -41,7 +41,7 @@ const PLANS: Array<{
     period: '/mês',
     role: 'COMPANY',
     docType: 'cnpj',
-    description: 'Para empresas do agronegócio que buscam as melhores condições de crédito em escala.',
+    description: 'Para empresas do agronegócio que precisam organizar crédito e documentos em escala.',
     free: false,
   },
   {
@@ -433,7 +433,9 @@ function RegisterForm() {
                   required
                 />
                 <p className="mt-1 text-xs text-gray-400">
-                  Necessário para processamento de pagamento (ValsaPay ou Asaas)
+                  {planConfig.free
+                    ? 'Usado para identificar a instituição e proteger o cadastro.'
+                    : 'Necessário para processamento de pagamento (ValsaPay ou Asaas).'}
                 </p>
               </div>
             )}
@@ -457,6 +459,8 @@ function RegisterForm() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-pressed={showPassword}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -477,6 +481,7 @@ function RegisterForm() {
                   <button
                     type="button"
                     onClick={() => setGateway('VALSA')}
+                    aria-pressed={gateway === 'VALSA'}
                     className={`relative rounded-xl border-2 p-4 text-left transition-all ${
                       gateway === 'VALSA'
                         ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/20'
@@ -499,6 +504,7 @@ function RegisterForm() {
                   <button
                     type="button"
                     onClick={() => setGateway('ASAAS')}
+                    aria-pressed={gateway === 'ASAAS'}
                     className={`relative rounded-xl border-2 p-4 text-left transition-all ${
                       gateway === 'ASAAS'
                         ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/20'

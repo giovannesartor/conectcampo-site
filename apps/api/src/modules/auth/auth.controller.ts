@@ -10,15 +10,18 @@ import {
   Request,
   Ip,
   Headers,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle, SkipThrottle } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { Public } from './decorators/public.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
@@ -67,7 +70,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Alterar senha do usuário logado' })
   async changePassword(
     @Request() req: any,
-    @Body() body: { currentPassword: string; newPassword: string },
+    @Body() body: ChangePasswordDto,
   ) {
     return this.authService.changePassword(req.user.sub, body.currentPassword, body.newPassword);
   }
@@ -96,6 +99,7 @@ export class AuthController {
 
   @Public()
   @Post('reset-password')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Redefinir senha com token' })
   async resetPassword(
@@ -110,7 +114,7 @@ export class AuthController {
   @Get('verify-email')
   @ApiOperation({ summary: 'Confirmar e-mail com token' })
   async verifyEmail(
-    @Query('token') token: string,
+    @Query('token', new ParseUUIDPipe({ version: '4' })) token: string,
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string,
   ) {
@@ -118,10 +122,19 @@ export class AuthController {
   }
 
   @Public()
-  @SkipThrottle()
+  @Post('resend-verification-link')
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reenviar confirmação usando um link anterior' })
+  async resendVerificationLink(@Body() dto: ResendVerificationDto) {
+    return this.authService.resendVerificationByToken(dto.token);
+  }
+
+  @Public()
   @Get('payment-status')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
   @ApiOperation({ summary: 'Verificar status de pagamento pós-registro (polling)' })
-  async paymentStatus(@Query('userId') userId: string) {
+  async paymentStatus(@Query('userId', new ParseUUIDPipe({ version: '4' })) userId: string) {
     return this.authService.getPaymentStatus(userId);
   }
 
@@ -134,4 +147,3 @@ export class AuthController {
     return this.authService.resendVerification(req.user.sub);
   }
 }
-

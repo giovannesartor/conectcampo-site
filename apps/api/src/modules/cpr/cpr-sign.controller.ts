@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Param, Body, Ip } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Ip, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { CprService } from './cpr.service';
 import { Public } from '../auth/decorators/public.decorator';
 
@@ -14,16 +15,18 @@ export class CprSignController {
 
   @Public()
   @Get(':token')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
   @ApiOperation({ summary: 'Visualizar minuta para assinatura (público, por token)' })
-  async view(@Param('token') token: string) {
+  async view(@Param('token', new ParseUUIDPipe({ version: '4' })) token: string) {
     return this.service.getSignView(token);
   }
 
   @Public()
   @Post(':token')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @ApiOperation({ summary: 'Assinar CPR (público, por token)' })
   async sign(
-    @Param('token') token: string,
+    @Param('token', new ParseUUIDPipe({ version: '4' })) token: string,
     @Ip() ip: string,
     @Body('nomeConfirmacao') nomeConfirmacao?: string,
   ) {

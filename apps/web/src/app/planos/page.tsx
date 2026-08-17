@@ -15,8 +15,8 @@ const plans = [
       'Perfil e gestão da propriedade (talhões e safras)',
       'Score ConectCampo de crédito',
       'Monitoramento por satélite (NDVI) e alertas de clima',
-      'Cotações de mercado em tempo real',
-      'Até 2 operações de crédito simultâneas',
+      'Cotações de commodities e moedas',
+      'Gestão de operações de crédito',
       'Matching automático com financiadores',
       'Gestão de documentos',
       'Suporte por e-mail',
@@ -24,7 +24,7 @@ const plans = [
   },
   {
     name: 'Plano Empresa',
-    description: 'Para empresas do agronegócio que buscam as melhores condições de crédito em escala.',
+    description: 'Para empresas do agronegócio que precisam organizar crédito e documentos em escala.',
     price: 'R$ 799',
     period: '/mês',
     highlight: false,
@@ -67,13 +67,13 @@ const plans = [
     cta: 'Cadastre-se grátis',
     href: '/register?plan=CORPORATE',
     features: [
-      'Acesso à base de tomadores qualificados',
+      'Acesso a solicitações com dados organizados',
       'Filtros avançados de risco e perfil',
       'API completa de integração',
       'Dashboards de portfólio',
       'Gestão de propostas',
       'Compliance e rastreabilidade',
-      'SLA garantido + gerente dedicado',
+      'Atendimento especializado para integração',
     ],
   },
 ];
@@ -109,7 +109,7 @@ export default function PlanosPage() {
               {plan.highlight && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400 px-4 py-1 text-xs font-bold text-amber-900">
-                    <Zap className="h-3 w-3" /> Mais popular
+                    <Zap className="h-3 w-3" /> Mais completo
                   </span>
                 </div>
               )}

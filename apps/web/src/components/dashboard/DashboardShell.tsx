@@ -15,6 +15,7 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Building2,
   DollarSign,
   Activity,
@@ -146,6 +147,9 @@ const CONTA_SECTION_COM_ASSINATURA: NavSection = {
 function buildNav(role: string, plan: string): NavSection[] {
   const base = buildRoleNav(role, plan);
   if (base.length === 0) return base;
+  // Instituições financeiras recebem um fluxo focado em deal-flow e análise;
+  // ferramentas operacionais de fazenda não pertencem a esse perfil.
+  if (role === 'FINANCIAL_INSTITUTION' || role === 'CREDIT_ANALYST') return base;
   const conta = base[base.length - 1];
   const rest = base.slice(0, -1);
   return [...rest, PRODUCAO_SECTION, FINANCEIRO_SECTION, MERCADO_SECTION, conta];
@@ -187,13 +191,29 @@ function buildRoleNav(role: string, plan: string): NavSection[] {
     ];
   }
 
+  if (role === 'CREDIT_ANALYST') {
+    return [
+      {
+        title: 'Análise',
+        items: [
+          { label: 'Visão Geral',      href: '/dashboard',            icon: <LayoutDashboard className="h-5 w-5" /> },
+          { label: 'Fila de Operações', href: '/dashboard/matching',   icon: <ClipboardList className="h-5 w-5" /> },
+          { label: 'Score & Risco',    href: '/dashboard/scoring',     icon: <BarChart3 className="h-5 w-5" /> },
+          { label: 'Docs Inteligentes', href: '/dashboard/smart-docs', icon: <FileScan className="h-5 w-5" /> },
+          { label: 'CPR',              href: '/dashboard/cpr',         icon: <ScrollText className="h-5 w-5" /> },
+        ],
+      },
+      CONTA_SECTION,
+    ];
+  }
+
   if (role === 'FINANCIAL_INSTITUTION') {
     return [
       {
         title: 'Deal-flow',
         items: [
           { label: 'Visão Geral',        href: '/dashboard',                   icon: <LayoutDashboard className="h-5 w-5" /> },
-          { label: 'Oportunidades',      href: '/dashboard/operations',        icon: <Landmark className="h-5 w-5" /> },
+          { label: 'Oportunidades',      href: '/dashboard/matching',          icon: <Landmark className="h-5 w-5" /> },
           { label: 'Minhas Propostas',   href: '/dashboard/proposals',         icon: <ScrollText className="h-5 w-5" /> },
           { label: 'Portfólio',          href: '/dashboard/scoring',           icon: <Briefcase className="h-5 w-5" /> },
         ],
@@ -223,8 +243,8 @@ function buildRoleNav(role: string, plan: string): NavSection[] {
       {
         title: 'Cooperados',
         items: [
-          { label: 'Gestão de Cooperados',   href: '/dashboard/proposals',     icon: <UsersRound className="h-5 w-5" /> },
-          { label: 'Relatórios',             href: '/dashboard/scoring',       icon: <BarChart3 className="h-5 w-5" /> },
+          { label: 'Propostas',              href: '/dashboard/proposals',     icon: <UsersRound className="h-5 w-5" /> },
+          { label: 'Análise de Risco',        href: '/dashboard/scoring',       icon: <BarChart3 className="h-5 w-5" /> },
         ],
       },
       INSTRUMENTOS_SECTION,
@@ -281,13 +301,23 @@ function buildRoleNav(role: string, plan: string): NavSection[] {
 // ─── Shell ────────────────────────────────────────────────────────────────────
 
 export function DashboardShell({ children }: { children: ReactNode }) {
-  const { user, logout } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const { previewRole, previewPlan } = usePreview();
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [planKey, setPlanKey] = useState<string>('');
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    () => new Set(['Principal', 'Administração', 'Deal-flow']),
+  );
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      const next = pathname.startsWith('/dashboard') ? pathname : '/dashboard';
+      router.replace(`/login?next=${encodeURIComponent(next)}`);
+    }
+  }, [isLoading, pathname, router, user]);
 
   useEffect(() => {
     if (user) {
@@ -297,14 +327,47 @@ export function DashboardShell({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  if (!user) return null;
-
-  const isPreviewMode = user.role === 'ADMIN' && !!previewRole;
-  const effectiveRole = isPreviewMode ? previewRole! : user.role;
+  const isPreviewMode = user?.role === 'ADMIN' && !!previewRole;
+  const effectiveRole = isPreviewMode ? previewRole! : (user?.role ?? '');
   const effectivePlan = isPreviewMode ? (previewPlan ?? '') : planKey;
 
   const planInfo = PLAN_LABELS[effectivePlan] ?? null;
   const navSections = buildNav(effectiveRole, effectivePlan);
+
+  useEffect(() => {
+    const activeSection = navSections.find((section) =>
+      section.items.some((item) => item.href === '/dashboard'
+        ? pathname === '/dashboard'
+        : pathname.startsWith(item.href)),
+    );
+    if (!activeSection) return;
+    setExpandedSections((current) => {
+      if (current.has(activeSection.title)) return current;
+      const next = new Set(current);
+      next.add(activeSection.title);
+      return next;
+    });
+  }, [effectivePlan, effectiveRole, pathname]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-dark-bg" role="status">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+        <span className="sr-only">Carregando sua conta...</span>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-dark-bg px-6 text-center">
+        <div>
+          <p className="font-semibold text-gray-900 dark:text-white">Redirecionando para o login...</p>
+          <Link href="/login" className="btn-primary mt-4">Entrar</Link>
+        </div>
+      </div>
+    );
+  }
 
   async function handleLogout() {
     await logout();
@@ -316,15 +379,30 @@ export function DashboardShell({ children }: { children: ReactNode }) {
     return pathname.startsWith(href);
   }
 
+  function toggleSection(title: string) {
+    setExpandedSections((current) => {
+      const next = new Set(current);
+      if (next.has(title)) next.delete(title);
+      else next.add(title);
+      return next;
+    });
+  }
+
   const sidebar = (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center justify-between px-4 py-5 border-b border-gray-200 dark:border-dark-border">
         {!collapsed && <Logo size="sm" href="/dashboard" />}
-        <button onClick={() => setCollapsed(!collapsed)} className="hidden lg:flex btn-ghost p-1.5">
+        <button
+          type="button"
+          onClick={() => setCollapsed(!collapsed)}
+          className="hidden lg:flex btn-ghost p-1.5"
+          aria-label={collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
+          aria-expanded={!collapsed}
+        >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
-        <button onClick={() => setMobileOpen(false)} className="lg:hidden btn-ghost p-1.5">
+        <button type="button" onClick={() => setMobileOpen(false)} className="lg:hidden btn-ghost p-1.5" aria-label="Fechar menu">
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -349,14 +427,24 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
       {/* Navigation */}
       <nav aria-label="Navegação principal" className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
-        {navSections.map((section) => (
+        {navSections.map((section) => {
+          const sectionId = `nav-${section.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+          const sectionOpen = collapsed || expandedSections.has(section.title);
+          return (
           <div key={section.title}>
             {!collapsed && (
-              <p className="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+              <button
+                type="button"
+                onClick={() => toggleSection(section.title)}
+                className="mb-2 flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                aria-expanded={sectionOpen}
+                aria-controls={sectionId}
+              >
                 {section.title}
-              </p>
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${sectionOpen ? 'rotate-180' : ''}`} />
+              </button>
             )}
-            <ul className="space-y-1">
+            <ul id={sectionId} className={`space-y-1 ${sectionOpen ? 'block' : 'hidden'}`}>
               {section.items.map((item) => (
                 <li key={item.label + item.href}>
                   <Link
@@ -383,7 +471,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               ))}
             </ul>
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* User info */}
@@ -400,12 +489,12 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 {isPreviewMode ? (ROLE_LABELS[effectiveRole] ?? effectiveRole) : (ROLE_LABELS[user.role] ?? user.role)}
               </p>
             </div>
-            <button onClick={handleLogout} className="text-gray-400 hover:text-red-500 transition-colors" title="Sair">
+            <button type="button" onClick={handleLogout} className="text-gray-400 hover:text-red-500 transition-colors" title="Sair" aria-label="Sair da conta">
               <LogOut className="h-4 w-4" />
             </button>
           </div>
         ) : (
-          <button onClick={handleLogout} className="w-full flex justify-center text-gray-400 hover:text-red-500" title="Sair">
+          <button type="button" onClick={handleLogout} className="w-full flex justify-center text-gray-400 hover:text-red-500" title="Sair" aria-label="Sair da conta">
             <LogOut className="h-5 w-5" />
           </button>
         )}
@@ -416,10 +505,11 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-dark-bg">
       {mobileOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
+        <button type="button" className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Fechar menu" />
       )}
 
       <aside
+        id="dashboard-navigation"
         className={`fixed inset-y-0 left-0 z-50 bg-white dark:bg-dark-card border-r border-gray-200 dark:border-dark-border transition-all duration-300 lg:sticky lg:top-0 lg:h-screen lg:z-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         } ${collapsed ? 'w-[70px]' : 'w-64'}`}
@@ -432,7 +522,14 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <header className="sticky top-0 z-30 border-b border-gray-200 dark:border-dark-border bg-white/80 dark:bg-dark-card/80 backdrop-blur-lg">
           <div className="flex items-center justify-between px-4 lg:px-6 py-3">
             <div className="flex items-center gap-3">
-              <button onClick={() => setMobileOpen(true)} className="lg:hidden btn-ghost p-1.5">
+              <button
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                className="lg:hidden btn-ghost p-1.5"
+                aria-label="Abrir menu"
+                aria-controls="dashboard-navigation"
+                aria-expanded={mobileOpen}
+              >
                 <Menu className="h-5 w-5" />
               </button>
               {/* Mobile: logo compacto (some quando a saudação aparece) */}
@@ -464,14 +561,14 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               <div data-tour="notifications">
                 <NotificationsDropdown />
               </div>
-              <button onClick={() => router.push('/dashboard/settings')} className="btn-ghost p-2">
+              <button type="button" onClick={() => router.push('/dashboard/settings')} className="btn-ghost p-2" aria-label="Abrir configurações">
                 <Settings className="h-5 w-5" />
               </button>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-6">
+        <main id="main-content" className="flex-1 p-4 lg:p-6">
           {children}
         </main>
       </div>

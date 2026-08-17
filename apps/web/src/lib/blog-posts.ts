@@ -48,7 +48,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <h2>FIAGRO — Fundo de Investimento nas Cadeias Agroindustriais</h2>
       <p>O FIAGRO é um veículo relativamente novo que pode investir em terras, direitos creditórios, participações e ativos do agro. Democratizou o acesso do investidor ao setor e ampliou as fontes de funding.</p>
       <h2>Qual faz sentido para você?</h2>
-      <p>Depende do porte, das garantias e do objetivo. É exatamente aí que um <strong>marketplace multi-financiador</strong> ajuda: em vez de bater na porta de um credor por vez, o produtor tem seu perfil cruzado com dezenas de instituições e compara as melhores condições.</p>
+      <p>Depende do porte, das garantias e do objetivo. É exatamente aí que um <strong>marketplace multi-financiador</strong> pode ajudar: em vez de organizar cada contato separadamente, o produtor estrutura seu perfil e acompanha as propostas disponíveis em um só fluxo.</p>
     `,
   },
   {

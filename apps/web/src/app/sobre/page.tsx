@@ -20,7 +20,7 @@ const values = [
 
 const timeline = [
   { year: '2023', title: 'Fundação', description: 'ConectCampo é fundada com a missão de simplificar o crédito rural no Brasil.' },
-  { year: '2024 Q1', title: 'MVP e primeiros parceiros', description: 'Lançamento da plataforma beta com 5 instituições financeiras parceiras.' },
+  { year: '2024 Q1', title: 'MVP da plataforma', description: 'Primeira versão do fluxo digital para organização e análise de operações rurais.' },
   { year: '2024 Q3', title: 'Score ConectCampo', description: 'Lançamento do scoring proprietário com IA para avaliação de risco agro.' },
   { year: '2025 Q1', title: 'Marketplace e CPR digital', description: 'Lançamento do marketplace de grãos com pagamento em custódia e emissão digital de CPR.' },
   { year: '2025 Q3', title: 'Ampliação da rede de parceiros', description: 'Expansão da rede de instituições financeiras: bancos, cooperativas, FIDCs, securitizadoras e FIAGROs.' },
@@ -28,10 +28,10 @@ const timeline = [
 ];
 
 const numbers = [
-  { value: '48h', label: 'Pré-análise média' },
-  { value: '100%', label: 'Processo digital, da CPR ao crédito' },
+  { value: 'Online', label: 'Organização da operação e documentos' },
+  { value: 'Score', label: 'Apoio à análise de risco' },
   { value: 'CPR', label: 'Emissão e assinatura digital' },
-  { value: '5+', label: 'Tipos de fontes de crédito conectadas' },
+  { value: 'Multi-perfil', label: 'Diferentes fontes de crédito' },
 ];
 
 export default function SobrePage() {
@@ -73,9 +73,9 @@ export default function SobrePage() {
                   mudar esse cenário.
                 </p>
                 <p>
-                  Nossa plataforma conecta diretamente produtores rurais qualificados a uma rede de
+                  Nossa plataforma organiza solicitações de produtores rurais e as apresenta a uma rede de
                   bancos, cooperativas, FIDCs, securitizadoras e FIAGROs — eliminando barreiras e
-                  acelerando operações de crédito que antes levavam meses.
+                  facilitando a troca de informações durante a análise de crédito.
                 </p>
               </div>
             </div>
