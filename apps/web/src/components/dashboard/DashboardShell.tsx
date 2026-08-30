@@ -333,6 +333,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   const planInfo = PLAN_LABELS[effectivePlan] ?? null;
   const navSections = buildNav(effectiveRole, effectivePlan);
+  const activeNavItem = navSections
+    .flatMap((section) => section.items)
+    .filter((item) => item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href))
+    .sort((a, b) => b.href.length - a.href.length)[0];
+  const activeNavSection = navSections.find((section) =>
+    section.items.some((item) => item.href === activeNavItem?.href),
+  );
 
   useEffect(() => {
     const activeSection = navSections.find((section) =>
@@ -391,7 +398,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const sidebar = (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center justify-between px-4 py-5 border-b border-gray-200 dark:border-dark-border">
+      <div className="flex min-h-[72px] items-center justify-between border-b border-gray-200/80 px-4 py-4 dark:border-dark-border">
         {!collapsed && <Logo size="sm" href="/dashboard" />}
         <button
           type="button"
@@ -409,7 +416,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
       {/* Plan badge in sidebar */}
       {!collapsed && planInfo && (
-        <div className={`mx-3 mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 ${planInfo.bg} ${planInfo.border}`}>
+        <div className={`mx-3 mt-3 flex items-center gap-2 rounded-xl border px-3 py-2.5 ${planInfo.bg} ${planInfo.border}`}>
           <Sparkles className={`h-3.5 w-3.5 flex-shrink-0 ${planInfo.color}`} />
           <span className={`text-xs font-semibold truncate ${planInfo.color}`}>{planInfo.label}</span>
         </div>
@@ -426,7 +433,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       )}
 
       {/* Navigation */}
-      <nav aria-label="Navegação principal" className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+      <nav aria-label="Navegação principal" className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
         {navSections.map((section) => {
           const sectionId = `nav-${section.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
           const sectionOpen = collapsed || expandedSections.has(section.title);
@@ -436,7 +443,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => toggleSection(section.title)}
-                className="mb-2 flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                className="mb-1.5 flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-[11px] font-bold uppercase tracking-[0.1em] text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200"
                 aria-expanded={sectionOpen}
                 aria-controls={sectionId}
               >
@@ -452,10 +459,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                     onClick={() => setMobileOpen(false)}
                     data-tour={TOUR_ATTR[item.href]}
                     aria-current={isActive(item.href) ? 'page' : undefined}
-                    className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                    className={`relative flex min-h-10 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                       isActive(item.href)
-                        ? 'bg-gradient-to-r from-brand-50 to-transparent dark:from-brand-950/40 text-brand-700 dark:text-brand-400 shadow-[inset_3px_0_0_0_theme(colors.brand.600)]'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                        ? 'bg-brand-50 text-brand-800 shadow-[inset_3px_0_0_0_theme(colors.brand.600)] dark:bg-brand-950/35 dark:text-brand-300'
+                        : 'text-gray-600 hover:bg-gray-100/80 hover:text-gray-950 dark:text-gray-400 dark:hover:bg-gray-800/80 dark:hover:text-white'
                     }`}
                     title={collapsed ? item.label : undefined}
                   >
@@ -476,10 +483,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       </nav>
 
       {/* User info */}
-      <div className="border-t border-gray-200 dark:border-dark-border px-4 py-4">
+      <div className="border-t border-gray-200/80 px-3 py-3 dark:border-dark-border">
         {!collapsed ? (
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-brand-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+          <div className="flex items-center gap-3 rounded-xl bg-gray-50 px-2.5 py-2 dark:bg-gray-900/55">
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-700 text-sm font-bold text-white shadow-sm">
               {user.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
@@ -489,7 +496,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 {isPreviewMode ? (ROLE_LABELS[effectiveRole] ?? effectiveRole) : (ROLE_LABELS[user.role] ?? user.role)}
               </p>
             </div>
-            <button type="button" onClick={handleLogout} className="text-gray-400 hover:text-red-500 transition-colors" title="Sair" aria-label="Sair da conta">
+            <button type="button" onClick={handleLogout} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30" title="Sair" aria-label="Sair da conta">
               <LogOut className="h-4 w-4" />
             </button>
           </div>
@@ -503,24 +510,24 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-dark-bg">
+    <div className="flex min-h-screen bg-[#f7faf8] dark:bg-dark-bg">
       {mobileOpen && (
         <button type="button" className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Fechar menu" />
       )}
 
       <aside
         id="dashboard-navigation"
-        className={`fixed inset-y-0 left-0 z-50 bg-white dark:bg-dark-card border-r border-gray-200 dark:border-dark-border transition-all duration-300 lg:sticky lg:top-0 lg:h-screen lg:z-0 ${
+        className={`fixed inset-y-0 left-0 z-50 border-r border-gray-200/80 bg-white/95 shadow-[4px_0_24px_-22px_rgba(0,40,24,0.45)] backdrop-blur-xl transition-all duration-300 dark:border-dark-border dark:bg-dark-card/95 lg:sticky lg:top-0 lg:z-0 lg:h-screen ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        } ${collapsed ? 'w-[70px]' : 'w-64'}`}
+        } ${collapsed ? 'w-[76px]' : 'w-[272px]'}`}
       >
         {sidebar}
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 border-b border-gray-200 dark:border-dark-border bg-white/80 dark:bg-dark-card/80 backdrop-blur-lg">
-          <div className="flex items-center justify-between px-4 lg:px-6 py-3">
+        <header className="sticky top-0 z-30 border-b border-gray-200/80 bg-white/[0.88] backdrop-blur-xl dark:border-dark-border dark:bg-dark-card/[0.88]">
+          <div className="flex min-h-[72px] items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -536,10 +543,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               <div className="sm:hidden">
                 <Logo size="sm" href="/dashboard" />
               </div>
-              <div className="hidden sm:block">
+              <div className="hidden min-w-0 sm:block">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-bold text-gray-900 dark:text-white">
-                    Bem-vindo, {user.name.split(' ')[0]}
+                  <h2 className="truncate text-sm font-bold text-gray-950 dark:text-white">
+                    {activeNavItem?.label ?? 'Visão Geral'}
                   </h2>
                   {planInfo && (
                     <span className={`hidden md:inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${planInfo.bg} ${planInfo.border} ${planInfo.color}`}>
@@ -548,11 +555,11 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                <p className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                   {isPreviewMode && <Eye className="h-3 w-3 text-amber-500 flex-shrink-0" />}
                   {isPreviewMode
                     ? `Preview: ${ROLE_LABELS[effectiveRole] ?? effectiveRole}`
-                    : (ROLE_LABELS[user.role] ?? user.role)}
+                    : `${activeNavSection?.title ?? (ROLE_LABELS[user.role] ?? user.role)} · Olá, ${user.name.split(' ')[0]}`}
                 </p>
               </div>
             </div>
@@ -568,9 +575,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main id="main-content" className="relative flex-1 overflow-hidden bg-[#f7faf8] p-4 dark:bg-[#07110c] lg:p-6">
+        <main id="main-content" className="dashboard-surface relative flex-1 overflow-hidden bg-[#f7faf8] p-4 dark:bg-[#07110c] sm:p-6 lg:p-8">
           <div className="pointer-events-none absolute inset-0 contour-pattern opacity-[0.018] dark:opacity-[0.035]" />
-          <div className="relative min-h-full">{children}</div>
+          <div className="relative mx-auto min-h-full w-full max-w-[1600px]">{children}</div>
         </main>
       </div>
 

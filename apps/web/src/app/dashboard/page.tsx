@@ -200,7 +200,7 @@ export default function DashboardPage() {
       {isAdmin && <AdminPreviewBar />}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="dashboard-heading">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Visão Geral</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">

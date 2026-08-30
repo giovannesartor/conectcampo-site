@@ -13,7 +13,7 @@ const HIGHLIGHTS = [
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pt-28 pb-20 sm:pt-36 bg-warm-50 dark:bg-dark-bg">
+    <section className="relative overflow-hidden border-b border-warm-200/70 bg-warm-50 pb-20 pt-28 dark:border-dark-border dark:bg-dark-bg sm:pt-36">
       {/* Grain texture overlay */}
       <div className="grain-overlay absolute inset-0" />
 
@@ -68,7 +68,7 @@ export function Hero() {
               </Link>
               <Link
                 href="/register?plan=CORPORATE"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card px-7 py-3.5 text-base font-semibold text-gray-700 dark:text-gray-200 transition-all hover:border-brand-400 hover:-translate-y-0.5 shadow-sm"
+                className="btn-secondary px-7 py-3.5 text-base"
               >
                 Sou instituição financeira
               </Link>
@@ -94,7 +94,7 @@ export function Hero() {
               {HIGHLIGHTS.map(({ icon: Icon, value, label }) => (
                 <div
                   key={label}
-                  className="rounded-2xl border border-warm-200 dark:border-dark-border bg-white dark:bg-dark-card px-3 py-4 text-center shadow-sm"
+                  className="rounded-2xl border border-warm-200/90 bg-white px-3 py-4 text-center shadow-[var(--shadow-soft)] dark:border-dark-border dark:bg-dark-card"
                 >
                   <Icon className="h-5 w-5 mx-auto text-brand-600 dark:text-brand-400" />
                   <p className="mt-2 text-xl font-extrabold text-gray-900 dark:text-white leading-none">{value}</p>

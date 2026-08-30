@@ -34,7 +34,8 @@ export function StatusBadge({ status, size = 'sm' }: StatusBadgeProps) {
   const sizeClass = size === 'sm' ? 'text-xs px-2 py-0.5' : 'text-sm px-3 py-1';
 
   return (
-    <span className={`inline-flex items-center rounded-full font-medium ${sizeClass} ${config.className}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full font-semibold ring-1 ring-inset ring-black/[0.04] dark:ring-white/[0.04] ${sizeClass} ${config.className}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" aria-hidden="true" />
       {config.label}
     </span>
   );

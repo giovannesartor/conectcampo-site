@@ -29,7 +29,7 @@ export function Platform() {
       <div className="pointer-events-none absolute inset-0 opacity-[0.02] dark:opacity-[0.04] contour-pattern" />
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
         <div className="text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600 dark:text-brand-400">
+          <span className="section-kicker">
             Plataforma completa
           </span>
           <h2 className="section-title mt-3">Muito além do crédito</h2>
@@ -39,7 +39,7 @@ export function Platform() {
           </p>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {TOOLS.map((t, i) => (
             <motion.div
               key={t.title}
@@ -47,11 +47,11 @@ export function Platform() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: (i % 3) * 0.08 }}
-              className={`card card-hover group relative flex gap-4 ${
+              className={`card card-hover group relative flex min-h-[138px] gap-4 ${
                 t.highlight ? 'ring-1 ring-brand-500/30 bg-gradient-to-br from-warm-100/60 to-transparent dark:from-warm-900/10' : ''
               }`}
             >
-              <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-warm-100 dark:bg-warm-900/20 text-brand-600 dark:text-brand-400 transition-transform group-hover:-translate-y-0.5">
+              <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-brand-100 bg-brand-50 text-brand-600 dark:border-brand-900 dark:bg-brand-950/30 dark:text-brand-400">
                 <t.icon className="h-5 w-5" />
               </span>
               <div>
@@ -63,14 +63,14 @@ export function Platform() {
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t.desc}</p>
+                <p className="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">{t.desc}</p>
               </div>
             </motion.div>
           ))}
         </div>
 
         {/* Faixa de destaque — pagamento seguro */}
-        <div className="mt-14 flex flex-col items-center gap-4 rounded-2xl border border-emerald-200 dark:border-emerald-900 bg-gradient-to-r from-emerald-50 to-transparent dark:from-emerald-950/30 p-6 text-center sm:flex-row sm:text-left">
+        <div className="mt-12 flex flex-col items-center gap-4 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white p-6 text-center shadow-[var(--shadow-soft)] dark:border-emerald-900 dark:from-emerald-950/30 dark:to-dark-card sm:flex-row sm:text-left">
           <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white">
             <ShieldCheck className="h-6 w-6" />
           </span>

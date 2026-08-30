@@ -20,13 +20,24 @@ const colorMap = {
   cyan:   'bg-cyan-50 dark:bg-cyan-950/20 text-cyan-600 dark:text-cyan-400',
 };
 
+const accentMap = {
+  brand:  'bg-brand-500',
+  green:  'bg-green-500',
+  blue:   'bg-blue-500',
+  purple: 'bg-purple-500',
+  amber:  'bg-amber-500',
+  red:    'bg-red-500',
+  cyan:   'bg-cyan-500',
+};
+
 export function KPICard({ title, value, subtitle, icon, trend, color = 'brand' }: KPICardProps) {
   return (
-    <div className="card card-hover">
+    <div className="card card-hover relative min-h-[138px] overflow-hidden">
+      <span className={`absolute inset-x-0 top-0 h-[3px] ${accentMap[color]}`} />
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{title}</p>
-          <p className="mt-1.5 sm:mt-2 text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate">{value}</p>
+          <p className="truncate text-[11px] font-bold uppercase tracking-[0.07em] text-gray-500 dark:text-gray-400 sm:text-xs">{title}</p>
+          <p className="mt-2 truncate text-2xl font-extrabold tracking-[-0.03em] text-gray-950 dark:text-white sm:text-3xl">{value}</p>
           {subtitle && (
             <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 truncate">{subtitle}</p>
           )}
@@ -47,7 +58,7 @@ export function KPICard({ title, value, subtitle, icon, trend, color = 'brand' }
             </div>
           )}
         </div>
-        <div className={`flex-shrink-0 rounded-xl p-2 sm:p-3 ${colorMap[color]}`}>
+        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ring-black/[0.03] sm:h-11 sm:w-11 ${colorMap[color]}`}>
           {icon}
         </div>
       </div>

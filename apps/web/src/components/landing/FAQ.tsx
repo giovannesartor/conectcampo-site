@@ -136,7 +136,7 @@ export function FAQ() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="rounded-2xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 sm:p-8"
+          className="card p-6 sm:p-8"
         >
           {faqs.map((faq, i) => (
             <FAQItem

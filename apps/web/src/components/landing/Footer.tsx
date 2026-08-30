@@ -23,13 +23,13 @@ const footerLinks = {
 
 export function Footer() {
   return (
-    <footer className="border-t border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg">
+    <footer className="surface-muted border-t border-gray-200 dark:border-dark-border">
       <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
-          <div>
+          <div className="md:pr-8">
             <Logo size="md" href="/" />
-            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            <p className="mt-4 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">
               Marketplace de crédito agro que conecta produtores rurais
               às melhores oportunidades de financiamento.
             </p>

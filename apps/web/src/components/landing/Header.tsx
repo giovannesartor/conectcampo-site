@@ -29,8 +29,8 @@ export function Header() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-dark-bg/90 backdrop-blur-xl border-b border-gray-200 dark:border-dark-border">
-      <nav aria-label="Navegação principal" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-gray-200/80 bg-white/[0.92] shadow-[0_8px_30px_-28px_rgba(0,40,24,0.55)] backdrop-blur-xl dark:border-dark-border dark:bg-dark-bg/[0.92]">
+      <nav aria-label="Navegação principal" className="mx-auto flex min-h-[72px] max-w-7xl items-center justify-between px-6 py-2 lg:px-8">
         {/* Logo */}
         <Logo size="md" href="/" />
 
@@ -57,14 +57,14 @@ export function Header() {
             </button>
             {dropdownOpen && (
               <div className="absolute left-0 top-full pt-1">
-              <div id="platform-menu" role="menu" className="w-48 rounded-xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card shadow-lg overflow-hidden">
+              <div id="platform-menu" role="menu" className="w-52 overflow-hidden rounded-2xl border border-gray-200 bg-white p-1.5 shadow-xl shadow-gray-950/10 dark:border-dark-border dark:bg-dark-card">
                 {plataformaLinks.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
                     role="menuitem"
                     onClick={() => setDropdownOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 transition-colors"
+                    className="block rounded-xl px-3.5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-gray-300 dark:hover:bg-brand-900/20 dark:hover:text-brand-300"
                   >
                     {item.name}
                   </Link>
@@ -111,7 +111,7 @@ export function Header() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div id="mobile-navigation" className="lg:hidden border-t border-gray-200 dark:border-dark-border">
+        <div id="mobile-navigation" className="border-t border-gray-200 bg-white/95 shadow-xl backdrop-blur-xl dark:border-dark-border dark:bg-dark-bg/95 lg:hidden">
           <div className="space-y-1 px-6 py-4">
             {mobileNavLinks.map((item) => (
               <Link

@@ -120,7 +120,7 @@ export function DashboardStart() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="dashboard-heading">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 dark:bg-brand-950/40">
             <Sprout className="h-5 w-5 text-brand-600 dark:text-brand-400" />

@@ -30,7 +30,7 @@ export function ProductShowcase() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600 dark:text-brand-400">
+            <span className="section-kicker">
               Painel de controle
             </span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white [text-wrap:balance]">
@@ -43,8 +43,8 @@ export function ProductShowcase() {
 
             <div className="mt-8 space-y-4">
               {FEATURES.map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="flex gap-3">
-                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-warm-100 dark:bg-warm-900/20 text-brand-600 dark:text-brand-400">
+                <div key={title} className="flex gap-3 rounded-2xl border border-transparent p-2 transition-colors hover:border-gray-200 hover:bg-gray-50/80 dark:hover:border-dark-border dark:hover:bg-dark-card/60">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-brand-100 bg-brand-50 text-brand-600 dark:border-brand-900 dark:bg-brand-950/30 dark:text-brand-400">
                     <Icon className="h-5 w-5" />
                   </span>
                   <div>
@@ -69,7 +69,7 @@ export function ProductShowcase() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="relative"
           >
-            <div className="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card shadow-lg">
+            <div className="relative overflow-hidden rounded-[1.4rem] border border-gray-200 bg-white shadow-xl shadow-gray-950/[0.07] dark:border-dark-border dark:bg-dark-card">
               {/* window bar */}
               <div className="flex items-center gap-2 border-b border-gray-100 dark:border-dark-border bg-gray-50/80 dark:bg-dark-bg/60 px-4 py-3">
                 <span className="h-2.5 w-2.5 rounded-full bg-gray-300 dark:bg-gray-600" />
@@ -91,7 +91,7 @@ export function ProductShowcase() {
                     { label: 'Score', value: '742', sub: 'Excelente' },
                     { label: 'Propostas', value: 'R$8,4M', sub: 'Em análise' },
                   ].map((k) => (
-                    <div key={k.label} className="rounded-xl border border-gray-100 dark:border-dark-border bg-gray-50/70 dark:bg-dark-bg/60 p-3">
+                    <div key={k.label} className="rounded-xl border border-gray-200/80 bg-gray-50/70 p-3 dark:border-dark-border dark:bg-dark-bg/60">
                       <p className="text-[11px] text-gray-500 dark:text-gray-400">{k.label}</p>
                       <p className="mt-1 text-xl font-extrabold text-gray-900 dark:text-white leading-none">{k.value}</p>
                       <p className="mt-1 text-[11px] font-medium text-brand-600 dark:text-brand-400">{k.sub}</p>
@@ -102,7 +102,7 @@ export function ProductShowcase() {
                 {/* Modules */}
                 <div className="mt-4 grid grid-cols-3 gap-3">
                   {MODULES.map((m) => (
-                    <div key={m.label} className="rounded-xl border border-gray-100 dark:border-dark-border bg-gray-50/70 dark:bg-dark-bg/60 p-3">
+                    <div key={m.label} className="rounded-xl border border-gray-200/80 bg-gray-50/70 p-3 dark:border-dark-border dark:bg-dark-bg/60">
                       <m.icon className="h-5 w-5 text-brand-600 dark:text-brand-400" />
                       <p className="mt-2 text-xs font-semibold text-gray-900 dark:text-white">{m.label}</p>
                       <p className="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400">{m.desc}</p>

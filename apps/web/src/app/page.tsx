@@ -104,7 +104,7 @@ const jsonLd = {
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-white dark:bg-dark-bg">
+    <main className="landing-home min-h-screen bg-white dark:bg-dark-bg">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

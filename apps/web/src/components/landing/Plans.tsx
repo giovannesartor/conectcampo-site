@@ -84,13 +84,14 @@ export function Plans() {
     <section id="planos" className="py-24 bg-warm-50 dark:bg-dark-bg">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="section-title">Planos que cabem na sua operação</h2>
+          <span className="section-kicker">Planos e preços</span>
+          <h2 className="section-title mt-3">Planos que cabem na sua operação</h2>
           <p className="section-subtitle">
             Comece com <span className="font-semibold text-brand-600 dark:text-brand-400">7 dias grátis</span> em qualquer plano pago. Instituições financeiras entram grátis. Além da assinatura, cobramos apenas uma comissão sobre operações fechadas.
           </p>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
+        <div className="mt-14 grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 lg:grid-cols-4">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
@@ -98,14 +99,14 @@ export function Plans() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`card relative flex flex-col h-full ${
+              className={`card card-hover relative flex h-full flex-col ${
                 plan.highlighted
-                  ? 'ring-2 ring-brand-500 shadow-xl shadow-brand-500/10'
+                  ? 'border-brand-400 ring-1 ring-brand-500 shadow-xl shadow-brand-500/10'
                   : ''
               }`}
             >
               {plan.highlighted && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-brand-600 px-4 py-1 text-xs font-bold text-white">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-brand-700 px-4 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
                   Mais completo
                 </div>
               )}
