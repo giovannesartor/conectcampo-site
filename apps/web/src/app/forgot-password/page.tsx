@@ -28,13 +28,13 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="auth-surface flex min-h-screen">
       <div className="hidden lg:block fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
 
       {/* Left panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 items-center justify-center p-12">
+      <div className="auth-brand-panel hidden items-center justify-center p-12 lg:flex lg:w-1/2">
         <div className="max-w-md text-center">
           <div className="flex items-center justify-center mb-8">
             <Logo size="lg" showText={false} href="/" />
@@ -50,8 +50,8 @@ export default function ForgotPasswordPage() {
       </div>
 
       {/* Right panel */}
-      <div className="flex w-full lg:w-1/2 items-center justify-center p-8">
-        <div className="w-full max-w-md">
+      <div className="flex w-full items-center justify-center p-5 sm:p-8 lg:w-1/2">
+        <div className="auth-form-card max-w-md p-6 sm:p-8">
           <div className="lg:hidden flex items-center justify-between mb-8">
             <Logo size="sm" href="/" />
             <ThemeToggle />

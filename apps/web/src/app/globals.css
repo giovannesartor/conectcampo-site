@@ -198,11 +198,108 @@ html {
   letter-spacing: -0.012em;
 }
 
+/* Páginas institucionais compartilham o mesmo acabamento editorial da home. */
+.public-site > section {
+  position: relative;
+  isolation: isolate;
+}
+
+.public-site > section:first-child {
+  border-bottom: 1px solid var(--border-soft);
+  background:
+    radial-gradient(720px 320px at 50% -30%, rgba(0, 160, 60, 0.1), transparent 70%),
+    linear-gradient(135deg, #f7fbf8 0%, #ffffff 70%);
+}
+
+.dark .public-site > section:first-child {
+  background:
+    radial-gradient(720px 320px at 50% -30%, rgba(0, 160, 60, 0.1), transparent 70%),
+    linear-gradient(135deg, #101a13 0%, #0a0f0c 70%);
+}
+
+.public-site > section:first-child h1 {
+  color: #111827;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.dark .public-site > section:first-child h1 {
+  color: #ffffff;
+}
+
+.public-site > section:first-child p {
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+
+.public-site section h2 {
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.public-site .rounded-2xl.border.bg-white {
+  border-color: var(--border-soft);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Auth segue o mesmo produto, sem parecer uma área separada da plataforma. */
+.auth-surface {
+  background:
+    radial-gradient(800px 500px at 85% 0%, rgba(0, 140, 60, 0.055), transparent 65%),
+    var(--background);
+}
+
+.auth-brand-panel {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #001f14 0%, #003c28 48%, #006830 100%);
+}
+
+.auth-brand-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 Q45 20 30 35 Q15 20 30 5' fill='none' stroke='%23ffffff' stroke-width='0.4'/%3E%3Cpath d='M30 20 Q45 30 30 45 Q15 30 30 20' fill='none' stroke='%23ffffff' stroke-width='0.3'/%3E%3C/svg%3E");
+}
+
+.auth-brand-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-form-card {
+  width: 100%;
+  border: 1px solid var(--border-soft);
+  border-radius: 1.25rem;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
 /* Tabelas e filtros passam a seguir o mesmo acabamento em todo o dashboard. */
 .dashboard-surface table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+}
+
+.dashboard-surface :where(h1, h2, h3) {
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+}
+
+.dashboard-surface h1 {
+  font-weight: 800;
+}
+
+.dashboard-surface .card > :where(h2, h3):first-child {
+  color: #111827;
+  font-weight: 700;
+}
+
+.dark .dashboard-surface .card > :where(h2, h3):first-child {
+  color: #ffffff;
 }
 
 .dashboard-surface thead {
@@ -243,5 +340,9 @@ html {
 }
 
 .dashboard-surface :where(select, textarea):not(.input) {
+  border-radius: 0.75rem;
+}
+
+.dashboard-surface input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not(.input) {
   border-radius: 0.75rem;
 }

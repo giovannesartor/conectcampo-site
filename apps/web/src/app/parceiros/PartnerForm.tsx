@@ -33,8 +33,7 @@ export function PartnerForm() {
           Cadastro enviado com sucesso!
         </h3>
         <p className="text-gray-600 dark:text-gray-400">
-          Nosso time comercial entrará em contato em até 24h úteis.
-          Fique atento ao seu e-mail.
+          Nosso time comercial analisará os dados enviados e retornará pelo e-mail informado.
         </p>
       </div>
     );
@@ -43,7 +42,7 @@ export function PartnerForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 sm:p-8 space-y-5"
+      className="card space-y-5 p-6 sm:p-8"
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>

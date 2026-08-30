@@ -30,8 +30,8 @@ export function Footer() {
           <div className="md:pr-8">
             <Logo size="md" href="/" />
             <p className="mt-4 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">
-              Marketplace de crédito agro que conecta produtores rurais
-              às melhores oportunidades de financiamento.
+              Plataforma que organiza operações do agro e aproxima produtores,
+              empresas e instituições financeiras em um fluxo digital.
             </p>
           </div>
 

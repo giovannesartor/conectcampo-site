@@ -113,7 +113,7 @@ export default function CarreirasPage() {
       <section className="bg-brand-600 px-6 py-16 lg:px-8 text-center">
         <h2 className="text-2xl font-bold text-white mb-3">Não encontrou sua vaga?</h2>
         <p className="text-brand-100 mb-6 max-w-lg mx-auto">
-          Mandou o seu currículo mesmo assim. Adoramos conhecer pessoas talentosas que querem impactar o agronegócio.
+          Mande o seu currículo mesmo assim. Adoramos conhecer pessoas talentosas que querem impactar o agronegócio.
         </p>
         <Link href="mailto:carreiras@conectcampo.com.br?subject=Candidatura Espontânea" className="inline-flex items-center gap-2 bg-white text-brand-700 font-semibold px-6 py-3 rounded-lg hover:bg-brand-50 transition-colors">
           Enviar candidatura espontânea <ArrowRight className="h-4 w-4" />

@@ -160,13 +160,13 @@ export function CreditSimulator({ embedded = false }: { embedded?: boolean }) {
             <Check className="h-5 w-5 text-brand-600 mx-auto mb-1" />
             <p className="text-sm font-semibold text-brand-700 dark:text-brand-400">Recebemos seu contato!</p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Em breve você recebe as melhores oportunidades de crédito para sua operação.
+              Seu contato foi registrado para apresentação de fontes compatíveis com a operação.
             </p>
           </div>
         ) : (
           <form onSubmit={submitLead} className="mt-5">
             <p className="text-sm font-semibold text-gray-900 dark:text-white text-center mb-2">
-              Receba propostas reais para essa simulação
+              Receba propostas compatíveis com esta simulação
             </p>
             <div className="flex flex-col sm:flex-row gap-2">
               <input

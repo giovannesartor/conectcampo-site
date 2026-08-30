@@ -17,7 +17,7 @@ const steps = [
   {
     icon: BarChart3,
     title: 'Score automático',
-    description: 'Nosso motor analisa receita, garantias, fluxo de caixa e gera seu Risk Score.',
+    description: 'O motor organiza receita, garantias e fluxo de caixa para compor indicadores de apoio à análise.',
   },
   {
     icon: Handshake,
@@ -27,7 +27,7 @@ const steps = [
   {
     icon: CheckCircle2,
     title: 'Receba propostas',
-    description: 'Compare condições, taxas e prazos. Aceite a melhor oferta diretamente na plataforma.',
+    description: 'Compare condições, taxas e prazos e escolha a proposta mais adequada à sua operação.',
   },
 ];
 
@@ -38,7 +38,7 @@ export function HowItWorks() {
         <div className="text-center">
           <h2 className="section-title">Como funciona</h2>
           <p className="section-subtitle">
-            Em 5 passos simples, conectamos você ao crédito ideal para sua operação.
+            Em 5 passos, sua operação fica organizada para encontrar fontes de crédito compatíveis.
           </p>
         </div>
 

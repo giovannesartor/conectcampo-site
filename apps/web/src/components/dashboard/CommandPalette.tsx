@@ -68,6 +68,12 @@ export function CommandPalette() {
   }, []);
 
   useEffect(() => {
+    const openPalette = () => setOpen(true);
+    window.addEventListener('conectcampo:open-command-palette', openPalette);
+    return () => window.removeEventListener('conectcampo:open-command-palette', openPalette);
+  }, []);
+
+  useEffect(() => {
     if (open) {
       setQ('');
       setActive(0);
@@ -110,9 +116,9 @@ export function CommandPalette() {
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center bg-black/40 backdrop-blur-sm pt-[12vh] px-4" onClick={() => setOpen(false)}>
-      <div className="w-full max-w-xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-2 border-b border-gray-100 dark:border-dark-border px-4">
+    <div className="fixed inset-0 z-[60] flex items-start justify-center bg-gray-950/55 px-4 pt-[12vh] backdrop-blur-[3px]" onClick={() => setOpen(false)}>
+      <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-white/60 bg-white shadow-2xl shadow-black/20 dark:border-gray-800 dark:bg-gray-900" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3 border-b border-gray-100 px-4 dark:border-dark-border">
           <Search className="h-4 w-4 text-gray-400" />
           <input
             ref={inputRef}
@@ -124,11 +130,11 @@ export function CommandPalette() {
               if (e.key === 'Enter' && results[active]) go(results[active].href);
             }}
             placeholder="Buscar páginas, operações…"
-            className="flex-1 bg-transparent py-3.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none"
+            className="flex-1 bg-transparent py-4 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none dark:text-white"
           />
           <kbd className="text-[10px] text-gray-400 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5">ESC</kbd>
         </div>
-        <div className="max-h-80 overflow-y-auto py-2">
+        <div className="max-h-[420px] overflow-y-auto p-2">
           {results.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-gray-400">Nada encontrado.</p>
           ) : (
@@ -137,11 +143,11 @@ export function CommandPalette() {
                 key={c.id}
                 onMouseEnter={() => setActive(i)}
                 onClick={() => go(c.href)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left ${
-                  i === active ? 'bg-brand-50 dark:bg-brand-950/30' : ''
+                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${
+                  i === active ? 'bg-brand-50 dark:bg-brand-950/30' : 'hover:bg-gray-50 dark:hover:bg-gray-800/60'
                 }`}
               >
-                <span className="text-gray-500 dark:text-gray-400">{c.icon}</span>
+                <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${i === active ? 'bg-white text-brand-600 shadow-sm dark:bg-gray-900 dark:text-brand-400' : 'bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}>{c.icon}</span>
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm font-medium text-gray-900 dark:text-white truncate">{c.label}</span>
                   {c.sub && <span className="block text-xs text-gray-400 truncate">{c.sub}</span>}

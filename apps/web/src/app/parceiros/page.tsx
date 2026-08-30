@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: 'Torne-se parceiro ConectCampo. Analise operações rurais com scoring, documentos e dados organizados em um só fluxo.',
   openGraph: {
     title: 'Parceiros Financeiros — ConectCampo',
-    description: 'Bancos, FIDCs, FIAGROs e cooperativas: acesse o melhor do crédito rural sem burocracia.',
+    description: 'Bancos, FIDCs, FIAGROs e cooperativas: analise operações rurais com dados e documentos organizados.',
   },
 };
 
@@ -61,8 +61,8 @@ export default function ParceirosPage() {
             Parceiros Financeiros
           </span>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
-            Acesse o melhor do crédito rural{' '}
-            <span className="text-brand-600">sem a burocracia</span>
+            Operações rurais organizadas{' '}
+            <span className="text-brand-600">para uma análise mais eficiente</span>
           </h1>
           <p className="mt-6 text-lg text-gray-600 dark:text-gray-400">
             A ConectCampo organiza a conexão entre instituições financeiras e solicitantes de
@@ -129,7 +129,7 @@ export default function ParceirosPage() {
             Cadastre sua instituição
           </h2>
           <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
-            Preencha o formulário abaixo e nosso time comercial entrará em contato em até 24h.
+            Preencha o formulário abaixo. Nosso time comercial analisará os dados e retornará pelo contato informado.
           </p>
           <PartnerForm />
         </div>
@@ -139,7 +139,7 @@ export default function ParceirosPage() {
       <section className="bg-brand-600 px-6 py-20 lg:px-8 text-center">
         <h2 className="text-3xl font-bold text-white mb-4">Pronto para expandir seu portfólio agro?</h2>
         <p className="text-brand-100 mb-8 max-w-xl mx-auto">
-          Fale com nosso time comercial e veja como a ConectCampo pode aumentar o volume de crédito rural da sua instituição.
+          Fale com nosso time comercial e conheça o fluxo de originação, análise e acompanhamento da ConectCampo.
         </p>
         <Link href="/contato" className="inline-flex items-center gap-2 bg-white text-brand-700 font-semibold px-8 py-3 rounded-lg hover:bg-brand-50 transition-colors">
           Falar com especialista <ArrowRight className="h-4 w-4" />

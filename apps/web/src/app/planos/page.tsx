@@ -15,8 +15,8 @@ const plans = [
       'Perfil e gestão da propriedade (talhões e safras)',
       'Score ConectCampo de crédito',
       'Monitoramento por satélite (NDVI) e alertas de clima',
-      'Cotações de commodities e moedas',
-      'Gestão de operações de crédito',
+      'Cotações de commodities e câmbio',
+      'Até 2 operações de crédito simultâneas',
       'Matching automático com financiadores',
       'Gestão de documentos',
       'Suporte por e-mail',
@@ -73,7 +73,7 @@ const plans = [
       'Dashboards de portfólio',
       'Gestão de propostas',
       'Compliance e rastreabilidade',
-      'Atendimento especializado para integração',
+      'Suporte por e-mail e acompanhamento comercial',
     ],
   },
 ];
@@ -96,47 +96,43 @@ export default function PlanosPage() {
 
       {/* Plans grid */}
       <section className="px-6 py-20 lg:px-8">
-        <div className="mx-auto max-w-7xl grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative rounded-2xl border p-8 flex flex-col ${
+              className={`card card-hover relative flex flex-col ${
                 plan.highlight
-                  ? 'border-brand-500 bg-brand-600 text-white shadow-2xl shadow-brand-200 dark:shadow-brand-900/30 scale-105'
-                  : 'border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card'
+                  ? 'border-brand-400 ring-1 ring-brand-500 shadow-xl shadow-brand-500/10'
+                  : ''
               }`}
             >
               {plan.highlight && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400 px-4 py-1 text-xs font-bold text-amber-900">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-4 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
                     <Zap className="h-3 w-3" /> Mais completo
                   </span>
                 </div>
               )}
 
               <div>
-                <h3 className={`text-lg font-bold ${plan.highlight ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                   {plan.name}
                 </h3>
-                <p className={`mt-2 text-sm ${plan.highlight ? 'text-brand-100' : 'text-gray-500 dark:text-gray-400'}`}>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                   {plan.description}
                 </p>
                 <div className="mt-6 flex items-end gap-1">
-                  <span className={`text-4xl font-black ${plan.highlight ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                  <span className="text-4xl font-black text-gray-900 dark:text-white">
                     {plan.price}
                   </span>
                   {plan.period && (
-                    <span className={`mb-1 text-sm ${plan.highlight ? 'text-brand-200' : 'text-gray-400'}`}>
+                    <span className="mb-1 text-sm text-gray-400">
                       {plan.period}
                     </span>
                   )}
                 </div>
                 {plan.period && (
-                  <span className={`mt-2 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                    plan.highlight
-                      ? 'bg-white/20 text-white'
-                      : 'bg-brand-50 dark:bg-brand-950/20 text-brand-700 dark:text-brand-300'
-                  }`}>
+                  <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700 dark:bg-brand-950/20 dark:text-brand-300">
                     7 dias grátis
                   </span>
                 )}
@@ -145,19 +141,15 @@ export default function PlanosPage() {
               <ul className="mt-8 space-y-3 flex-1">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3 text-sm">
-                    <Check className={`h-4 w-4 mt-0.5 shrink-0 ${plan.highlight ? 'text-brand-200' : 'text-brand-600'}`} />
-                    <span className={plan.highlight ? 'text-brand-100' : 'text-gray-600 dark:text-gray-400'}>{feature}</span>
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+                    <span className="text-gray-600 dark:text-gray-400">{feature}</span>
                   </li>
                 ))}
               </ul>
 
               <Link
                 href={plan.href}
-                className={`mt-8 inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-colors ${
-                  plan.highlight
-                    ? 'bg-white text-brand-700 hover:bg-brand-50'
-                    : 'bg-brand-600 text-white hover:bg-brand-700'
-                }`}
+                className={`mt-8 ${plan.highlight ? 'btn-primary' : 'btn-secondary'}`}
               >
                 {plan.cta} <ArrowRight className="h-4 w-4" />
               </Link>

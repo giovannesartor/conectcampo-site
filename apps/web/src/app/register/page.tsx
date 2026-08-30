@@ -204,7 +204,7 @@ function RegisterForm() {
 
   if (step === 'plan') {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-dark-bg px-4 py-12">
+      <div className="auth-surface flex min-h-screen flex-col items-center justify-center px-4 py-12">
         <div className="fixed top-4 right-4 z-50">
           <ThemeToggle />
         </div>
@@ -224,7 +224,7 @@ function RegisterForm() {
             <button
               key={plan.key}
               onClick={() => choosePlan(plan.key)}
-              className="group flex flex-col rounded-2xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 text-left transition-all hover:border-brand-500 hover:shadow-lg hover:shadow-brand-500/10 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="card card-hover group flex flex-col text-left focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <div className="flex-1">
                 <h3 className="text-base font-bold text-gray-900 dark:text-white">
@@ -272,13 +272,13 @@ function RegisterForm() {
   // ─── Step: Registration form ─────────────────────────────────────────────────
 
   return (
-    <div className="flex min-h-screen">
+    <div className="auth-surface flex min-h-screen">
       <div className="hidden lg:block fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
 
       {/* Left panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 items-center justify-center p-12">
+      <div className="auth-brand-panel hidden items-center justify-center p-12 lg:flex lg:w-1/2">
         <div className="max-w-md text-center">
           <Logo size="lg" showText={false} href="/" />
           <div className="mt-8 text-3xl font-bold text-white">
@@ -323,8 +323,8 @@ function RegisterForm() {
       </div>
 
       {/* Right panel */}
-      <div className="flex w-full lg:w-1/2 items-center justify-center p-8">
-        <div className="w-full max-w-md">
+      <div className="flex w-full items-center justify-center p-5 sm:p-8 lg:w-1/2">
+        <div className="auth-form-card max-w-md p-6 sm:p-8">
           <div className="lg:hidden flex items-center justify-between mb-8">
             <Logo size="sm" href="/" />
             <ThemeToggle />

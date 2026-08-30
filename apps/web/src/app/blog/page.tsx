@@ -22,7 +22,7 @@ export default function BlogIndex() {
           Crédito agro, sem complicação
         </h1>
         <p className="mt-3 text-lg text-gray-600 dark:text-gray-400 max-w-2xl">
-          Guias práticos sobre crédito rural, CPR, mercado de capitais e como conseguir as melhores condições para a sua operação.
+          Guias práticos sobre crédito rural, CPR, mercado de capitais e organização de operações no agronegócio.
         </p>
 
         <div className="mt-12 grid gap-6 sm:grid-cols-2">

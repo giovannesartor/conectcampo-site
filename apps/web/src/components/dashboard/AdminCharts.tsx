@@ -26,11 +26,11 @@ interface ChartCardProps {
 
 function ChartCard({ title, subtitle, children }: ChartCardProps) {
   return (
-    <div className="card">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+    <div className="card overflow-hidden">
+      <div className="mb-5 border-b border-gray-100 pb-4 dark:border-gray-800">
+        <h3 className="text-base font-bold tracking-tight text-gray-950 dark:text-white">{title}</h3>
         {subtitle && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{subtitle}</p>
         )}
       </div>
       {children}

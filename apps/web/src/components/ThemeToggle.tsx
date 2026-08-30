@@ -11,7 +11,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       type="button"
       onClick={toggleTheme}
       aria-label={theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}
-      className={`inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${className}`}
+      className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-gray-600 transition-colors hover:border-gray-200 hover:bg-white hover:text-gray-950 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-white ${className}`}
     >
       {theme === 'light' ? (
         <Moon className="h-5 w-5" />

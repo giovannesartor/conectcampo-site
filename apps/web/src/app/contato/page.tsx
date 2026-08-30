@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { PublicLayout } from '@/components/landing/PublicLayout';
-import { Mail, MessageSquare, Building2, Phone, Loader2 } from 'lucide-react';
+import { Mail, MessageSquare, Building2, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -10,7 +10,6 @@ const contacts = [
   { icon: Mail, label: 'E-mail geral', value: 'contato@conectcampo.com.br', href: 'mailto:contato@conectcampo.com.br' },
   { icon: Building2, label: 'Parcerias institucionais', value: 'parcerias@conectcampo.com.br', href: 'mailto:parcerias@conectcampo.com.br' },
   { icon: MessageSquare, label: 'Suporte', value: 'suporte@conectcampo.com.br', href: 'mailto:suporte@conectcampo.com.br' },
-  { icon: Phone, label: 'WhatsApp (somente texto)', value: '+55 (11) 9 0000-0000', href: 'https://wa.me/5511900000000' },
 ];
 
 export default function ContatoPage() {
@@ -86,53 +85,53 @@ export default function ContatoPage() {
                   <Mail className="h-7 w-7" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Mensagem enviada!</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Retornaremos em até 2 dias úteis.</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Nossa equipe analisará sua mensagem e retornará pelo e-mail informado.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome</label>
+                    <label className="label">Nome</label>
                     <input
                       type="text"
                       required
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      className="w-full rounded-lg border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-bg px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 dark:focus:ring-brand-900/30"
+                      className="input"
                       placeholder="João Silva"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-mail</label>
+                    <label className="label">E-mail</label>
                     <input
                       type="email"
                       required
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="w-full rounded-lg border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-bg px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 dark:focus:ring-brand-900/30"
+                      className="input"
                       placeholder="joao@email.com"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assunto</label>
+                  <label className="label">Assunto</label>
                   <input
                     type="text"
                     required
                     value={form.subject}
                     onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-bg px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 dark:focus:ring-brand-900/30"
+                    className="input"
                     placeholder="Ex: Quero ser parceiro"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mensagem</label>
+                  <label className="label">Mensagem</label>
                   <textarea
                     required
                     rows={5}
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-bg px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 dark:focus:ring-brand-900/30 resize-none"
+                    className="input resize-none"
                     placeholder="Conte o que você precisa..."
                   />
                 </div>

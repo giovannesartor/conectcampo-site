@@ -1,5 +1,5 @@
 import { PublicLayout } from '@/components/landing/PublicLayout';
-import { CheckCircle2, ArrowRight, FileText, Search, Handshake, TrendingUp, ShoppingCart, ShieldCheck, Truck, HandCoins } from 'lucide-react';
+import { CheckCircle2, ArrowRight, FileText, Search, Handshake, TrendingUp, ShoppingCart, ShieldCheck, Truck, HandCoins, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 
 const escrowSteps = [
@@ -12,34 +12,42 @@ const escrowSteps = [
 const steps = [
   {
     number: '01',
-    icon: FileText,
-    title: 'Cadastre-se e envie documentos',
+    icon: UserPlus,
+    title: 'Crie sua conta e seu perfil',
     description:
-      'Crie sua conta e envie documentos como balanço patrimonial, CPF/CNPJ, comprovante de propriedade e histórico produtivo em um fluxo online.',
-    items: ['Cadastro online', 'Upload organizado de documentos', 'Apoio automatizado à análise'],
+      'Cadastre a pessoa, empresa ou instituição e defina o perfil que orientará a experiência e os módulos disponíveis.',
+    items: ['Cadastro online', 'Perfil conforme o tipo de operação', 'Controles de acesso por função'],
   },
   {
     number: '02',
-    icon: Search,
-    title: 'Análise e Score de Crédito',
+    icon: FileText,
+    title: 'Organize dados e documentos',
     description:
-      'Nossa engine analisa seu perfil com base em dados agronômicos, histórico de produção, localização e indicadores financeiros. Você recebe um Score ConectCampo transparente.',
-    items: ['Score baseado nos dados cadastrados', 'Análise multivariável proprietária', 'Acompanhamento pelo dashboard'],
+      'Reúna documentos cadastrais, informações produtivas, garantias e históricos necessários para apresentar a operação.',
+    items: ['Data room organizado', 'Campos pendentes identificados', 'Documentos vinculados à operação'],
   },
   {
     number: '03',
+    icon: Search,
+    title: 'Componha o Score ConectCampo',
+    description:
+      'O motor organiza os dados cadastrados em indicadores de apoio à análise, sem substituir a política de crédito das instituições.',
+    items: ['Indicadores baseados nos dados disponíveis', 'Critérios explicados no dashboard', 'Evolução conforme o cadastro é completado'],
+  },
+  {
+    number: '04',
     icon: Handshake,
     title: 'Matching com parceiros financeiros',
     description:
       'Com base no seu score e perfil, o sistema identifica compatibilidade com os critérios cadastrados por bancos, cooperativas, FIDCs, securitizadoras e FIAGROs.',
-    items: ['Matching inteligente por IA', 'Múltiplas instituições simultaneamente', 'Sem necessidade de bater de porta em porta'],
+    items: ['Matching por perfil e critérios de elegibilidade', 'Apresentação a fontes compatíveis', 'Fluxo centralizado de acompanhamento'],
   },
   {
-    number: '04',
+    number: '05',
     icon: TrendingUp,
-    title: 'Feche a operação e cresça',
+    title: 'Compare e acompanhe propostas',
     description:
-      'Compare as propostas, negocie condições e formalize a operação direto pela plataforma. Tudo documentado e rastreável. A operação de crédito é concedida e formalizada pela instituição financeira parceira, responsável pela observância das normas do Banco Central.',
+      'Compare condições e acompanhe as etapas de formalização. A concessão e as condições finais pertencem à instituição financeira responsável.',
     items: ['Comparação lado a lado das propostas', 'Assinatura digital integrada', 'Gestão pós-operação no dashboard'],
   },
 ];
@@ -55,11 +63,11 @@ export default function ComoFuncionaPage() {
           </span>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
             Do campo ao crédito em{' '}
-            <span className="text-brand-600">4 etapas simples</span>
+            <span className="text-brand-600">5 etapas claras</span>
           </h1>
           <p className="mt-6 text-lg text-gray-600 dark:text-gray-400">
-            A ConectCampo elimina a burocracia do crédito rural. Nossa plataforma conecta produtores
-            rurais e empresas do agronegócio diretamente às melhores instituições financeiras do Brasil.
+            A ConectCampo organiza dados, documentos e etapas do crédito rural. A plataforma aproxima produtores
+            e empresas do agronegócio de fontes compatíveis, preservando a análise e a decisão de cada instituição.
           </p>
         </div>
       </section>
@@ -161,7 +169,7 @@ export default function ComoFuncionaPage() {
       <section className="bg-brand-600 px-6 py-20 lg:px-8 text-center">
         <h2 className="text-3xl font-bold text-white mb-4">Pronto para começar?</h2>
         <p className="text-brand-100 mb-8 max-w-xl mx-auto">
-          Cadastre-se gratuitamente e descubra as melhores oportunidades de crédito para o seu negócio.
+          Cadastre-se, organize sua operação e acompanhe a apresentação a fontes de crédito compatíveis.
         </p>
         <Link href="/register" className="inline-flex items-center gap-2 bg-white text-brand-700 font-semibold px-8 py-3 rounded-lg hover:bg-brand-50 transition-colors">
           Criar conta gratuita <ArrowRight className="h-4 w-4" />

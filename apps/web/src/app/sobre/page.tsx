@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 };
 
 const values = [
-  { icon: Target, title: 'Missão', description: 'Democratizar o acesso ao crédito rural, conectando produtores brasileiros às melhores oportunidades de financiamento com transparência e tecnologia.' },
-  { icon: Lightbulb, title: 'Visão', description: 'Ser a principal infraestrutura de crédito do agronegócio brasileiro, contribuindo para a modernização e sustentabilidade do setor.' },
+  { icon: Target, title: 'Missão', description: 'Organizar o acesso ao crédito rural e aproximar produtores e empresas de fontes compatíveis com transparência e tecnologia.' },
+  { icon: Lightbulb, title: 'Visão', description: 'Ser uma referência em infraestrutura digital para operações de crédito do agronegócio brasileiro.' },
   { icon: Users, title: 'Valores', description: 'Transparência, inovação, respeito ao produtor rural, conformidade regulatória e impacto positivo no desenvolvimento do campo brasileiro.' },
 ];
 
@@ -48,8 +48,8 @@ export default function SobrePage() {
             <span className="text-brand-600"> do crédito</span>
           </h1>
           <p className="mt-6 text-lg text-gray-600 dark:text-gray-400">
-            A ConectCampo nasceu da convicção de que o produtor rural brasileiro merece acesso
-            simples, rápido e justo ao crédito — sem burocracia, sem intermediários desnecessários.
+            A ConectCampo nasceu para tornar a jornada de crédito rural mais organizada, transparente
+            e rastreável para produtores, empresas e instituições financeiras.
           </p>
         </div>
       </section>
@@ -67,22 +67,21 @@ export default function SobrePage() {
                   especialmente os pequenos e médios, que representam a grande maioria do campo brasileiro.
                 </p>
                 <p>
-                  Com mais de R$ 600 bilhões em crédito rural movimentados anualmente no Brasil, o
-                  processo ainda é marcado por burocracia excessiva, assimetria de informação e falta
-                  de tecnologia. A ConectCampo usa inteligência artificial e dados agronômicos para
-                  mudar esse cenário.
+                  O crédito rural envolve documentos, dados produtivos, garantias e diferentes políticas
+                  de análise. A ConectCampo reúne essas informações em uma jornada digital para reduzir
+                  retrabalho e dar mais clareza ao acompanhamento.
                 </p>
                 <p>
                   Nossa plataforma organiza solicitações de produtores rurais e as apresenta a uma rede de
-                  bancos, cooperativas, FIDCs, securitizadoras e FIAGROs — eliminando barreiras e
-                  facilitando a troca de informações durante a análise de crédito.
+                  bancos, cooperativas, FIDCs, securitizadoras e FIAGROs — facilitando a troca de
+                  informações durante a análise, sem substituir a decisão de cada instituição.
                 </p>
               </div>
             </div>
             <div className="rounded-2xl bg-gradient-to-br from-brand-100 to-brand-200 dark:from-dark-card dark:to-dark-border h-72 flex items-center justify-center">
               <div className="text-center px-8">
-                <p className="text-5xl font-black text-brand-600">R$ 600bi</p>
-                <p className="text-sm text-brand-700 dark:text-brand-400 mt-2">em crédito rural movimentado anualmente no Brasil</p>
+                <p className="text-5xl font-black text-brand-600">1 fluxo</p>
+                <p className="text-sm text-brand-700 dark:text-brand-400 mt-2">dados, documentos, análise, propostas e acompanhamento conectados</p>
               </div>
             </div>
           </div>

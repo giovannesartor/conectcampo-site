@@ -44,6 +44,7 @@ import {
   FileSignature,
   ShieldAlert,
   FileScan,
+  Search,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { Logo } from '@/components/Logo';
@@ -564,6 +565,24 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event('conectcampo:open-command-palette'))}
+                className="btn-ghost p-2 md:hidden"
+                aria-label="Buscar na plataforma"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event('conectcampo:open-command-palette'))}
+                className="hidden h-10 min-w-[210px] items-center gap-2 rounded-xl border border-gray-200 bg-gray-50/80 px-3 text-left text-sm text-gray-500 transition-colors hover:border-brand-200 hover:bg-white hover:text-gray-700 dark:border-dark-border dark:bg-gray-900/55 dark:text-gray-400 dark:hover:border-brand-900 dark:hover:bg-gray-900 md:flex"
+                aria-label="Buscar na plataforma"
+              >
+                <Search className="h-4 w-4" />
+                <span className="flex-1">Buscar na plataforma</span>
+                <kbd className="rounded-md border border-gray-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-gray-400 shadow-sm dark:border-gray-700 dark:bg-gray-800">⌘K</kbd>
+              </button>
               <ThemeToggle />
               <div data-tour="notifications">
                 <NotificationsDropdown />

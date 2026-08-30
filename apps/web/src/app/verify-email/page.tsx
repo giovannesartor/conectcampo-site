@@ -116,7 +116,7 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center p-8 bg-gray-50 dark:bg-dark-bg">
+    <div className="auth-surface flex min-h-screen items-center justify-center p-5 sm:p-8">
       <div className="hidden lg:block fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
@@ -129,7 +129,7 @@ export default function VerifyEmailPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-200 dark:border-dark-border p-8">
+        <div className="auth-form-card p-8">
           <Suspense fallback={
             <div className="text-center">
               <Loader2 className="h-14 w-14 text-brand-600 animate-spin mx-auto mb-4" />

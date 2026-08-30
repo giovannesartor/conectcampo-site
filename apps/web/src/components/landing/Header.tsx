@@ -7,11 +7,11 @@ import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const plataformaLinks = [
-  { name: 'Ferramentas', href: '/#plataforma' },
-  { name: 'Como Funciona', href: '/como-funciona' },
-  { name: 'Planos', href: '/planos' },
-  { name: 'Parceiros', href: '/parceiros' },
-  { name: 'API para Devs', href: '/api-docs' },
+  { name: 'Ferramentas', href: '/#plataforma', description: 'Todos os módulos da operação' },
+  { name: 'Como Funciona', href: '/como-funciona', description: 'Conheça o fluxo completo' },
+  { name: 'Planos', href: '/planos', description: 'Escolha o perfil ideal' },
+  { name: 'Parceiros', href: '/parceiros', description: 'Bancos, FIDCs e cooperativas' },
+  { name: 'API para Devs', href: '/api-docs', description: 'Integrações e documentação' },
 ];
 
 const mobileNavLinks = [
@@ -57,16 +57,18 @@ export function Header() {
             </button>
             {dropdownOpen && (
               <div className="absolute left-0 top-full pt-1">
-              <div id="platform-menu" role="menu" className="w-52 overflow-hidden rounded-2xl border border-gray-200 bg-white p-1.5 shadow-xl shadow-gray-950/10 dark:border-dark-border dark:bg-dark-card">
+              <div id="platform-menu" role="menu" className="w-72 overflow-hidden rounded-2xl border border-gray-200 bg-white p-2 shadow-xl shadow-gray-950/10 dark:border-dark-border dark:bg-dark-card">
+                <p className="px-3 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400">Explorar a plataforma</p>
                 {plataformaLinks.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
                     role="menuitem"
                     onClick={() => setDropdownOpen(false)}
-                    className="block rounded-xl px-3.5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-gray-300 dark:hover:bg-brand-900/20 dark:hover:text-brand-300"
+                    className="group block rounded-xl px-3 py-2.5 transition-colors hover:bg-brand-50 dark:hover:bg-brand-900/20"
                   >
-                    {item.name}
+                    <span className="block text-sm font-semibold text-gray-800 group-hover:text-brand-700 dark:text-gray-200 dark:group-hover:text-brand-300">{item.name}</span>
+                    <span className="mt-0.5 block text-xs text-gray-400 dark:text-gray-500">{item.description}</span>
                   </Link>
                 ))}
               </div>

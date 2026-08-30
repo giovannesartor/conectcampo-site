@@ -19,8 +19,8 @@ export function CTA() {
             Pronto para conectar sua operação ao crédito certo?
           </h2>
           <p className="mt-6 text-lg text-brand-200 max-w-2xl mx-auto">
-            Cadastre-se gratuitamente e descubra em minutos as melhores
-            oportunidades de crédito para o seu negócio agro.
+            Organize sua operação, complete os dados e encontre fontes de crédito
+            compatíveis com o seu perfil em um único fluxo.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
