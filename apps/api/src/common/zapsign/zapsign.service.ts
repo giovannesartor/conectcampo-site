@@ -4,9 +4,11 @@ import axios from 'axios';
 export interface ZapSignSignerInput {
   name: string;
   externalId: string; // 'emitente' | 'credor'
+  qualification?: string;
   email?: string;
   phoneCountry?: string;
   phoneNumber?: string;
+  authMode?: 'assinaturaTela' | 'assinaturaTela-tokenEmail' | 'assinaturaTela-tokenSms';
   sendAutomaticEmail?: boolean;
   sendAutomaticWhatsapp?: boolean;
 }
@@ -79,10 +81,14 @@ export class ZapSignService {
           signers: params.signers.map((s) => ({
             name: s.name,
             external_id: s.externalId,
-            auth_mode: 'assinaturaTela',
+            qualification: s.qualification ?? '',
+            auth_mode: s.authMode ?? 'assinaturaTela',
+            lock_name: true,
             ...(s.email ? { email: s.email } : {}),
+            ...(s.email ? { lock_email: true } : {}),
             ...(s.phoneCountry ? { phone_country: s.phoneCountry } : {}),
             ...(s.phoneNumber ? { phone_number: s.phoneNumber } : {}),
+            ...(s.phoneNumber ? { lock_phone: true } : {}),
             ...(s.sendAutomaticEmail && s.email ? { send_automatic_email: true } : {}),
             ...(s.sendAutomaticWhatsapp && s.phoneNumber ? { send_automatic_whatsapp: true } : {}),
           })),

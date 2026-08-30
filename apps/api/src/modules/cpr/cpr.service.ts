@@ -164,7 +164,7 @@ export class CprService {
     const snapshot = renderCprHtml(cpr);
     const documentHash = createHash('sha256').update(snapshot).digest('hex');
 
-    // ── ZapSign (assinatura automática) — se habilitado ──
+    // ── ZapSign (documento e links automáticos; a assinatura é sempre da parte) ──
     if (this.zapsign.isEnabled()) {
       // Gera o PDF profissional (com logo); se falhar, usa markdown como fallback.
       let base64Pdf: string | undefined;
@@ -188,17 +188,29 @@ export class CprService {
           {
             name: cpr.emitenteNome,
             externalId: 'emitente',
+            qualification: 'Emitente',
             email: cpr.emitenteEmail ?? undefined,
             phoneCountry: cpr.emitenteTelefone ? '55' : undefined,
             phoneNumber: phone(cpr.emitenteTelefone),
+            authMode: cpr.emitenteEmail
+              ? 'assinaturaTela-tokenEmail'
+              : cpr.emitenteTelefone
+                ? 'assinaturaTela-tokenSms'
+                : 'assinaturaTela',
             sendAutomaticEmail: true,
           },
           {
             name: cpr.credorNome,
             externalId: 'credor',
+            qualification: 'Credor',
             email: cpr.credorEmail ?? undefined,
             phoneCountry: cpr.credorTelefone ? '55' : undefined,
             phoneNumber: phone(cpr.credorTelefone),
+            authMode: cpr.credorEmail
+              ? 'assinaturaTela-tokenEmail'
+              : cpr.credorTelefone
+                ? 'assinaturaTela-tokenSms'
+                : 'assinaturaTela',
             sendAutomaticEmail: true,
           },
         ],
@@ -324,7 +336,35 @@ export class CprService {
 
   /** Webhook da ZapSign (evento doc_signed). */
   async handleZapSignWebhook(payload: any) {
-    if (!payload || payload.event_type !== 'doc_signed') {
+    if (!payload?.event_type) {
+      return { ignored: true };
+    }
+
+    if (payload.event_type === 'email_bounce') {
+      const cpr = await this.prisma.cprDocument.findFirst({
+        where: {
+          deletedAt: null,
+          OR: [
+            { emitenteSignToken: payload.token },
+            { credorSignToken: payload.token },
+          ],
+        },
+      });
+      if (!cpr) return { ignored: true };
+
+      const party = cpr.emitenteSignToken === payload.token ? 'emitente' : 'credor';
+      await this.notifications.create({
+        userId: cpr.userId,
+        type: 'error',
+        title: 'Falha no e-mail de assinatura',
+        message: `A ZapSign não conseguiu entregar o e-mail ao ${party}. Confira o endereço e compartilhe o link manualmente.`,
+        link: '/dashboard/cpr',
+      }).catch(() => undefined);
+      this.logger.warn(`ZapSign email_bounce: CPR ${cpr.id}, parte ${party}`);
+      return { ok: true, event: 'email_bounce', party };
+    }
+
+    if (payload.event_type !== 'doc_signed') {
       return { ignored: true };
     }
 

@@ -25,7 +25,7 @@ const steps = [
     icon: FileSignature,
     index: '03',
     title: 'Assine e acompanhe',
-    description: 'Assinatura eletrônica com hash e trilha de auditoria, seguida do controle operacional do registro e da liquidação.',
+    description: 'Links individuais, autenticação por token quando o contato está cadastrado e trilha de auditoria, seguidos do controle operacional do registro e da liquidação.',
   },
 ];
 

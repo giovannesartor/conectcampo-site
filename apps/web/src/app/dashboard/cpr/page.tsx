@@ -884,7 +884,7 @@ export default function CprPage() {
                   <div className="sm:col-span-2"><Field label="Endereço completo" value={form.emitenteEndereco} onChange={set('emitenteEndereco')} placeholder="Rua, número, complemento e bairro" /></div>
                   <Field label="CEP" value={form.emitenteCep} onChange={set('emitenteCep')} placeholder="00000-000" inputMode="numeric" />
                   <Field label="Representante legal" value={form.emitenteRepresentante} onChange={set('emitenteRepresentante')} placeholder="Nome e qualificação" />
-                  <Field label="E-mail (p/ assinatura)" value={form.emitenteEmail} onChange={set('emitenteEmail')} type="email" placeholder="email@exemplo.com" />
+                  <Field label="E-mail (envio + token de autenticação)" value={form.emitenteEmail} onChange={set('emitenteEmail')} type="email" placeholder="email@exemplo.com" />
                   <Field label="Telefone / WhatsApp" value={form.emitenteTelefone} onChange={setMasked('emitenteTelefone', maskPhone)} placeholder="(11) 99999-9999" inputMode="tel" />
                   <Field label="Cidade" value={form.emitenteCidade} onChange={set('emitenteCidade')} />
                   <div>
@@ -926,7 +926,7 @@ export default function CprPage() {
                       <option value="fundo">Fundo de Investimento</option>
                     </select>
                   </div>
-                  <Field label="E-mail (p/ assinatura)" value={form.credorEmail} onChange={set('credorEmail')} type="email" placeholder="email@exemplo.com" />
+                  <Field label="E-mail (envio + token de autenticação)" value={form.credorEmail} onChange={set('credorEmail')} type="email" placeholder="email@exemplo.com" />
                   <Field label="Telefone / WhatsApp" value={form.credorTelefone} onChange={set('credorTelefone')} placeholder="(11) 99999-9999" />
                   <div className="sm:col-span-2"><Field label="Qualificação do credor" value={form.credorQualificacao} onChange={set('credorQualificacao')} placeholder="Natureza jurídica, registro e representação" /></div>
                   <div className="sm:col-span-2"><Field label="Endereço completo" value={form.credorEndereco} onChange={set('credorEndereco')} placeholder="Rua, número, complemento e bairro" /></div>
@@ -1256,8 +1256,9 @@ export default function CprPage() {
 
             <div className="p-6 space-y-4">
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Compartilhe cada link com a parte correspondente. Ao assinar, registramos data, IP e o
-                hash do documento como trilha de auditoria.
+                A ZapSign envia o link individual por e-mail quando o endereço está preenchido e exige
+                o token recebido para autenticar a parte. Os links também ficam disponíveis abaixo para
+                compartilhamento manual. Ao assinar, registramos data, status e o hash do documento.
               </p>
               <div className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
                 {signModal.info.provider === 'zapsign' ? 'Assinatura via ZapSign' : 'Assinatura interna'}

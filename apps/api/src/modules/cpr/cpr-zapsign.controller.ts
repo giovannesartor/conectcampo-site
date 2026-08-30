@@ -16,7 +16,7 @@ export class CprZapSignController {
   @Public()
   @Post('webhook')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Webhook da ZapSign (doc_signed)' })
+  @ApiOperation({ summary: 'Webhook da ZapSign (doc_signed e email_bounce)' })
   async webhook(@Body() payload: unknown) {
     return this.service.handleZapSignWebhook(payload);
   }
