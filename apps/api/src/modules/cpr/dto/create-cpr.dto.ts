@@ -6,6 +6,7 @@ import {
   IsDateString,
   IsPositive,
   IsEmail,
+  IsObject,
   MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -134,6 +135,13 @@ export class CreateCprDto {
   @Type(() => Number)
   precoUnitario?: number;
 
+  @ApiPropertyOptional({ description: 'Valor de face da CPR (base do custo de 0,8% na CPR Financeira)' })
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  @Type(() => Number)
+  valorFace?: number;
+
   @ApiPropertyOptional({ description: 'Local de entrega do produto' })
   @IsOptional()
   @IsString()
@@ -199,4 +207,13 @@ export class CreateCprDto {
   @IsOptional()
   @IsString()
   observacoes?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Dados estruturados da minuta: qualificações, endereços, avalistas, condições financeiras, cronograma, garantias e registro.',
+    type: Object,
+  })
+  @IsOptional()
+  @IsObject()
+  contractData?: Record<string, unknown>;
 }

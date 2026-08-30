@@ -16,6 +16,11 @@ import {
   DollarSign,
   PenLine,
   Copy,
+  Download,
+  ListChecks,
+  ShieldCheck,
+  Database,
+  Scale,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
@@ -77,13 +82,26 @@ interface CreateCprForm {
   type: 'FISICA' | 'FINANCEIRA';
   emitenteNome: string;
   emitenteCpfCnpj: string;
+  emitenteEndereco: string;
+  emitenteCep: string;
+  emitenteQualificacao: string;
+  emitenteRepresentante: string;
   emitenteCidade: string;
   emitenteEstado: string;
   emitenteCarNumero: string;
   emitenteEmail: string;
   emitenteTelefone: string;
+  emitenteBanco: string;
+  emitenteAgencia: string;
+  emitenteConta: string;
   credorNome: string;
   credorCpfCnpj: string;
+  credorEndereco: string;
+  credorCidade: string;
+  credorEstado: string;
+  credorCep: string;
+  credorQualificacao: string;
+  credorRepresentante: string;
   credorTipo: string;
   credorEmail: string;
   credorTelefone: string;
@@ -91,6 +109,15 @@ interface CreateCprForm {
   quantidade: string;
   unidade: string;
   precoUnitario: string;
+  valorFace: string;
+  produtoQualidade: string;
+  produtoPadrao: string;
+  propriedadeNome: string;
+  propriedadeEndereco: string;
+  propriedadeMatricula: string;
+  indicePreco: string;
+  fontePreco: string;
+  mercadoReferencia: string;
   localEntrega: string;
   dataEntrega: string;
   dataVencimento: string;
@@ -100,8 +127,34 @@ interface CreateCprForm {
   garantiaTipo: string;
   garantiaDescricao: string;
   garantiaValor: string;
+  garantiaProprietario: string;
+  garantiaRegistro: string;
+  garantiaGrau: string;
   finalidade: string;
   valorCaptacao: string;
+  valorCredito: string;
+  valorIof: string;
+  valorLiquido: string;
+  taxaJurosMensal: string;
+  taxaJurosAnual: string;
+  cetMensal: string;
+  cetAnual: string;
+  multaMoraPct: string;
+  jurosMoraMensalPct: string;
+  encargosAdicionais: string;
+  formaLiquidacao: string;
+  localPagamento: string;
+  localEmissao: string;
+  dataEmissao: string;
+  registradora: string;
+  numeroRegistro: string;
+  foroCidade: string;
+  foroEstado: string;
+  avalistaNome: string;
+  avalistaCpfCnpj: string;
+  avalistaQualificacao: string;
+  avalistaEndereco: string;
+  cronograma: Array<{ vencimento: string; principal: string; encargos: string }>;
   observacoes: string;
 }
 
@@ -124,14 +177,16 @@ const PURPOSE_CONFIG = {
 const EMPTY_FORM: CreateCprForm = {
   purpose: 'EMISSAO',
   type: 'FINANCEIRA',
-  emitenteNome: '', emitenteCpfCnpj: '', emitenteCidade: '', emitenteEstado: '', emitenteCarNumero: '',
-  emitenteEmail: '', emitenteTelefone: '',
-  credorNome: '', credorCpfCnpj: '', credorTipo: '', credorEmail: '', credorTelefone: '',
-  produto: '', quantidade: '', unidade: 'sacas', precoUnitario: '',
+  emitenteNome: '', emitenteCpfCnpj: '', emitenteEndereco: '', emitenteCep: '', emitenteQualificacao: '', emitenteRepresentante: '', emitenteCidade: '', emitenteEstado: '', emitenteCarNumero: '',
+  emitenteEmail: '', emitenteTelefone: '', emitenteBanco: '', emitenteAgencia: '', emitenteConta: '',
+  credorNome: '', credorCpfCnpj: '', credorEndereco: '', credorCidade: '', credorEstado: '', credorCep: '', credorQualificacao: '', credorRepresentante: '', credorTipo: '', credorEmail: '', credorTelefone: '',
+  produto: '', quantidade: '', unidade: 'sacas', precoUnitario: '', valorFace: '', produtoQualidade: '', produtoPadrao: '', propriedadeNome: '', propriedadeEndereco: '', propriedadeMatricula: '', indicePreco: '', fontePreco: '', mercadoReferencia: '',
   localEntrega: '', dataEntrega: '',
   dataVencimento: '', prazoAnos: '', carenciaAnos: '', safras: [],
-  garantiaTipo: '', garantiaDescricao: '', garantiaValor: '',
-  finalidade: '', valorCaptacao: '',
+  garantiaTipo: '', garantiaDescricao: '', garantiaValor: '', garantiaProprietario: '', garantiaRegistro: '', garantiaGrau: '',
+  finalidade: '', valorCaptacao: '', valorCredito: '', valorIof: '', valorLiquido: '', taxaJurosMensal: '', taxaJurosAnual: '', cetMensal: '', cetAnual: '', multaMoraPct: '', jurosMoraMensalPct: '', encargosAdicionais: '', formaLiquidacao: '', localPagamento: '', localEmissao: '', dataEmissao: '', registradora: '', numeroRegistro: '', foroCidade: '', foroEstado: '',
+  avalistaNome: '', avalistaCpfCnpj: '', avalistaQualificacao: '', avalistaEndereco: '',
+  cronograma: [],
   observacoes: '',
 };
 
@@ -174,7 +229,7 @@ export default function CprPage() {
   const [signModal, setSignModal] = useState<{ cpr: CprItem; info: SignatureInfo } | null>(null);
   const [copied, setCopied] = useState<string>('');
   // Preços vêm da fonte única (/pricing); defaults como fallback
-  const [pricing, setPricing] = useState({ fisicaFlat: 2500, financeiraRatePct: 3, captacaoFeeRatePct: 6 });
+  const [pricing, setPricing] = useState({ fisicaFlat: 2500, financeiraRatePct: 0.8, captacaoFeeRatePct: 6 });
 
   useEffect(() => {
     api.get('/pricing').then(r => { if (r.data?.cpr) setPricing(r.data.cpr); }).catch(() => {});
@@ -207,7 +262,7 @@ export default function CprPage() {
         type: form.type,
         emitenteNome: form.emitenteNome,
         emitenteCpfCnpj: form.emitenteCpfCnpj,
-        emitenteEndereco: undefined,
+        emitenteEndereco: form.emitenteEndereco || undefined,
         emitenteCidade: form.emitenteCidade || undefined,
         emitenteEstado: form.emitenteEstado || undefined,
         emitenteCarNumero: form.emitenteCarNumero || undefined,
@@ -223,6 +278,7 @@ export default function CprPage() {
         unidade: form.unidade,
         safraAno: form.safras.length ? form.safras.join(', ') : undefined,
         precoUnitario: form.precoUnitario ? parseFloat(form.precoUnitario) : undefined,
+        valorFace: form.valorFace ? parseFloat(form.valorFace) : undefined,
         localEntrega: form.localEntrega || undefined,
         dataEntrega: form.dataEntrega || undefined,
         dataVencimento: form.dataVencimento,
@@ -233,6 +289,65 @@ export default function CprPage() {
         garantiaValor: form.garantiaValor ? parseFloat(form.garantiaValor) : undefined,
         finalidade: form.finalidade || undefined,
         valorCaptacao: form.valorCaptacao ? parseFloat(form.valorCaptacao) : undefined,
+        contractData: {
+          localEmissao: form.localEmissao || undefined,
+          dataEmissao: form.dataEmissao || undefined,
+          emitenteQualificacao: form.emitenteQualificacao || undefined,
+          emitenteCep: form.emitenteCep || undefined,
+          emitenteRepresentante: form.emitenteRepresentante || undefined,
+          emitenteBanco: form.emitenteBanco || undefined,
+          emitenteAgencia: form.emitenteAgencia || undefined,
+          emitenteConta: form.emitenteConta || undefined,
+          credorQualificacao: form.credorQualificacao || undefined,
+          credorEndereco: form.credorEndereco || undefined,
+          credorCidade: form.credorCidade || undefined,
+          credorEstado: form.credorEstado || undefined,
+          credorCep: form.credorCep || undefined,
+          credorRepresentante: form.credorRepresentante || undefined,
+          avalistas: form.avalistaNome ? [{
+            nome: form.avalistaNome,
+            cpfCnpj: form.avalistaCpfCnpj || undefined,
+            qualificacao: form.avalistaQualificacao || undefined,
+            endereco: form.avalistaEndereco || undefined,
+          }] : [],
+          produtoQualidade: form.produtoQualidade || undefined,
+          produtoPadrao: form.produtoPadrao || undefined,
+          propriedadeNome: form.propriedadeNome || undefined,
+          propriedadeEndereco: form.propriedadeEndereco || undefined,
+          propriedadeMatricula: form.propriedadeMatricula || undefined,
+          indicePreco: form.indicePreco || undefined,
+          fontePreco: form.fontePreco || undefined,
+          mercadoReferencia: form.mercadoReferencia || undefined,
+          valorCredito: form.valorCredito ? parseFloat(form.valorCredito) : undefined,
+          valorIof: form.valorIof ? parseFloat(form.valorIof) : undefined,
+          valorLiquido: form.valorLiquido ? parseFloat(form.valorLiquido) : undefined,
+          taxaJurosMensal: form.taxaJurosMensal ? parseFloat(form.taxaJurosMensal) : undefined,
+          taxaJurosAnual: form.taxaJurosAnual ? parseFloat(form.taxaJurosAnual) : undefined,
+          cetMensal: form.cetMensal ? parseFloat(form.cetMensal) : undefined,
+          cetAnual: form.cetAnual ? parseFloat(form.cetAnual) : undefined,
+          multaMoraPct: form.multaMoraPct ? parseFloat(form.multaMoraPct) : undefined,
+          jurosMoraMensalPct: form.jurosMoraMensalPct ? parseFloat(form.jurosMoraMensalPct) : undefined,
+          encargosAdicionais: form.encargosAdicionais || undefined,
+          formaLiquidacao: form.formaLiquidacao || undefined,
+          localPagamento: form.localPagamento || undefined,
+          garantiaProprietario: form.garantiaProprietario || undefined,
+          garantiaRegistro: form.garantiaRegistro || undefined,
+          garantiaGrau: form.garantiaGrau || undefined,
+          registradora: form.registradora || undefined,
+          numeroRegistro: form.numeroRegistro || undefined,
+          foroCidade: form.foroCidade || undefined,
+          foroEstado: form.foroEstado || undefined,
+          contatoNotificacoes: [form.emitenteEmail, form.credorEmail].filter(Boolean).join(' · ') || undefined,
+          cronograma: form.cronograma
+            .filter(item => item.vencimento || item.principal || item.encargos)
+            .map((item, index) => ({
+              numero: index + 1,
+              vencimento: item.vencimento || undefined,
+              principal: item.principal ? parseFloat(item.principal) : undefined,
+              encargos: item.encargos ? parseFloat(item.encargos) : 0,
+              total: (item.principal ? parseFloat(item.principal) : 0) + (item.encargos ? parseFloat(item.encargos) : 0),
+            })),
+        },
         observacoes: form.observacoes || undefined,
       };
       await api.post('/cpr', payload);
@@ -282,6 +397,25 @@ export default function CprPage() {
       }
     } catch {
       toast.error('Não foi possível gerar a minuta agora.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handlePdf = async (id: string) => {
+    setActionLoading(id);
+    try {
+      const { data } = await api.get(`/cpr/${id}/pdf`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `CPR-${id.slice(0, 8)}-ConectCampo.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Não foi possível baixar o PDF da CPR.');
     } finally {
       setActionLoading(null);
     }
@@ -414,21 +548,59 @@ export default function CprPage() {
       return { ...prev, safras: [...prev.safras, s].sort() };
     });
 
+  const addInstallment = () =>
+    setForm(prev => ({
+      ...prev,
+      cronograma: [...prev.cronograma, { vencimento: '', principal: '', encargos: '' }],
+    }));
+
+  const updateInstallment = (
+    index: number,
+    key: 'vencimento' | 'principal' | 'encargos',
+    value: string,
+  ) => setForm(prev => ({
+    ...prev,
+    cronograma: prev.cronograma.map((item, itemIndex) =>
+      itemIndex === index ? { ...item, [key]: value } : item,
+    ),
+  }));
+
+  const removeInstallment = (index: number) =>
+    setForm(prev => ({
+      ...prev,
+      cronograma: prev.cronograma.filter((_, itemIndex) => itemIndex !== index),
+    }));
+
+  const completenessFields = [
+    form.emitenteNome, form.emitenteCpfCnpj, form.emitenteEndereco, form.emitenteCidade,
+    form.credorNome, form.credorCpfCnpj, form.credorEndereco, form.produto,
+    form.quantidade, form.valorFace, form.dataVencimento, form.propriedadeNome,
+    form.propriedadeEndereco, form.localEmissao, form.formaLiquidacao, form.localPagamento,
+    form.garantiaTipo || 'sem-garantia', form.foroCidade,
+  ];
+  const completeness = Math.round((completenessFields.filter(Boolean).length / completenessFields.length) * 100);
+
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 p-4 sm:p-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 via-white to-amber-50/50 p-5 shadow-sm dark:border-emerald-900 dark:from-emerald-950/30 dark:via-gray-900 dark:to-amber-950/10 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <ScrollText className="h-6 w-6 text-emerald-600" />
             Gerador de CPR
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Cédula de Produto Rural — Emissão ou Captação de Crédito
+            Minuta completa, PDF profissional, assinatura e acompanhamento do registro
           </p>
+          <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300">
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-white/80 px-2.5 py-1 dark:border-emerald-800 dark:bg-gray-900/70"><ListChecks className="h-3.5 w-3.5" /> Dados essenciais</span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-white/80 px-2.5 py-1 dark:border-emerald-800 dark:bg-gray-900/70"><ShieldCheck className="h-3.5 w-3.5" /> Garantias e aval</span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-white/80 px-2.5 py-1 dark:border-emerald-800 dark:bg-gray-900/70"><Scale className="h-3.5 w-3.5" /> Cláusulas padronizadas</span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-white/80 px-2.5 py-1 dark:border-emerald-800 dark:bg-gray-900/70"><Database className="h-3.5 w-3.5" /> Registro controlado</span>
+          </div>
         </div>
         <button
           onClick={() => { setShowForm(true); setError(''); }}
@@ -486,7 +658,41 @@ export default function CprPage() {
           onAction={() => { setShowForm(true); setError(''); }}
         />
       ) : (
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+        <>
+        <div className="grid gap-3 md:hidden">
+          {cprs.map(cpr => {
+            const status = STATUS_CONFIG[cpr.status] ?? { label: cpr.status, color: 'text-gray-500 bg-gray-100', icon: null };
+            const purpose = PURPOSE_CONFIG[cpr.purpose];
+            const isLoading = actionLoading === cpr.id;
+            return (
+              <article key={cpr.id} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-mono text-[11px] text-gray-400">{cpr.numeroCpr || 'RASCUNHO SEM NÚMERO'}</p>
+                    <h3 className="mt-1 font-semibold text-gray-900 dark:text-white">{cpr.produto} · {Number(cpr.quantidade).toLocaleString('pt-BR')} {cpr.unidade}</h3>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Credor: {cpr.credorNome}</p>
+                  </div>
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold ${status.color}`}>{status.icon}{status.label}</span>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-gray-50 p-3 text-xs dark:bg-gray-900/50">
+                  <div><p className="text-gray-400">Valor</p><p className="font-semibold text-gray-900 dark:text-white">{cpr.valorTotal ? formatCurrency(Number(cpr.valorTotal)) : 'A definir'}</p></div>
+                  <div><p className="text-gray-400">Vencimento</p><p className="font-semibold text-gray-900 dark:text-white">{new Date(cpr.dataVencimento).toLocaleDateString('pt-BR')}</p></div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className={`rounded-full px-2 py-1 text-[11px] font-medium ${purpose.color}`}>{purpose.label}</span>
+                  <button onClick={() => handlePdf(cpr.id)} disabled={isLoading} className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-2.5 py-1.5 text-xs font-semibold text-blue-700 dark:border-blue-800 dark:text-blue-300"><Download className="h-3.5 w-3.5" /> PDF</button>
+                  <button onClick={() => handleDocument(cpr.id)} disabled={isLoading} className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:text-emerald-300"><FileText className="h-3.5 w-3.5" /> Prévia</button>
+                  {cpr.status === 'RASCUNHO' ? (
+                    <button onClick={() => handleEmit(cpr.id)} disabled={isLoading} className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white"><ChevronRight className="h-3.5 w-3.5" /> Emitir</button>
+                  ) : (
+                    <button onClick={() => openSignature(cpr)} disabled={isLoading} className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-2.5 py-1.5 text-xs font-semibold text-white"><PenLine className="h-3.5 w-3.5" /> Assinatura</button>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+        <div className="hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden md:block">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
@@ -533,12 +739,20 @@ export default function CprPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <button
+                            onClick={() => handlePdf(cpr.id)}
+                            disabled={isLoading}
+                            className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 font-medium disabled:opacity-50 flex items-center gap-1"
+                            title="Baixar minuta completa em PDF"
+                          >
+                            <Download className="h-3.5 w-3.5" /> PDF
+                          </button>
+                          <button
                             onClick={() => handleDocument(cpr.id)}
                             disabled={isLoading}
                             className="text-xs text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 font-medium disabled:opacity-50 flex items-center gap-1"
                             title="Ver / imprimir minuta"
                           >
-                            <FileText className="h-3.5 w-3.5" /> Documento
+                            <FileText className="h-3.5 w-3.5" /> Prévia
                           </button>
                           {cpr.status !== 'RASCUNHO' && (
                             <button
@@ -588,24 +802,33 @@ export default function CprPage() {
             </table>
           </div>
         </div>
+        </>
       )}
 
       {/* Modal / Drawer de criação */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-start justify-end bg-black/40 backdrop-blur-sm" onClick={() => setShowForm(false)}>
           <div
-            className="relative h-full w-full max-w-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-y-auto"
+            className="relative h-full w-full max-w-4xl bg-white dark:bg-gray-900 shadow-2xl overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
             {/* Header do drawer */}
-            <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+            <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 px-6 py-4 backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
+              <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Nova CPR</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Cédula de Produto Rural</p>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Nova CPR completa</h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Dados comerciais, jurídicos, garantias e registro em uma única minuta</p>
               </div>
               <button onClick={() => setShowForm(false)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
                 <X className="h-5 w-5 text-gray-500" />
               </button>
+              </div>
+              <div className="mt-3 flex items-center gap-3">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                  <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-700 transition-all" style={{ width: `${completeness}%` }} />
+                </div>
+                <span className="min-w-24 text-right text-[11px] font-semibold text-gray-500 dark:text-gray-400">{completeness}% preenchido</span>
+              </div>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -613,7 +836,7 @@ export default function CprPage() {
               {/* Finalidade */}
               <section>
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Finalidade</h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {(['EMISSAO', 'CAPTACAO'] as const).map(p => (
                     <button
                       key={p}
@@ -653,10 +876,14 @@ export default function CprPage() {
               {/* Emitente */}
               <section>
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Emitente (Produtor Rural)</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="col-span-2"><Field label="Nome completo *" value={form.emitenteNome} onChange={set('emitenteNome')} required /></div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="sm:col-span-2"><Field label="Nome completo *" value={form.emitenteNome} onChange={set('emitenteNome')} required /></div>
                   <Field label="CPF / CNPJ *" value={form.emitenteCpfCnpj} onChange={setMasked('emitenteCpfCnpj', maskCpfCnpj)} onBlur={() => lookupCnpj('emitente')} required placeholder="000.000.000-00" inputMode="numeric" />
                   <Field label="Número CAR" value={form.emitenteCarNumero} onChange={set('emitenteCarNumero')} placeholder="SP-XXXXXXX-XXXX..." />
+                  <div className="sm:col-span-2"><Field label="Qualificação do emitente" value={form.emitenteQualificacao} onChange={set('emitenteQualificacao')} placeholder="Nacionalidade, estado civil, profissão ou dados societários" /></div>
+                  <div className="sm:col-span-2"><Field label="Endereço completo" value={form.emitenteEndereco} onChange={set('emitenteEndereco')} placeholder="Rua, número, complemento e bairro" /></div>
+                  <Field label="CEP" value={form.emitenteCep} onChange={set('emitenteCep')} placeholder="00000-000" inputMode="numeric" />
+                  <Field label="Representante legal" value={form.emitenteRepresentante} onChange={set('emitenteRepresentante')} placeholder="Nome e qualificação" />
                   <Field label="E-mail (p/ assinatura)" value={form.emitenteEmail} onChange={set('emitenteEmail')} type="email" placeholder="email@exemplo.com" />
                   <Field label="Telefone / WhatsApp" value={form.emitenteTelefone} onChange={setMasked('emitenteTelefone', maskPhone)} placeholder="(11) 99999-9999" inputMode="tel" />
                   <Field label="Cidade" value={form.emitenteCidade} onChange={set('emitenteCidade')} />
@@ -669,6 +896,14 @@ export default function CprPage() {
                       ))}
                     </select>
                   </div>
+                  <div className="rounded-xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-700 dark:bg-gray-800/40 sm:col-span-2">
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Dados bancários para liberação (opcional)</p>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <Field label="Banco" value={form.emitenteBanco} onChange={set('emitenteBanco')} />
+                      <Field label="Agência" value={form.emitenteAgencia} onChange={set('emitenteAgencia')} />
+                      <Field label="Conta" value={form.emitenteConta} onChange={set('emitenteConta')} />
+                    </div>
+                  </div>
                 </div>
               </section>
 
@@ -677,8 +912,8 @@ export default function CprPage() {
               {/* Credor */}
               <section>
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Credor</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="col-span-2"><Field label="Nome *" value={form.credorNome} onChange={set('credorNome')} required /></div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="sm:col-span-2"><Field label="Nome *" value={form.credorNome} onChange={set('credorNome')} required /></div>
                   <Field label="CPF / CNPJ *" value={form.credorCpfCnpj} onChange={setMasked('credorCpfCnpj', maskCpfCnpj)} onBlur={() => lookupCnpj('credor')} required placeholder="00.000.000/0000-00" inputMode="numeric" />
                   <div>
                     <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Tipo</label>
@@ -693,6 +928,12 @@ export default function CprPage() {
                   </div>
                   <Field label="E-mail (p/ assinatura)" value={form.credorEmail} onChange={set('credorEmail')} type="email" placeholder="email@exemplo.com" />
                   <Field label="Telefone / WhatsApp" value={form.credorTelefone} onChange={set('credorTelefone')} placeholder="(11) 99999-9999" />
+                  <div className="sm:col-span-2"><Field label="Qualificação do credor" value={form.credorQualificacao} onChange={set('credorQualificacao')} placeholder="Natureza jurídica, registro e representação" /></div>
+                  <div className="sm:col-span-2"><Field label="Endereço completo" value={form.credorEndereco} onChange={set('credorEndereco')} placeholder="Rua, número, complemento e bairro" /></div>
+                  <Field label="Cidade" value={form.credorCidade} onChange={set('credorCidade')} />
+                  <Field label="UF" value={form.credorEstado} onChange={set('credorEstado')} placeholder="UF" />
+                  <Field label="CEP" value={form.credorCep} onChange={set('credorCep')} placeholder="00000-000" inputMode="numeric" />
+                  <Field label="Representante legal" value={form.credorRepresentante} onChange={set('credorRepresentante')} />
                 </div>
               </section>
 
@@ -701,7 +942,7 @@ export default function CprPage() {
               {/* Produto */}
               <section>
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Produto Agrícola</h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Produto *</label>
                     <select value={form.produto} onChange={set('produto')} className={inputClass} required>
@@ -721,6 +962,15 @@ export default function CprPage() {
                     </select>
                   </div>
                   <Field label="Preço unitário (R$)" value={form.precoUnitario} onChange={set('precoUnitario')} type="number" placeholder="0,00" />
+                  <Field label="Valor de face da CPR (R$) *" value={form.valorFace} onChange={set('valorFace')} type="number" placeholder="0,00" required />
+                  <Field label="Qualidade do produto" value={form.produtoQualidade} onChange={set('produtoQualidade')} placeholder="Umidade, pureza, tipo..." />
+                  <Field label="Padrão / classificação" value={form.produtoPadrao} onChange={set('produtoPadrao')} placeholder="Padrão comercial ou técnico" />
+                  <Field label="Índice de preço" value={form.indicePreco} onChange={set('indicePreco')} placeholder="Ex.: indicador CEPEA" />
+                  <Field label="Fonte do preço" value={form.fontePreco} onChange={set('fontePreco')} placeholder="Fonte verificável" />
+                  <div className="sm:col-span-2"><Field label="Mercado / praça de referência" value={form.mercadoReferencia} onChange={set('mercadoReferencia')} /></div>
+                  <div className="sm:col-span-2"><Field label="Propriedade / local de produção" value={form.propriedadeNome} onChange={set('propriedadeNome')} placeholder="Nome da fazenda ou unidade produtiva" /></div>
+                  <div className="sm:col-span-2"><Field label="Endereço da produção" value={form.propriedadeEndereco} onChange={set('propriedadeEndereco')} /></div>
+                  <Field label="Matrícula do imóvel" value={form.propriedadeMatricula} onChange={set('propriedadeMatricula')} />
                   <Field label="Local de entrega" value={form.localEntrega} onChange={set('localEntrega')} />
                   {form.type === 'FISICA' && (
                     <Field label="Data de entrega" value={form.dataEntrega} onChange={set('dataEntrega')} type="date" />
@@ -733,7 +983,7 @@ export default function CprPage() {
               {/* Vencimento / Prazo / Carência / Safras */}
               <section>
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Prazo & Safras</h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <Field label="Data de vencimento *" value={form.dataVencimento} onChange={set('dataVencimento')} required type="date" />
                   <div>
                     <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Prazo (até 15 anos)</label>
@@ -797,45 +1047,120 @@ export default function CprPage() {
                 </div>
               </section>
 
-              {/* Garantia adicional */}
-              {form.purpose === 'CAPTACAO' && (
-                <>
-                  <Divider />
-                  <section>
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Captação de Crédito</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Finalidade</label>
-                        <select value={form.finalidade} onChange={set('finalidade')} className={inputClass}>
-                          <option value="">Selecione...</option>
-                          <option value="custeio">Custeio Agrícola</option>
-                          <option value="investimento">Investimento</option>
-                          <option value="giro">Capital de Giro</option>
-                          <option value="comercializacao">Comercialização</option>
-                        </select>
-                      </div>
-                      <Field label="Valor a captar (R$)" value={form.valorCaptacao} onChange={set('valorCaptacao')} type="number" placeholder="0,00" />
-                      <div>
-                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Tipo de garantia adicional</label>
-                        <select value={form.garantiaTipo} onChange={set('garantiaTipo')} className={inputClass}>
-                          <option value="">Nenhuma</option>
-                          <option value="imovel_rural">Imóvel Rural</option>
-                          <option value="penhor_safra">Penhor de Safra</option>
-                          <option value="aval">Aval</option>
-                          <option value="seguro">Seguro Agrícola</option>
-                          <option value="recebiveis">Recebíveis</option>
-                        </select>
-                      </div>
-                      <Field label="Valor da garantia (R$)" value={form.garantiaValor} onChange={set('garantiaValor')} type="number" placeholder="0,00" />
-                      {form.garantiaTipo && (
-                        <div className="col-span-2">
-                          <Field label="Descrição da garantia" value={form.garantiaDescricao} onChange={set('garantiaDescricao')} />
-                        </div>
-                      )}
+              <Divider />
+
+              <section>
+                <h3 className="mb-1 text-sm font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">Condições financeiras</h3>
+                <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">Campos não informados aparecem como pendentes na minuta; nenhum valor é presumido como zero.</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Finalidade dos recursos</label>
+                    <select value={form.finalidade} onChange={set('finalidade')} className={inputClass}>
+                      <option value="">Selecione...</option>
+                      <option value="custeio">Custeio agrícola</option>
+                      <option value="investimento">Investimento</option>
+                      <option value="giro">Capital de giro</option>
+                      <option value="comercializacao">Comercialização</option>
+                    </select>
+                  </div>
+                  <Field label="Valor a captar (R$)" value={form.valorCaptacao} onChange={set('valorCaptacao')} type="number" placeholder="0,00" />
+                  <Field label="Crédito bruto (R$)" value={form.valorCredito} onChange={set('valorCredito')} type="number" placeholder="0,00" />
+                  <Field label="IOF informado (R$)" value={form.valorIof} onChange={set('valorIof')} type="number" placeholder="0,00" />
+                  <Field label="Valor líquido (R$)" value={form.valorLiquido} onChange={set('valorLiquido')} type="number" placeholder="0,00" />
+                  <Field label="Taxa mensal (%)" value={form.taxaJurosMensal} onChange={set('taxaJurosMensal')} type="number" placeholder="0,00" />
+                  <Field label="Taxa anual (%)" value={form.taxaJurosAnual} onChange={set('taxaJurosAnual')} type="number" placeholder="0,00" />
+                  <Field label="CET mensal (%)" value={form.cetMensal} onChange={set('cetMensal')} type="number" placeholder="0,00" />
+                  <Field label="CET anual (%)" value={form.cetAnual} onChange={set('cetAnual')} type="number" placeholder="0,00" />
+                  <Field label="Multa por mora (%)" value={form.multaMoraPct} onChange={set('multaMoraPct')} type="number" placeholder="Preencher se contratada" />
+                  <Field label="Juros de mora (% a.m.)" value={form.jurosMoraMensalPct} onChange={set('jurosMoraMensalPct')} type="number" placeholder="Preencher se contratado" />
+                  <div className="sm:col-span-2"><Field label="Demais encargos de inadimplemento" value={form.encargosAdicionais} onChange={set('encargosAdicionais')} placeholder="Despesas comprovadas, índice de atualização ou outra condição expressa" /></div>
+                  <Field label="Forma de liquidação" value={form.formaLiquidacao} onChange={set('formaLiquidacao')} placeholder="Transferência, entrega física..." />
+                  <Field label="Local de pagamento / liquidação" value={form.localPagamento} onChange={set('localPagamento')} />
+                </div>
+
+                <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-700 dark:bg-gray-800/40">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Cronograma de liquidação</p>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Se não houver parcelas, o PDF usará o vencimento final e o valor de face.</p>
                     </div>
-                  </section>
-                </>
-              )}
+                    <button type="button" onClick={addInstallment} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-gray-900 dark:text-emerald-300">
+                      <Plus className="h-3.5 w-3.5" /> Adicionar parcela
+                    </button>
+                  </div>
+                  {form.cronograma.length > 0 && (
+                    <div className="mt-4 space-y-3">
+                      {form.cronograma.map((item, index) => (
+                        <div key={index} className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
+                          <div className="mb-2 flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Parcela {index + 1}</span>
+                            <button type="button" onClick={() => removeInstallment(index)} className="rounded-md p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30" aria-label={`Remover parcela ${index + 1}`}>
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                            <Field label="Vencimento" value={item.vencimento} onChange={event => updateInstallment(index, 'vencimento', event.target.value)} type="date" />
+                            <Field label="Principal (R$)" value={item.principal} onChange={event => updateInstallment(index, 'principal', event.target.value)} type="number" placeholder="0,00" />
+                            <Field label="Encargos (R$)" value={item.encargos} onChange={event => updateInstallment(index, 'encargos', event.target.value)} type="number" placeholder="0,00" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <Divider />
+
+              <section>
+                <h3 className="mb-1 text-sm font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">Garantias e aval</h3>
+                <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">Use estes campos também na emissão: a garantia faz parte do título quando contratada.</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Tipo de garantia</label>
+                    <select value={form.garantiaTipo} onChange={set('garantiaTipo')} className={inputClass}>
+                      <option value="">Sem garantia adicional</option>
+                      <option value="imovel_rural">Hipoteca / imóvel rural</option>
+                      <option value="penhor_safra">Penhor rural / de safra</option>
+                      <option value="alienacao_fiduciaria">Alienação fiduciária</option>
+                      <option value="cessao_fiduciaria">Cessão fiduciária</option>
+                      <option value="aval">Aval</option>
+                      <option value="seguro">Seguro agrícola</option>
+                      <option value="recebiveis">Recebíveis</option>
+                    </select>
+                  </div>
+                  <Field label="Valor da garantia (R$)" value={form.garantiaValor} onChange={set('garantiaValor')} type="number" placeholder="0,00" />
+                  <div className="sm:col-span-2"><Field label="Descrição completa da garantia" value={form.garantiaDescricao} onChange={set('garantiaDescricao')} placeholder="Bem, localização, características e vínculo com a operação" /></div>
+                  <Field label="Proprietário / garantidor" value={form.garantiaProprietario} onChange={set('garantiaProprietario')} />
+                  <Field label="Matrícula / registro" value={form.garantiaRegistro} onChange={set('garantiaRegistro')} />
+                  <Field label="Grau / prioridade" value={form.garantiaGrau} onChange={set('garantiaGrau')} placeholder="Ex.: primeiro grau" />
+                </div>
+
+                <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-700 dark:bg-gray-800/40">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Avalista / garantidor pessoal (opcional)</p>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <Field label="Nome completo" value={form.avalistaNome} onChange={set('avalistaNome')} />
+                    <Field label="CPF / CNPJ" value={form.avalistaCpfCnpj} onChange={setMasked('avalistaCpfCnpj', maskCpfCnpj)} inputMode="numeric" />
+                    <Field label="Qualificação" value={form.avalistaQualificacao} onChange={set('avalistaQualificacao')} />
+                    <Field label="Endereço" value={form.avalistaEndereco} onChange={set('avalistaEndereco')} />
+                  </div>
+                </div>
+              </section>
+
+              <Divider />
+
+              <section>
+                <h3 className="mb-1 text-sm font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">Emissão, registro e foro</h3>
+                <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">A ConectCampo acompanha o status. O comprovante oficial continua sendo emitido pela registradora ou cartório competente.</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <Field label="Local de emissão" value={form.localEmissao} onChange={set('localEmissao')} />
+                  <Field label="Data de emissão" value={form.dataEmissao} onChange={set('dataEmissao')} type="date" />
+                  <Field label="Registradora / entidade" value={form.registradora} onChange={set('registradora')} placeholder="B3, CERC ou outra aplicável" />
+                  <Field label="Número do registro" value={form.numeroRegistro} onChange={set('numeroRegistro')} placeholder="Preencher após registro" />
+                  <Field label="Cidade do foro" value={form.foroCidade} onChange={set('foroCidade')} />
+                  <Field label="UF do foro" value={form.foroEstado} onChange={set('foroEstado')} placeholder="UF" />
+                </div>
+              </section>
 
               {/* Observações */}
               <div>
@@ -859,17 +1184,17 @@ export default function CprPage() {
                 </div>
               )}
 
-              {/* Emissão Financeira — 3% sobre o valor total */}
+              {/* Emissão Financeira — 0,8% sobre o valor de face */}
               {form.purpose === 'EMISSAO' && form.type === 'FINANCEIRA' && (
                 <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3 text-sm">
                   <p className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1.5"><DollarSign className="h-4 w-4" /> Custo de emissão da CPR Financeira</p>
-                  {form.precoUnitario && form.quantidade ? (
+                  {form.valorFace ? (
                     <p className="text-emerald-600 dark:text-emerald-500 mt-1">
-                      <strong>{formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario) * (pricing.financeiraRatePct / 100))}</strong>
-                      {' '}· {pricing.financeiraRatePct}% do valor total ({formatCurrency(parseFloat(form.quantidade) * parseFloat(form.precoUnitario))})
+                      <strong>{formatCurrency(parseFloat(form.valorFace) * (pricing.financeiraRatePct / 100))}</strong>
+                      {' '}· {pricing.financeiraRatePct}% do valor de face ({formatCurrency(parseFloat(form.valorFace))})
                     </p>
                   ) : (
-                    <p className="text-emerald-600 dark:text-emerald-500 mt-1">{pricing.financeiraRatePct}% sobre o valor total da CPR · informe quantidade e preço unitário para calcular</p>
+                    <p className="text-emerald-600 dark:text-emerald-500 mt-1">{pricing.financeiraRatePct}% sobre o valor de face · informe o valor de face para calcular</p>
                   )}
                 </div>
               )}

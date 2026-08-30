@@ -9,9 +9,10 @@ import { createHash, randomInt, randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCprDto } from './dto/create-cpr.dto';
 import { UpdateCprDto } from './dto/update-cpr.dto';
-import { UserRole } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { ZapSignService } from '../../common/zapsign/zapsign.service';
 import { renderCprPdf } from '../../common/zapsign/cpr-pdf';
+import { renderCprHtml, renderCprMarkdown } from '../../common/cpr/cpr-document';
 import { CPR_PRICING } from '../../common/pricing/pricing';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -20,7 +21,7 @@ const ZAPSIGN_BRAND_COLOR = '#008c3c';
 
 const CONECTCAMPO_FEE_RATE = CPR_PRICING.captacaoFeeRate; // 6% — aplicado apenas na Captação
 const CUSTO_EMISSAO_CPR_FISICA = CPR_PRICING.fisicaFlat; // R$ 2.500 (pagamento único) na emissão de CPR Física
-const CUSTO_EMISSAO_CPR_FINANCEIRA_RATE = CPR_PRICING.financeiraRate; // 3% sobre o valor total
+const CUSTO_EMISSAO_CPR_FINANCEIRA_RATE = CPR_PRICING.financeiraRate; // 0,8% sobre o valor de face
 
 @Injectable()
 export class CprService {
@@ -61,6 +62,7 @@ export class CprService {
       dto.precoUnitario != null
         ? dto.quantidade * dto.precoUnitario
         : null;
+    const valorFace = dto.valorFace ?? valorTotal;
 
     const isEmissao = dto.purpose === 'EMISSAO';
     const isFisica = (dto.type ?? 'FINANCEIRA') === 'FISICA';
@@ -70,12 +72,12 @@ export class CprService {
       !isEmissao && valorTotal != null ? valorTotal * CONECTCAMPO_FEE_RATE : null;
 
     // Custo de emissão: CPR Física = R$ 2.500 (pagamento único);
-    // CPR Financeira = 3% sobre o valor total da CPR.
+    // CPR Financeira = 0,8% sobre o valor de face da CPR.
     const custoEmissao = isEmissao
       ? isFisica
         ? CUSTO_EMISSAO_CPR_FISICA
-        : valorTotal != null
-          ? valorTotal * CUSTO_EMISSAO_CPR_FINANCEIRA_RATE
+        : valorFace != null
+          ? valorFace * CUSTO_EMISSAO_CPR_FINANCEIRA_RATE
           : null
       : null;
 
@@ -111,6 +113,7 @@ export class CprService {
         safraAno: dto.safraAno,
         precoUnitario: dto.precoUnitario,
         valorTotal,
+        valorFace,
         localEntrega: dto.localEntrega,
         dataEntrega: dto.dataEntrega ? new Date(dto.dataEntrega) : null,
 
@@ -128,76 +131,18 @@ export class CprService {
         finalidade: dto.finalidade,
         valorCaptacao: dto.valorCaptacao,
 
-        // ConectCampo fee (6% — só Captação) e custo de emissão (R$2.500 — CPR Física)
+        // Fee ConectCampo (só Captação) e custo de emissão conforme o tipo da CPR.
         conectcampoFeeRate: CONECTCAMPO_FEE_RATE,
         conectcampoFeeValue,
         custoEmissao,
 
         observacoes: dto.observacoes,
+        contractData: dto.contractData as Prisma.InputJsonValue | undefined,
       },
     });
 
     this.logger.log(`CPR criada: ${cpr.id} | ${dto.purpose} | Usuário: ${userId}`);
     return cpr;
-  }
-
-  /** Versão em Markdown da CPR (usada pela ZapSign para gerar o documento). */
-  private renderCprMarkdown(c: any): string {
-    const brl = (v: unknown) =>
-      v == null || v === '' ? '—' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const date = (v: unknown) => (v ? new Date(v as string).toLocaleDateString('pt-BR') : '—');
-    const meses = (m: number | null | undefined) => {
-      if (m == null) return '—';
-      const anos = Math.floor(m / 12);
-      const r = m % 12;
-      const parts: string[] = [];
-      if (anos > 0) parts.push(`${anos} ${anos === 1 ? 'ano' : 'anos'}`);
-      if (r > 0) parts.push(`${r} ${r === 1 ? 'mês' : 'meses'}`);
-      return parts.length ? parts.join(' e ') : `${m} meses`;
-    };
-    const tipo = c.type === 'FISICA' ? 'CPR Física' : 'CPR Financeira';
-    const purpose = c.purpose === 'EMISSAO' ? 'Emissão de CPR' : 'Captação de Crédito';
-
-    return [
-      `# Cédula de Produto Rural — ${tipo}`,
-      ``,
-      `**Número:** ${c.numeroCpr ?? '—'}  `,
-      `**Finalidade:** ${purpose}  `,
-      `**Produto:** ${c.produto} — ${Number(c.quantidade).toLocaleString('pt-BR')} ${c.unidade}  `,
-      c.safraAno ? `**Safra(s):** ${c.safraAno}  ` : '',
-      ``,
-      `## Emitente (Produtor Rural)`,
-      `Nome: ${c.emitenteNome}  `,
-      `CPF/CNPJ: ${c.emitenteCpfCnpj}  `,
-      `Cidade/UF: ${c.emitenteCidade ?? '—'} ${c.emitenteEstado ? '/ ' + c.emitenteEstado : ''}  `,
-      c.emitenteCarNumero ? `CAR: ${c.emitenteCarNumero}  ` : '',
-      ``,
-      `## Credor`,
-      `Nome: ${c.credorNome}  `,
-      `CPF/CNPJ: ${c.credorCpfCnpj}  `,
-      ``,
-      `## Prazo, Carência e Vencimento`,
-      `Prazo total: ${meses(c.prazoMeses)}  `,
-      `Carência: ${meses(c.carenciaMeses)}  `,
-      `Vencimento: ${date(c.dataVencimento)}  `,
-      ``,
-      `## Valores`,
-      `Valor total da CPR: ${brl(c.valorTotal)}  `,
-      c.purpose === 'EMISSAO' && c.type === 'FISICA'
-        ? `Custo de emissão (CPR Física): ${brl(c.custoEmissao ?? 2500)} (pagamento único)  `
-        : '',
-      c.purpose === 'EMISSAO' && c.type === 'FINANCEIRA' && c.custoEmissao != null
-        ? `Custo de emissão (CPR Financeira): ${brl(c.custoEmissao)} (3% do valor total)  `
-        : '',
-      c.purpose === 'CAPTACAO' ? `Valor a captar: ${brl(c.valorCaptacao)}  ` : '',
-      c.purpose === 'CAPTACAO' ? `Fee ConectCampo (6%): ${brl(c.conectcampoFeeValue)}  ` : '',
-      c.observacoes ? `\n## Observações\n${c.observacoes}` : '',
-      ``,
-      `---`,
-      `_Documento gerado pela plataforma ConectCampo. A eficácia plena da Cédula de Produto Rural depende de emissão e, quando aplicável, registro no cartório competente (Lei nº 8.929/1994 e Lei nº 13.986/2020)._`,
-    ]
-      .filter((l) => l !== '')
-      .join('\n');
   }
 
   // ─── Assinatura eletrônica (simples, com trilha de auditoria) ────────────────
@@ -216,7 +161,7 @@ export class CprService {
       throw new BadRequestException('Esta CPR já está totalmente assinada.');
     }
 
-    const snapshot = this.renderCprHtml(cpr);
+    const snapshot = renderCprHtml(cpr);
     const documentHash = createHash('sha256').update(snapshot).digest('hex');
 
     // ── ZapSign (assinatura automática) — se habilitado ──
@@ -235,7 +180,7 @@ export class CprService {
       const doc = await this.zapsign.createDocument({
         name: `CPR ${cpr.numeroCpr ?? cpr.id.slice(0, 8)}`,
         base64Pdf,
-        markdownText: base64Pdf ? undefined : this.renderCprMarkdown(cpr),
+        markdownText: base64Pdf ? undefined : renderCprMarkdown(cpr),
         externalId: cpr.id,
         brandLogo: ZAPSIGN_BRAND_LOGO,
         brandPrimaryColor: ZAPSIGN_BRAND_COLOR,
@@ -470,7 +415,7 @@ export class CprService {
       documentHash: cpr.documentHash,
       alreadySigned: !!signedAt,
       signedAt,
-      html: cpr.signedSnapshot ?? this.renderCprHtml(cpr),
+      html: cpr.signedSnapshot ?? renderCprHtml(cpr),
     };
   }
 
@@ -606,7 +551,12 @@ export class CprService {
 
   async getDocumentHtml(cprId: string, userId: string, role: string) {
     const cpr = await this.assertOwner(cprId, userId, role);
-    return { html: this.renderCprHtml(cpr) };
+    return { html: renderCprHtml(cpr) };
+  }
+
+  async getDocumentPdf(cprId: string, userId: string, role: string) {
+    const cpr = await this.assertOwner(cprId, userId, role);
+    return renderCprPdf(cpr);
   }
 
   private renderCprHtml(c: any): string {
@@ -745,7 +695,7 @@ export class CprService {
         c.purpose === 'EMISSAO' && c.type === 'FISICA'
           ? row('Custo de emissão (CPR Física)', `${brl(c.custoEmissao ?? 2500)} · pagamento único`)
           : c.purpose === 'EMISSAO' && c.type === 'FINANCEIRA' && c.custoEmissao != null
-            ? row('Custo de emissão (CPR Financeira)', `${brl(c.custoEmissao)} · 3% do valor total`)
+            ? row('Custo de emissão (CPR Financeira)', `${brl(c.custoEmissao)} · 0,8% do valor de face`)
             : ''
       }
       ${
@@ -795,25 +745,36 @@ export class CprService {
       );
     }
 
-    const valorTotal =
-      dto.precoUnitario != null && dto.quantidade != null
-        ? dto.quantidade * dto.precoUnitario
-        : dto.precoUnitario != null
-        ? Number(cpr.quantidade) * dto.precoUnitario
-        : null;
-
-    const conectcampoFeeValue =
-      valorTotal != null ? valorTotal * CONECTCAMPO_FEE_RATE : null;
+    const quantity = dto.quantidade ?? Number(cpr.quantidade);
+    const unitPrice = dto.precoUnitario ?? (cpr.precoUnitario == null ? null : Number(cpr.precoUnitario));
+    const valorTotal = unitPrice == null ? null : quantity * unitPrice;
+    const valorFace = dto.valorFace ?? (cpr.valorFace == null ? valorTotal : Number(cpr.valorFace));
+    const purpose = dto.purpose ?? cpr.purpose;
+    const type = dto.type ?? cpr.type;
+    const conectcampoFeeValue = purpose === 'CAPTACAO' && valorTotal != null
+      ? valorTotal * CONECTCAMPO_FEE_RATE
+      : null;
+    const custoEmissao = purpose === 'EMISSAO'
+      ? type === 'FISICA'
+        ? CUSTO_EMISSAO_CPR_FISICA
+        : valorFace == null
+          ? null
+          : valorFace * CUSTO_EMISSAO_CPR_FINANCEIRA_RATE
+      : null;
+    const { contractData, ...fields } = dto;
 
     return this.prisma.cprDocument.update({
       where: { id: cprId },
       data: {
-        ...dto,
+        ...fields,
         emitenteEstado: dto.emitenteEstado as import('@prisma/client').BrazilianState | undefined,
         dataVencimento: dto.dataVencimento ? new Date(dto.dataVencimento) : undefined,
         dataEntrega: dto.dataEntrega ? new Date(dto.dataEntrega) : undefined,
-        ...(valorTotal != null && { valorTotal }),
-        ...(conectcampoFeeValue != null && { conectcampoFeeValue }),
+        valorTotal,
+        valorFace,
+        conectcampoFeeValue,
+        custoEmissao,
+        ...(contractData !== undefined && { contractData: contractData as Prisma.InputJsonValue }),
       },
     });
   }

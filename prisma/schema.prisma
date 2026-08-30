@@ -1135,6 +1135,7 @@ model CprDocument {
   safraAno            String?     // ex: "2025/2026"
   precoUnitario       Decimal?    @db.Decimal(10, 2)
   valorTotal          Decimal?    @db.Decimal(15, 2)
+  valorFace           Decimal?    @db.Decimal(15, 2) // base econômica formal da CPR
   localEntrega        String?
   dataEntrega         DateTime?
 
@@ -1165,7 +1166,7 @@ model CprDocument {
   conectcampoFeeRate  Decimal     @db.Decimal(5, 4)   @default(0.06)
   conectcampoFeeValue Decimal?    @db.Decimal(15, 2)
 
-  // Custo de emissão (pagamento único). CPR Física = R$ 2.500
+  // Custo de emissão: CPR Física = R$ 2.500; Financeira = 0,8% do valor de face
   custoEmissao        Decimal?    @db.Decimal(15, 2)
 
   // Assinatura eletrônica (simples, com trilha de auditoria)
@@ -1186,6 +1187,7 @@ model CprDocument {
   signedFileUrl       String?     // PDF assinado (ZapSign)
 
   observacoes         String?
+  contractData        Json?       // qualificação, cronograma, garantias e dados jurídicos complementares
 
   deletedAt           DateTime?
   createdAt           DateTime    @default(now())

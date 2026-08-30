@@ -35,7 +35,7 @@ const plans = [
       'Operações de crédito ilimitadas',
       'Score Premium com análise detalhada',
       'Prioridade no matching com financiadores',
-      'Emissão de CPR e contratos digitais',
+      'CPR completa: minuta, PDF e assinatura digital',
       'Gestão de documentos avançada',
       'Relatórios e analytics da operação',
       'Suporte prioritário',

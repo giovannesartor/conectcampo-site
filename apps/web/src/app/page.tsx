@@ -3,6 +3,7 @@ import { Hero } from '@/components/landing/Hero';
 import { SocialProof } from '@/components/landing/SocialProof';
 import { AudienceSplit } from '@/components/landing/AudienceSplit';
 import { ProductShowcase } from '@/components/landing/ProductShowcase';
+import { CprShowcase } from '@/components/landing/CprShowcase';
 import { Platform } from '@/components/landing/Platform';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { Segments } from '@/components/landing/Segments';
@@ -17,11 +18,11 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Marketplace de Crédito Agro | ConectCampo',
   description:
-    'Conectamos produtores rurais a bancos, cooperativas, FIDCs, securitizadoras e FIAGROs. Crédito rural, CPR, carbon credits e marketplace de grãos.',
+    'Crédito rural, CPR profissional, gestão da produção, documentos, crédito de carbono e mercado em uma plataforma conectada.',
   openGraph: {
     title: 'Marketplace de Crédito Agro | ConectCampo',
     description:
-      'Conectamos produtores rurais a bancos, cooperativas, FIDCs, securitizadoras e FIAGROs.',
+      'Crédito rural, CPR profissional, gestão da produção e mercado em uma única plataforma para o agro.',
   },
 };
 
@@ -74,6 +75,14 @@ const jsonLd = {
         },
         {
           '@type': 'Question',
+          name: 'Como funciona a CPR e quanto custa a emissão?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'A plataforma organiza os dados, gera a minuta completa e o PDF, coleta assinaturas e acompanha o status do registro. Na CPR Financeira, o custo ConectCampo é de 0,8% do valor de face; registro, tributos e encargos do credor, quando aplicáveis, são separados.',
+          },
+        },
+        {
+          '@type': 'Question',
           name: 'Como funciona o marketplace de grãos e o pagamento seguro?',
           acceptedAnswer: {
             '@type': 'Answer',
@@ -108,9 +117,11 @@ export default function LandingPage() {
       <HowItWorks />
       {/* 3. Veja a plataforma em ação */}
       <ProductShowcase />
-      {/* 4. Expansão: todas as ferramentas */}
+      {/* 4. Fluxo premium de CPR */}
+      <CprShowcase />
+      {/* 5. Expansão: todas as ferramentas */}
       <Platform />
-      {/* 5. Para cada porte */}
+      {/* 6. Para cada porte */}
       <Segments />
       {/* 6. Prova social (só depois de entender o produto) */}
       <SocialProof />

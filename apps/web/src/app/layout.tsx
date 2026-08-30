@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     template: '%s | ConectCampo',
   },
   description:
-    'Conectamos produtores rurais e empresas do agronegócio a bancos, cooperativas, FIDCs, securitizadoras, FIAGROs e o mercado de capitais.',
+    'Crédito rural, CPR profissional, gestão da produção, documentos e mercado em uma plataforma que conecta o agro a bancos, cooperativas, FIDCs e FIAGROs.',
   metadataBase: new URL('https://conectcampo.digital'),
   icons: {
     icon: [
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'ConectCampo | Marketplace de Crédito Agro',
     description:
-      'Conectamos produtores rurais e empresas do agronegócio às melhores oportunidades de crédito. Do pequeno ao grande produtor.',
+      'Crédito rural, CPR profissional, gestão da produção, documentos e mercado em uma única plataforma para o agronegócio.',
     url: 'https://conectcampo.digital',
     siteName: 'ConectCampo',
     locale: 'pt_BR',
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'ConectCampo | Marketplace de Crédito Agro',
     description:
-      'Conectamos produtores rurais e empresas do agro a bancos, cooperativas, FIDCs e o mercado de capitais.',
+      'Crédito rural, CPR profissional e gestão do agro conectados a bancos, cooperativas, FIDCs e ao mercado de capitais.',
     images: ['/og-image.png'],
   },
   robots: {
@@ -109,7 +109,7 @@ export default function RootLayout({
               url: 'https://conectcampo.digital',
               logo: 'https://conectcampo.digital/apple-touch-icon.png',
               description:
-                'Marketplace de crédito rural que conecta produtores e empresas do agronegócio a bancos, cooperativas, FIDCs, securitizadoras e FIAGROs.',
+                'Plataforma de crédito rural, CPR, documentos e gestão do agro que conecta produtores e empresas a bancos, cooperativas, FIDCs, securitizadoras e FIAGROs.',
               foundingDate: '2023',
               sameAs: [],
               contactPoint: {

@@ -13,7 +13,12 @@ const faqs = [
   {
     question: 'Quais tipos de crédito estão disponíveis?',
     answer:
-      'A plataforma oferece acesso a diversas modalidades: CPR Financeira, CPR Física, CDCA, CRA, LCA e FIAGRO. Trabalhamos com operações de custeio, investimento, capital de giro e mercado de capitais, com valores a partir de R$ 50 mil.',
+      'A plataforma organiza solicitações de custeio, investimento, capital de giro e operações estruturadas, incluindo CPR Física e Financeira. A disponibilidade, a modalidade e as condições finais dependem das instituições participantes e da análise de cada operação.',
+  },
+  {
+    question: 'Como funciona a CPR e quanto custa a emissão?',
+    answer:
+      'Você preenche os dados das partes, do produto, do valor de face, das garantias e do cronograma; a plataforma gera a minuta completa e o PDF, coleta assinaturas e acompanha o status do registro. Na CPR Financeira, o custo ConectCampo é de 0,8% do valor de face. Emolumentos, registro, tributos e encargos do credor, quando existirem, são separados. A minuta deve ser conferida e não substitui aconselhamento jurídico nem comprovante oficial da registradora.',
   },
   {
     question: 'Preciso pagar para usar a plataforma?',
@@ -23,7 +28,7 @@ const faqs = [
   {
     question: 'Como funciona o Score ConectCampo?',
     answer:
-      'Nosso Score proprietário analisa dezenas de variáveis agronômicas, financeiras e de mercado — incluindo histórico de produção, garantias, localização, safra, perfil da cultura e dados do produtor — para gerar uma pontuação de crédito específica para o agro que facilita a análise pelas instituições financeiras.',
+      'O Score organiza os dados disponíveis da operação — como produção, garantias, localização, safra, documentos e informações financeiras — em indicadores de apoio à análise. Ele não é promessa de aprovação, não substitui a política de crédito da instituição e melhora conforme os dados são completados e verificados.',
   },
   {
     question: 'Qual o prazo médio para aprovação?',

@@ -25,8 +25,8 @@ export const PLAN_LABELS: Record<string, string> = {
 export const CPR_PRICING = {
   /** Custo de emissão de CPR Física (pagamento único). */
   fisicaFlat: 2500,
-  /** Custo de emissão de CPR Financeira = % sobre o valor total. */
-  financeiraRate: 0.03,
+  /** Custo de emissão de CPR Financeira = 0,8% sobre o valor de face. */
+  financeiraRate: 0.008,
   /** Fee ConectCampo sobre operações de Captação. */
   captacaoFeeRate: 0.06,
 };

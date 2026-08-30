@@ -7,7 +7,7 @@ import { ArrowRight, LayoutDashboard, GitCompareArrows, FolderLock, Satellite, D
 const FEATURES = [
   { icon: LayoutDashboard, title: 'Painel unificado', desc: 'Score, propostas, operações e documentos num só lugar.' },
   { icon: GitCompareArrows, title: 'Comparador de propostas', desc: 'Compare taxas e prazos lado a lado e escolha a melhor.' },
-  { icon: FolderLock, title: 'Data room seguro', desc: 'Controle de acesso granular por instituição financeira.' },
+  { icon: FolderLock, title: 'Documentos e CPR', desc: 'Data room, minutas, PDFs e trilhas de assinatura no mesmo fluxo.' },
 ];
 
 const MODULES = [

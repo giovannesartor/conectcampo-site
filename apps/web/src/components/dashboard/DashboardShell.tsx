@@ -90,7 +90,7 @@ const INSTRUMENTOS_SECTION: NavSection = {
   title: 'Instrumentos',
   items: [
     { label: 'Crédito de Carbono', href: '/dashboard/carbon-credits', icon: <Leaf className="h-5 w-5" /> },
-    { label: 'CPR',                href: '/dashboard/cpr',            icon: <ScrollText className="h-5 w-5" /> },
+    { label: 'CPR & Garantias',     href: '/dashboard/cpr',            icon: <ScrollText className="h-5 w-5" /> },
     { label: 'Docs Inteligentes',  href: '/dashboard/smart-docs',     icon: <FileScan className="h-5 w-5" /> },
   ],
 };
@@ -200,7 +200,7 @@ function buildRoleNav(role: string, plan: string): NavSection[] {
           { label: 'Fila de Operações', href: '/dashboard/matching',   icon: <ClipboardList className="h-5 w-5" /> },
           { label: 'Score & Risco',    href: '/dashboard/scoring',     icon: <BarChart3 className="h-5 w-5" /> },
           { label: 'Docs Inteligentes', href: '/dashboard/smart-docs', icon: <FileScan className="h-5 w-5" /> },
-          { label: 'CPR',              href: '/dashboard/cpr',         icon: <ScrollText className="h-5 w-5" /> },
+          { label: 'CPR & Garantias',  href: '/dashboard/cpr',         icon: <ScrollText className="h-5 w-5" /> },
         ],
       },
       CONTA_SECTION,
@@ -568,8 +568,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main id="main-content" className="flex-1 p-4 lg:p-6">
-          {children}
+        <main id="main-content" className="relative flex-1 overflow-hidden bg-[#f7faf8] p-4 dark:bg-[#07110c] lg:p-6">
+          <div className="pointer-events-none absolute inset-0 contour-pattern opacity-[0.018] dark:opacity-[0.035]" />
+          <div className="relative min-h-full">{children}</div>
         </main>
       </div>
 

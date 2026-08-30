@@ -10,6 +10,8 @@ import {
   UseGuards,
   ParseIntPipe,
   DefaultValuePipe,
+  Header,
+  StreamableFile,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -97,6 +99,20 @@ export class CprController {
     @CurrentUser('role') role: string,
   ) {
     return this.service.getDocumentHtml(id, userId, role);
+  }
+
+  @Get(':id/pdf')
+  @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
+  @Header('Content-Type', 'application/pdf')
+  @Header('Content-Disposition', 'attachment; filename="cpr-conectcampo.pdf"')
+  @ApiOperation({ summary: 'Baixar a minuta completa da CPR em PDF' })
+  async getPdf(
+    @Param('id') id: string,
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    const buffer = await this.service.getDocumentPdf(id, userId, role);
+    return new StreamableFile(buffer);
   }
 
   @Patch(':id')

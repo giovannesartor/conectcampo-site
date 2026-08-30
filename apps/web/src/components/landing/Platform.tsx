@@ -18,7 +18,7 @@ const TOOLS = [
   { icon: Wallet, title: 'Fluxo de Caixa', desc: 'Receitas × despesas por safra, com projeção e gráficos.' },
   { icon: CalendarClock, title: 'Calendário', desc: 'Parcelas, CPRs e seguros num só lugar, com lembretes.' },
   { icon: Leaf, title: 'Crédito de Carbono', desc: 'Projetos de carbono e acesso ao mercado voluntário.' },
-  { icon: ScrollText, title: 'CPR Digital', desc: 'Emita e assine Cédulas de Produto Rural eletronicamente.' },
+  { icon: ScrollText, title: 'CPR & Garantias', desc: 'Minuta completa, PDF, assinatura e controle do registro — 0,8% do valor de face na CPR Financeira.' },
   { icon: FileScan, title: 'Docs Inteligentes', desc: 'Extração automática de matrícula, CAR, notas e contratos.' },
   { icon: NotebookPen, title: 'Diário de Safra', desc: 'Caderno de campo: plantio, insumos e rastreabilidade.' },
 ];
