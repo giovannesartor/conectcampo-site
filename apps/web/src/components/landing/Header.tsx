@@ -47,7 +47,8 @@ export function Header() {
           >
             <button
               type="button"
-              onClick={() => setDropdownOpen((open) => !open)}
+              onClick={() => setDropdownOpen(true)}
+              onFocus={() => setDropdownOpen(true)}
               className="flex items-center gap-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-500 transition-colors py-2"
               aria-haspopup="menu"
               aria-expanded={dropdownOpen}
