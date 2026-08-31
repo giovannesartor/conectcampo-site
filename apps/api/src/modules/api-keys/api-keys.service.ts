@@ -21,7 +21,7 @@ export interface ApiKeyPrincipal {
 export class ApiKeysService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly audit: AuditService,
+    private readonly audit?: AuditService,
   ) {}
 
   /** Cria uma chave; retorna o segredo em texto puro UMA única vez. */
@@ -79,14 +79,16 @@ export class ApiKeysService {
       data: { revokedAt: new Date() },
       select: { id: true, revokedAt: true },
     });
-    void this.audit.log({
-      userId,
-      action: 'REVOKE',
-      entity: 'api_key',
-      entityId: id,
-      oldValue: { revokedAt: key.revokedAt },
-      newValue: { revokedAt: updated.revokedAt, reason: reason ?? null },
-    }).catch(() => undefined);
+    if (this.audit) {
+      void this.audit.log({
+        userId,
+        action: 'REVOKE',
+        entity: 'api_key',
+        entityId: id,
+        oldValue: { revokedAt: key.revokedAt },
+        newValue: { revokedAt: updated.revokedAt, reason: reason ?? null },
+      }).catch(() => undefined);
+    }
     return updated;
   }
 
