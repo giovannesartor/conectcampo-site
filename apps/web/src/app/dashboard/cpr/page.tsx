@@ -26,6 +26,8 @@ import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
+import { Modal } from '@/components/dashboard/Modal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -218,6 +220,7 @@ function maskPhone(v: string): string {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function CprPage() {
+  const confirmAction = useConfirmDialog();
   const [summary, setSummary] = useState<CprSummary | null>(null);
   const [cprs, setCprs] = useState<CprItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -373,10 +376,23 @@ export default function CprPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Cancelar esta CPR?')) return;
+    const cpr = cprs.find((item) => item.id === id);
+    const { confirmed, reason } = await confirmAction({
+      title: 'Cancelar esta CPR?',
+      description: 'A CPR será cancelada e deixará de seguir para emissão, assinatura ou registro. O histórico permanecerá auditável.',
+      confirmLabel: 'Cancelar CPR',
+      tone: 'warning',
+      details: cpr ? [
+        { label: 'Emitente', value: cpr.emitenteNome },
+        { label: 'Valor', value: formatCurrency(Number(cpr.valorTotal ?? 0)) },
+      ] : undefined,
+      requireReason: true,
+      reasonLabel: 'Motivo do cancelamento',
+    });
+    if (!confirmed) return;
     setActionLoading(id);
     try {
-      await api.delete(`/cpr/${id}`);
+      await api.delete(`/cpr/${id}`, { data: { reason } });
       await load();
     } finally {
       setActionLoading(null);
@@ -442,10 +458,18 @@ export default function CprPage() {
   };
 
   const resetSignature = async (cprId: string) => {
-    if (!confirm('Gerar novos links invalida as assinaturas já coletadas. Continuar?')) return;
+    const { confirmed, reason } = await confirmAction({
+      title: 'Gerar novos links de assinatura?',
+      description: 'Os links anteriores serão invalidados. Assinaturas já coletadas podem precisar ser refeitas pelos participantes.',
+      confirmLabel: 'Gerar novos links',
+      tone: 'warning',
+      requireReason: true,
+      reasonLabel: 'Motivo da renovação',
+    });
+    if (!confirmed) return;
     setActionLoading(cprId);
     try {
-      await api.post(`/cpr/${cprId}/signature/request`);
+      await api.post(`/cpr/${cprId}/signature/request`, { reason });
       const { data } = await api.get<SignatureInfo>(`/cpr/${cprId}/signature`);
       setSignModal(prev => (prev ? { ...prev, info: data } : prev));
       await load();
@@ -1242,19 +1266,8 @@ export default function CprPage() {
 
       {/* Modal de assinatura eletrônica */}
       {signModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={() => setSignModal(null)}>
-          <div className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <PenLine className="h-5 w-5 text-violet-600" />
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Assinatura eletrônica</h2>
-              </div>
-              <button onClick={() => setSignModal(null)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-                <X className="h-5 w-5 text-gray-500" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
+        <Modal title="Assinatura eletrônica" onClose={() => setSignModal(null)} maxWidth="max-w-lg">
+            <div className="space-y-4">
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 A ZapSign envia o link individual por e-mail quando o endereço está preenchido e exige
                 o token recebido para autenticar a parte. Os links também ficam disponíveis abaixo para
@@ -1337,8 +1350,7 @@ export default function CprPage() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

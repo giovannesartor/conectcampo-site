@@ -104,8 +104,9 @@ export class MarketplaceOrdersController {
     @Param('id') id: string,
     @CurrentUser('sub') userId: string,
     @CurrentUser('role') role: string,
+    @Body() body: { reason?: string } | undefined,
   ) {
-    return this.service.confirmReceipt(id, userId, role);
+    return this.service.confirmReceipt(id, userId, role, body?.reason);
   }
 
   @Patch(':id/dispute')
@@ -150,7 +151,7 @@ export class MarketplaceOrdersController {
   @Patch(':id/refund')
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '[Admin] Reembolsar comprador' })
-  refund(@Param('id') id: string) {
-    return this.service.refund(id);
+  refund(@Param('id') id: string, @Body() body: { reason?: string } | undefined) {
+    return this.service.refund(id, body?.reason);
   }
 }

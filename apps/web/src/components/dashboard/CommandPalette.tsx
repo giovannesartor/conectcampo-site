@@ -2,13 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Search, LayoutDashboard, FileText, CreditCard, FolderOpen, BarChart3,
-  ScrollText, Leaf, Settings, Users, Landmark, ArrowRight,
-  MapPin, Satellite, CloudSun, DollarSign, Store, Wallet, CalendarClock,
-  FileSignature, ArrowLeftRight, ShieldAlert, NotebookPen, FileScan,
-} from 'lucide-react';
+import { Search, FileText, ArrowRight } from 'lucide-react';
 import { api } from '@/lib/api';
+import type { NavSection } from './DashboardShell';
 
 interface Cmd {
   id: string;
@@ -16,37 +12,16 @@ interface Cmd {
   sub?: string;
   href: string;
   icon: React.ReactNode;
-  keywords?: string;
+  group: string;
 }
 
-const NAV: Cmd[] = [
-  { id: 'overview', label: 'Visão Geral', href: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" />, keywords: 'inicio home dashboard' },
-  { id: 'ops', label: 'Operações', href: '/dashboard/operations', icon: <FileText className="h-4 w-4" />, keywords: 'credito operacao' },
-  { id: 'newop', label: 'Nova operação', sub: 'Solicitar crédito', href: '/dashboard/operations/new', icon: <FileText className="h-4 w-4" />, keywords: 'criar solicitar credito' },
-  { id: 'proposals', label: 'Propostas', href: '/dashboard/proposals', icon: <CreditCard className="h-4 w-4" />, keywords: 'oferta banco' },
-  { id: 'docs', label: 'Documentos', href: '/dashboard/documents', icon: <FolderOpen className="h-4 w-4" />, keywords: 'data room arquivos' },
-  { id: 'score', label: 'Score', href: '/dashboard/scoring', icon: <BarChart3 className="h-4 w-4" />, keywords: 'rating pontuacao' },
-  { id: 'cpr', label: 'CPR', sub: 'Cédula de Produto Rural', href: '/dashboard/cpr', icon: <ScrollText className="h-4 w-4" />, keywords: 'cedula assinatura' },
-  { id: 'carbon', label: 'Crédito de Carbono', href: '/dashboard/carbon-credits', icon: <Leaf className="h-4 w-4" />, keywords: 'esg carbono co2' },
-  { id: 'market', label: 'Mercado de Carbono', href: '/dashboard/carbon-credits/mercado', icon: <Leaf className="h-4 w-4" />, keywords: 'preco cotacao carbono' },
-  { id: 'farms', label: 'Gestão de Áreas', sub: 'Fazendas e talhões', href: '/dashboard/farms', icon: <MapPin className="h-4 w-4" />, keywords: 'fazenda talhao area car mapa' },
-  { id: 'journal', label: 'Diário de Safra', href: '/dashboard/field-journal', icon: <NotebookPen className="h-4 w-4" />, keywords: 'caderno campo insumo plantio colheita' },
-  { id: 'ndvi', label: 'Satélite (NDVI)', href: '/dashboard/ndvi', icon: <Satellite className="h-4 w-4" />, keywords: 'monitoramento satelite vigor lavoura sentinel planet' },
-  { id: 'weather', label: 'Clima & Alertas', href: '/dashboard/weather', icon: <CloudSun className="h-4 w-4" />, keywords: 'previsao tempo geada seca chuva plantio' },
-  { id: 'climate', label: 'Risco de Safra', href: '/dashboard/climate-score', icon: <ShieldAlert className="h-4 w-4" />, keywords: 'score climatico risco producao' },
-  { id: 'calendar', label: 'Calendário de Vencimentos', href: '/dashboard/calendar', icon: <CalendarClock className="h-4 w-4" />, keywords: 'vencimento parcela lembrete' },
-  { id: 'cashflow', label: 'Fluxo de Caixa', href: '/dashboard/cashflow', icon: <Wallet className="h-4 w-4" />, keywords: 'receita despesa projecao safra' },
-  { id: 'barter', label: 'Barter (troca)', href: '/dashboard/barter', icon: <ArrowLeftRight className="h-4 w-4" />, keywords: 'troca insumo grao' },
-  { id: 'quotes', label: 'Cotações & Preços', href: '/dashboard/quotes', icon: <DollarSign className="h-4 w-4" />, keywords: 'soja milho boi dolar cepea b3 preco' },
-  { id: 'marketplace', label: 'Marketplace de Grãos', href: '/dashboard/marketplace', icon: <Store className="h-4 w-4" />, keywords: 'oferta compra venda grao' },
-  { id: 'sales', label: 'Contratos de Venda', href: '/dashboard/sales-contracts', icon: <FileSignature className="h-4 w-4" />, keywords: 'contrato termo hedge preco travado' },
-  { id: 'smartdocs', label: 'Docs Inteligentes', href: '/dashboard/smart-docs', icon: <FileScan className="h-4 w-4" />, keywords: 'ocr documento matricula car nota extracao' },
-  { id: 'settings', label: 'Configurações', href: '/dashboard/settings', icon: <Settings className="h-4 w-4" />, keywords: 'perfil senha conta api' },
-  { id: 'admin', label: 'Painel Admin', href: '/dashboard/admin', icon: <Users className="h-4 w-4" />, keywords: 'administracao' },
-  { id: 'leads', label: 'Leads', href: '/dashboard/admin/leads', icon: <Landmark className="h-4 w-4" />, keywords: 'contatos simulador' },
-];
-
-export function CommandPalette() {
+export function CommandPalette({
+  navSections,
+  operationSearchEndpoint,
+}: {
+  navSections: NavSection[];
+  operationSearchEndpoint: string;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
@@ -75,20 +50,33 @@ export function CommandPalette() {
 
   useEffect(() => {
     if (open) {
+      const previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
       setQ('');
       setActive(0);
       setTimeout(() => inputRef.current?.focus(), 30);
       // carrega operações para busca (uma vez por abertura)
-      api.get('/operations?page=1&perPage=50')
+      api.get(`${operationSearchEndpoint}?page=1&perPage=50`)
         .then((r) => setOps((r.data?.data || r.data || []).map((o: any) => ({ id: o.id, type: o.type, crop: o.crop }))))
         .catch(() => {});
+      return () => { document.body.style.overflow = previousOverflow; };
     }
-  }, [open]);
+  }, [open, operationSearchEndpoint]);
+
+  const navigation = useMemo<Cmd[]>(() => navSections.flatMap((section) =>
+    section.items.map((item) => ({
+      id: `${section.title}-${item.label}-${item.href}`,
+      label: item.label,
+      sub: section.title,
+      href: item.href,
+      icon: item.icon,
+      group: 'Páginas',
+    }))), [navSections]);
 
   const results = useMemo(() => {
     const term = q.trim().toLowerCase();
-    const navMatches = NAV.filter(
-      (c) => !term || c.label.toLowerCase().includes(term) || c.keywords?.includes(term),
+    const navMatches = navigation.filter(
+      (c) => !term || `${c.label} ${c.sub ?? ''}`.toLowerCase().includes(term),
     );
     const opMatches: Cmd[] =
       term.length >= 2
@@ -101,10 +89,11 @@ export function CommandPalette() {
               sub: `Operação #${o.id.slice(-6).toUpperCase()}`,
               href: `/dashboard/operations/${o.id}`,
               icon: <FileText className="h-4 w-4" />,
+              group: 'Operações',
             }))
         : [];
     return [...navMatches, ...opMatches];
-  }, [q, ops]);
+  }, [navigation, q, ops]);
 
   useEffect(() => { setActive(0); }, [q]);
 
@@ -116,7 +105,7 @@ export function CommandPalette() {
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center bg-gray-950/55 px-4 pt-[12vh] backdrop-blur-[3px]" onClick={() => setOpen(false)}>
+    <div className="fixed inset-0 z-[60] flex items-start justify-center bg-gray-950/55 px-4 pt-[12vh] backdrop-blur-[3px]" onClick={() => setOpen(false)} role="dialog" aria-modal="true" aria-label="Busca global">
       <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-white/60 bg-white shadow-2xl shadow-black/20 dark:border-gray-800 dark:bg-gray-900" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 border-b border-gray-100 px-4 dark:border-dark-border">
           <Search className="h-4 w-4 text-gray-400" />
@@ -139,8 +128,11 @@ export function CommandPalette() {
             <p className="px-4 py-6 text-center text-sm text-gray-400">Nada encontrado.</p>
           ) : (
             results.map((c, i) => (
-              <button
-                key={c.id}
+              <div key={c.id}>
+                {(i === 0 || results[i - 1]?.group !== c.group) && (
+                  <p className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400">{c.group}</p>
+                )}
+                <button
                 onMouseEnter={() => setActive(i)}
                 onClick={() => go(c.href)}
                 className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${
@@ -150,10 +142,11 @@ export function CommandPalette() {
                 <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${i === active ? 'bg-white text-brand-600 shadow-sm dark:bg-gray-900 dark:text-brand-400' : 'bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}>{c.icon}</span>
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm font-medium text-gray-900 dark:text-white truncate">{c.label}</span>
-                  {c.sub && <span className="block text-xs text-gray-400 truncate">{c.sub}</span>}
+                  <span className="block text-xs text-gray-400 truncate">{c.group}{c.sub ? ` · ${c.sub}` : ''}</span>
                 </span>
                 {i === active && <ArrowRight className="h-4 w-4 text-brand-500" />}
               </button>
+              </div>
             ))
           )}
         </div>

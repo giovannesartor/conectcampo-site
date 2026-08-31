@@ -1,17 +1,41 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { OperationStatus, PartnerType, ProposalStatus, UserRole } from '@prisma/client';
+import { OperationStatus, PartnerType, ProposalStatus, SubscriptionPlan, UserRole } from '@prisma/client';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class OperationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
+    private readonly audit: AuditService,
   ) {}
 
   async create(userId: string, data: any) {
+    const subscription = await this.prisma.subscription.findFirst({
+      where: { userId, isActive: true },
+      orderBy: { createdAt: 'desc' },
+      select: { plan: true },
+    });
+
+    if (subscription?.plan === SubscriptionPlan.START) {
+      const activeOperations = await this.prisma.operationRequest.count({
+        where: {
+          producerProfile: { userId },
+          deletedAt: null,
+          status: { notIn: [OperationStatus.COMPLETED, OperationStatus.CANCELLED, OperationStatus.REJECTED] },
+        },
+      });
+
+      if (activeOperations >= 2) {
+        throw new BadRequestException(
+          'O Plano Produtor Rural permite até 2 operações simultâneas. Conclua uma operação ou faça upgrade para criar outra.',
+        );
+      }
+    }
+
     const profile = await this.prisma.producerProfile.findUnique({
       where: { userId },
     });
@@ -48,6 +72,57 @@ export class OperationsService {
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async getPartnerPortfolio(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, cnpj: true },
+    });
+    if (!user) throw new NotFoundException('Usuário não encontrado');
+
+    const partner = await this.prisma.partnerInstitution.findFirst({
+      where: {
+        OR: [
+          ...(user.cnpj ? [{ cnpj: user.cnpj }] : []),
+          { cnpj: `USER-${userId}` },
+          { contactEmail: user.email },
+        ],
+      },
+    });
+    if (!partner) return [];
+
+    const proposals = await this.prisma.proposal.findMany({
+      where: { partnerId: partner.id },
+      include: {
+        operation: {
+          include: {
+            producerProfile: { include: { user: { select: { name: true } } } },
+            riskScore: { select: { score: true, profile: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return proposals.map((proposal) => ({
+      id: proposal.id,
+      status: proposal.status,
+      amount: Number(proposal.amount),
+      interestRate: Number(proposal.interestRate),
+      termMonths: proposal.termMonths,
+      validUntil: proposal.validUntil,
+      createdAt: proposal.createdAt,
+      operation: {
+        id: proposal.operation.id,
+        type: proposal.operation.type,
+        purpose: proposal.operation.purpose,
+        requestedAmount: Number(proposal.operation.requestedAmount),
+        status: proposal.operation.status,
+        producerName: proposal.operation.producerProfile.user.name,
+        score: proposal.operation.riskScore?.score ?? null,
+      },
+    }));
   }
 
   /**
@@ -122,7 +197,7 @@ export class OperationsService {
   /**
    * Produtor aceita uma proposta recebida.
    */
-  async acceptProposal(proposalId: string, userId: string, userRole?: string) {
+  async acceptProposal(proposalId: string, userId: string, userRole?: string, reason?: string) {
     const proposal = await this.getProposalForProducer(proposalId, userId, userRole);
 
     const updated = await this.prisma.proposal.update({
@@ -145,19 +220,37 @@ export class OperationsService {
       data: { status: OperationStatus.ACCEPTED },
     });
 
+    void this.audit.log({
+      userId,
+      action: 'ACCEPT_PROPOSAL',
+      entity: 'proposal',
+      entityId: proposalId,
+      oldValue: { status: proposal.status },
+      newValue: { status: updated.status, operationId: proposal.operationId, reason: reason ?? null },
+    }).catch(() => undefined);
+
     return updated;
   }
 
   /**
    * Produtor recusa uma proposta recebida.
    */
-  async rejectProposal(proposalId: string, userId: string, userRole?: string) {
-    await this.getProposalForProducer(proposalId, userId, userRole);
+  async rejectProposal(proposalId: string, userId: string, userRole?: string, reason?: string) {
+    const proposal = await this.getProposalForProducer(proposalId, userId, userRole);
 
-    return this.prisma.proposal.update({
+    const updated = await this.prisma.proposal.update({
       where: { id: proposalId },
       data: { status: ProposalStatus.REJECTED, respondedAt: new Date() },
     });
+    void this.audit.log({
+      userId,
+      action: 'REJECT_PROPOSAL',
+      entity: 'proposal',
+      entityId: proposalId,
+      oldValue: { status: proposal.status },
+      newValue: { status: updated.status, operationId: proposal.operationId, reason: reason ?? null },
+    }).catch(() => undefined);
+    return updated;
   }
 
   private async getProposalForProducer(proposalId: string, userId: string, userRole?: string) {
@@ -204,12 +297,39 @@ export class OperationsService {
     const profile = await this.prisma.producerProfile.findUnique({
       where: { userId },
     });
-    if (!profile && role !== UserRole.ADMIN) {
+    const cooperativeSubscription = role === UserRole.COMPANY
+      ? await this.prisma.subscription.findFirst({
+          where: { userId, isActive: true, plan: SubscriptionPlan.COOPERATIVE },
+          select: { id: true },
+        })
+      : null;
+    if (!profile && role !== UserRole.ADMIN && !cooperativeSubscription) {
       return { data: [], meta: { total: 0, page, perPage, totalPages: 0 } };
     }
-    const where: any = role === UserRole.ADMIN
+    let where: any = role === UserRole.ADMIN
       ? { deletedAt: null }
-      : { producerProfileId: profile!.id, deletedAt: null };
+      : profile
+        ? { producerProfileId: profile.id, deletedAt: null }
+        : { producerProfileId: '__sem_perfil__', deletedAt: null };
+
+    if (role === UserRole.COMPANY && cooperativeSubscription) {
+        const companies = await this.prisma.company.findMany({
+          where: {
+            deletedAt: null,
+            OR: [
+              { ownerId: userId },
+              { members: { some: { userId } } },
+            ],
+          },
+          select: { id: true },
+        });
+        if (companies.length > 0) {
+          where = {
+            producerProfile: { companyId: { in: companies.map((company) => company.id) } },
+            deletedAt: null,
+          };
+        }
+    }
     if (status && Object.values(OperationStatus).includes(status as OperationStatus)) {
       where.status = status as OperationStatus;
     }
@@ -221,9 +341,10 @@ export class OperationsService {
         skip: (page - 1) * perPage,
         take: perPage,
         include: {
+          producerProfile: { include: { user: { select: { name: true } } } },
           riskScore: true,
           proposals: { orderBy: { createdAt: 'desc' } },
-          _count: { select: { matchResults: true, documents: true } },
+          _count: { select: { matchResults: true, documents: true, proposals: true } },
         },
       }),
       this.prisma.operationRequest.count({
@@ -232,7 +353,10 @@ export class OperationsService {
     ]);
 
     return {
-      data,
+      data: data.map((operation) => ({
+        ...operation,
+        producerName: operation.producerProfile.user.name,
+      })),
       meta: {
         total,
         page,

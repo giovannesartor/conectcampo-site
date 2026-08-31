@@ -12,6 +12,7 @@ import { api } from '@/lib/api';
 import { formatCurrency, formatRelative } from '@/lib/format';
 import { KPICard } from './KPICard';
 import { StatusBadge } from './StatusBadge';
+import { ErrorState } from './PageKit';
 import {
   FileText,
   TrendingUp,
@@ -58,6 +59,7 @@ export function DashboardCorporate() {
   const [filter, setFilter] = useState<FilterKey>('all');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [stats, setStats] = useState({
     totalOps: 0,
     pendingOps: 0,
@@ -72,6 +74,7 @@ export function DashboardCorporate() {
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     else setRefreshing(true);
+    setLoadError(false);
     try {
       const opsRes = await api.get('/operations/available?page=1&perPage=50');
       const ops: Operation[] = opsRes.data.data ?? opsRes.data.operations ?? opsRes.data ?? [];
@@ -96,7 +99,7 @@ export function DashboardCorporate() {
         pendingVolume: pendingVol,
         avgScore: Math.round(avgScore),
       });
-    } catch { /* empty portfolio */ } finally {
+    } catch { setLoadError(true); } finally {
       setLoading(false);
       setRefreshing(false);
     }
@@ -107,6 +110,10 @@ export function DashboardCorporate() {
   const filtered = filter === 'all'
     ? operations
     : operations.filter((op) => op.status === filter);
+
+  if (loadError && !loading) {
+    return <ErrorState onRetry={() => load()} />;
+  }
 
   return (
     <div className="space-y-6">

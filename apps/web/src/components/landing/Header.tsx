@@ -7,19 +7,22 @@ import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const plataformaLinks = [
-  { name: 'Ferramentas', href: '/#plataforma', description: 'Todos os módulos da operação' },
+  { name: 'Ferramentas', href: '/plataforma', description: 'Todos os módulos da operação' },
   { name: 'Como Funciona', href: '/como-funciona', description: 'Conheça o fluxo completo' },
   { name: 'Planos', href: '/planos', description: 'Escolha o perfil ideal' },
   { name: 'Parceiros', href: '/parceiros', description: 'Bancos, FIDCs e cooperativas' },
   { name: 'API para Devs', href: '/api-docs', description: 'Integrações e documentação' },
+  { name: 'Central de Ajuda', href: '/ajuda', description: 'Dúvidas sobre produto, CPR e crédito' },
 ];
 
 const mobileNavLinks = [
-  { name: 'Ferramentas', href: '/#plataforma' },
+  { name: 'Ferramentas', href: '/plataforma' },
   { name: 'Como Funciona', href: '/como-funciona' },
   { name: 'Planos', href: '/planos' },
   { name: 'Parceiros', href: '/parceiros' },
   { name: 'API para Devs', href: '/api-docs' },
+  { name: 'Blog', href: '/blog' },
+  { name: 'Central de Ajuda', href: '/ajuda' },
   { name: 'Sobre Nós', href: '/sobre' },
   { name: 'Contato', href: '/contato' },
 ];
@@ -79,6 +82,9 @@ export function Header() {
 
           <Link href="/sobre" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-500 transition-colors">
             Sobre Nós
+          </Link>
+          <Link href="/blog" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-500 transition-colors">
+            Blog
           </Link>
           <Link href="/contato" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-500 transition-colors">
             Contato

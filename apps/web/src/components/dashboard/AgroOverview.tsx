@@ -32,7 +32,7 @@ export function AgroOverview() {
         {
           label: 'Saúde da lavoura',
           value: monitored ? `${monitored} talhões` : '—',
-          sub: critical ? `${critical} requer atenção` : 'tudo saudável',
+          sub: !ndvi ? 'dados indisponíveis' : monitored === 0 ? 'cadastre um talhão' : critical ? `${critical} requer atenção` : 'sem alertas críticos',
           href: '/dashboard/ndvi',
           icon: <Satellite className="h-5 w-5" />,
           alert: critical > 0,
@@ -40,7 +40,7 @@ export function AgroOverview() {
         {
           label: 'Vencimentos (30d)',
           value: cal ? String(cal.countProximos30 ?? 0) : '—',
-          sub: cal?.countAtrasado ? `${cal.countAtrasado} atrasado(s)` : 'em dia',
+          sub: !cal ? 'dados indisponíveis' : cal.countAtrasado ? `${cal.countAtrasado} atrasado(s)` : 'sem atrasos',
           href: '/dashboard/calendar',
           icon: <CalendarClock className="h-5 w-5" />,
           alert: (cal?.countAtrasado ?? 0) > 0,
@@ -55,7 +55,7 @@ export function AgroOverview() {
         {
           label: 'Valor da produção',
           value: prod?.totalValue ? formatCurrency(prod.totalValue) : '—',
-          sub: 'a preço de mercado',
+          sub: prod ? 'a preço de mercado' : 'dados indisponíveis',
           href: '/dashboard/quotes',
           icon: <DollarSign className="h-5 w-5" />,
         },

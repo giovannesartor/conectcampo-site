@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/dashboard/EmptyState';
 import { formatDate } from '@/lib/format';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 
 const DOC_STATUS_MAP: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   PENDING: { label: 'Pendente', color: 'text-yellow-600 bg-yellow-50', icon: Clock },
@@ -38,6 +39,7 @@ interface DocumentItem {
 }
 
 export default function DocumentsPage() {
+  const confirmAction = useConfirmDialog();
   const { user } = useAuth();
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,12 +82,18 @@ export default function DocumentsPage() {
   }
 
   async function handleDelete(docId: string) {
-    if (!confirm('Tem certeza que deseja excluir este documento?')) return;
+    const { confirmed } = await confirmAction({
+      title: 'Excluir documento?',
+      description: 'O arquivo será removido do data room e deixará de ficar disponível para análises e parceiros autorizados.',
+      confirmLabel: 'Excluir documento',
+    });
+    if (!confirmed) return;
     try {
       await api.delete(`/documents/${docId}`);
       setDocuments((prev) => prev.filter((d) => d.id !== docId));
+      toast.success('Documento excluído');
     } catch {
-      toast.error('Ocorreu um erro. Tente novamente.');
+      toast.error('Não foi possível excluir o documento.');
     }
   }
 

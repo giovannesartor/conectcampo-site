@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/dashboard/EmptyState';
 import { Modal } from '@/components/dashboard/Modal';
 import { Spinner, PageHeader, StatCard } from '@/components/dashboard/PageKit';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 
 const STATUS = ['ABERTA','NEGOCIACAO','FECHADA','CANCELADA'];
 const STATUS_STYLE: Record<string, string> = {
@@ -25,6 +26,7 @@ interface Offer {
 interface Summary { total: number; abertas: number; fechadas: number; totalInsumoValor: number; }
 
 export default function BarterPage() {
+  const confirmAction = useConfirmDialog();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,11 @@ export default function BarterPage() {
   useEffect(load, []);
 
   const setStatus = async (id: string, status: string) => { try { await api.patch(`/barter/${id}`, { status }); load(); } catch { toast.error('Erro'); } };
-  const remove = async (id: string) => { try { await api.delete(`/barter/${id}`); load(); } catch { toast.error('Erro'); } };
+  const remove = async (id: string) => {
+    const { confirmed } = await confirmAction({ title: 'Excluir operação de barter?', description: 'A operação será removida da visão financeira e não poderá ser recuperada.', confirmLabel: 'Excluir barter' });
+    if (!confirmed) return;
+    try { await api.delete(`/barter/${id}`); toast.success('Operação de barter excluída'); load(); } catch { toast.error('Não foi possível excluir o barter.'); }
+  };
 
   if (loading) return <Spinner />;
 

@@ -12,6 +12,7 @@ import { EmptyState } from '@/components/dashboard/EmptyState';
 import { Modal } from '@/components/dashboard/Modal';
 import { Spinner, PageHeader, StatCard } from '@/components/dashboard/PageKit';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 
 const STATES = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
 const CROPS = ['SOJA','MILHO','CAFE','ALGODAO','CANA','ARROZ','TRIGO','FEIJAO','PECUARIA_CORTE','PECUARIA_LEITE','AVICULTURA','SUINOCULTURA','FRUTICULTURA','SILVICULTURA','OUTRO'];
@@ -66,6 +67,7 @@ const ORDER_STATUS: Record<string, { label: string; style: string; icon: React.R
 };
 
 export default function MarketplacePage() {
+  const confirmAction = useConfirmDialog();
   const [tab, setTab] = useState<'browse' | 'mine' | 'orders'>('browse');
   const [browse, setBrowse] = useState<Listing[]>([]);
   const [mine, setMine] = useState<Listing[]>([]);
@@ -100,8 +102,15 @@ export default function MarketplacePage() {
   useEffect(load, []);
 
   const removeListing = async (id: string) => {
-    if (!confirm('Remover esta oferta?')) return;
-    try { await api.delete(`/marketplace/${id}`); toast.success('Oferta removida'); load(); } catch { toast.error('Erro'); }
+    const listing = mine.find((item) => item.id === id);
+    const { confirmed } = await confirmAction({
+      title: 'Remover oferta do marketplace?',
+      description: 'A oferta deixará de aparecer para compradores. Pedidos já criados não serão alterados.',
+      confirmLabel: 'Remover oferta',
+      details: listing ? [{ label: 'Produto', value: listing.product }, { label: 'Quantidade', value: `${listing.quantity} ${listing.unit}` }] : undefined,
+    });
+    if (!confirmed) return;
+    try { await api.delete(`/marketplace/${id}`); toast.success('Oferta removida'); load(); } catch { toast.error('Não foi possível remover a oferta.'); }
   };
   const toggleStatus = async (l: Listing) => {
     const status = l.status === 'ATIVA' ? 'PAUSADA' : 'ATIVA';
@@ -110,9 +119,38 @@ export default function MarketplacePage() {
 
   // ── Ações de pedido ──
   const shipOrder = async (id: string) => { try { await api.patch(`/marketplace/orders/${id}/ship`, {}); toast.success('Marcado como enviado'); load(); } catch { toast.error('Erro'); } };
-  const confirmOrder = async (id: string) => { if (!confirm('Confirmar que recebeu o produto? O valor será liberado ao vendedor.')) return; try { await api.patch(`/marketplace/orders/${id}/confirm`, {}); toast.success('Recebimento confirmado'); load(); } catch { toast.error('Erro'); } };
-  const disputeOrder = async (id: string) => { const reason = prompt('Descreva o motivo da disputa:'); if (!reason) return; try { await api.patch(`/marketplace/orders/${id}/dispute`, { reason }); toast.success('Disputa aberta'); load(); } catch { toast.error('Erro'); } };
-  const cancelOrder = async (id: string) => { try { await api.patch(`/marketplace/orders/${id}/cancel`, {}); load(); } catch { toast.error('Erro'); } };
+  const confirmOrder = async (id: string) => {
+    const order = [...orders.purchases, ...orders.sales].find((item) => item.id === id);
+    const { confirmed } = await confirmAction({
+      title: 'Confirmar recebimento e liberar o pagamento?',
+      description: 'Esta decisão informa que o produto foi recebido e autoriza a liberação do valor em custódia ao vendedor.',
+      confirmLabel: 'Recebi e autorizo a liberação',
+      tone: 'warning',
+      details: order ? [{ label: 'Produto', value: order.product }, { label: 'Valor liberado', value: formatCurrency(order.sellerNet) }] : undefined,
+    });
+    if (!confirmed) return;
+    try { await api.patch(`/marketplace/orders/${id}/confirm`, {}); toast.success('Recebimento confirmado e liberação autorizada'); load(); } catch { toast.error('Não foi possível confirmar o recebimento.'); }
+  };
+  const disputeOrder = async (id: string) => {
+    const order = [...orders.purchases, ...orders.sales].find((item) => item.id === id);
+    const { confirmed, reason } = await confirmAction({
+      title: 'Abrir disputa sobre este pedido?',
+      description: 'O valor continuará em custódia enquanto a equipe analisa as evidências das duas partes.',
+      confirmLabel: 'Abrir disputa',
+      tone: 'warning',
+      requireReason: true,
+      reasonLabel: 'Motivo da disputa',
+      reasonPlaceholder: 'Descreva o problema, o que foi combinado e quais evidências estão disponíveis.',
+      details: order ? [{ label: 'Pedido', value: order.product }, { label: 'Valor em custódia', value: formatCurrency(order.buyerTotal) }] : undefined,
+    });
+    if (!confirmed || !reason) return;
+    try { await api.patch(`/marketplace/orders/${id}/dispute`, { reason }); toast.success('Disputa aberta'); load(); } catch { toast.error('Não foi possível abrir a disputa.'); }
+  };
+  const cancelOrder = async (id: string) => {
+    const { confirmed } = await confirmAction({ title: 'Cancelar este pedido?', description: 'O pedido poderá ser cancelado somente enquanto o pagamento ainda não tiver sido realizado.', confirmLabel: 'Cancelar pedido', tone: 'warning' });
+    if (!confirmed) return;
+    try { await api.patch(`/marketplace/orders/${id}/cancel`, {}); toast.success('Pedido cancelado'); load(); } catch { toast.error('Não foi possível cancelar o pedido.'); }
+  };
 
   const source = tab === 'mine' ? mine : browse;
 

@@ -3,6 +3,7 @@ import { createHash, randomBytes } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserRole } from '@prisma/client';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
+import { AuditService } from '../audit/audit.service';
 
 function sha256(v: string) {
   return createHash('sha256').update(v).digest('hex');
@@ -18,7 +19,10 @@ export interface ApiKeyPrincipal {
 
 @Injectable()
 export class ApiKeysService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
+  ) {}
 
   /** Cria uma chave; retorna o segredo em texto puro UMA única vez. */
   async create(userId: string, dto: CreateApiKeyDto) {
@@ -64,17 +68,26 @@ export class ApiKeysService {
     });
   }
 
-  async revoke(userId: string, id: string, role: string) {
+  async revoke(userId: string, id: string, role: string, reason?: string) {
     const key = await this.prisma.apiKey.findUnique({ where: { id } });
     if (!key) throw new NotFoundException('Chave não encontrada');
     if (role !== UserRole.ADMIN && key.userId !== userId) {
       throw new ForbiddenException('Acesso negado');
     }
-    return this.prisma.apiKey.update({
+    const updated = await this.prisma.apiKey.update({
       where: { id },
       data: { revokedAt: new Date() },
       select: { id: true, revokedAt: true },
     });
+    void this.audit.log({
+      userId,
+      action: 'REVOKE',
+      entity: 'api_key',
+      entityId: id,
+      oldValue: { revokedAt: key.revokedAt },
+      newValue: { revokedAt: updated.revokedAt, reason: reason ?? null },
+    }).catch(() => undefined);
+    return updated;
   }
 
   /** Valida uma chave (para autenticação via X-API-Key em integrações). */

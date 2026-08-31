@@ -29,9 +29,10 @@ export class ApiKeysController {
   @ApiResponse({ status: 200, description: 'Chave revogada' })
   revoke(
     @Param('id') id: string,
+    @Body() body: { reason?: string },
     @CurrentUser('sub') userId: string,
     @CurrentUser('role') role: string,
   ) {
-    return this.service.revoke(userId, id, role);
+    return this.service.revoke(userId, id, role, body?.reason);
   }
 }

@@ -15,6 +15,7 @@ import { renderCprPdf } from '../../common/zapsign/cpr-pdf';
 import { renderCprHtml, renderCprMarkdown } from '../../common/cpr/cpr-document';
 import { CPR_PRICING } from '../../common/pricing/pricing';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AuditService } from '../audit/audit.service';
 
 const ZAPSIGN_BRAND_LOGO = process.env.ZAPSIGN_BRAND_LOGO || 'https://conectcampo.digital/logo.png';
 const ZAPSIGN_BRAND_COLOR = '#008c3c';
@@ -31,6 +32,7 @@ export class CprService {
     private readonly prisma: PrismaService,
     private readonly zapsign: ZapSignService,
     private readonly notifications: NotificationsService,
+    private readonly audit: AuditService,
   ) {}
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -151,14 +153,25 @@ export class CprService {
    * Solicita assinatura: captura um snapshot imutável da minuta, calcula o hash
    * SHA-256 e gera tokens de assinatura para emitente e credor.
    */
-  async requestSignature(cprId: string, userId: string, role: string) {
+  async requestSignature(cprId: string, userId: string, role: string, reason?: string) {
     const cpr = await this.assertOwner(cprId, userId, role);
+    const restarting = Boolean(cpr.signatureStatus && cpr.signatureStatus !== 'NAO_INICIADA');
 
     if (cpr.status === 'RASCUNHO') {
       throw new BadRequestException('Emita a CPR antes de solicitar assinaturas.');
     }
     if (cpr.signatureStatus === 'ASSINADA') {
       throw new BadRequestException('Esta CPR já está totalmente assinada.');
+    }
+    if (restarting && (!reason || reason.trim().length < 3)) {
+      throw new BadRequestException('Informe o motivo para renovar os links de assinatura.');
+    }
+
+    if (restarting && cpr.signatureProvider === 'zapsign' && cpr.zapsignDocToken) {
+      const cancelled = await this.zapsign.cancelDocument(cpr.zapsignDocToken, reason!.trim());
+      if (!cancelled) {
+        throw new BadRequestException('Não foi possível cancelar o fluxo anterior na ZapSign. Nenhum link novo foi gerado.');
+      }
     }
 
     const snapshot = renderCprHtml(cpr);
@@ -241,6 +254,14 @@ export class CprService {
         });
 
         this.logger.log(`Assinatura ZapSign solicitada para CPR ${cprId} (doc ${doc.docToken})`);
+        void this.audit.log({
+          userId,
+          action: restarting ? 'SIGNATURE_RESTART' : 'SIGNATURE_REQUEST',
+          entity: 'cpr',
+          entityId: cprId,
+          oldValue: { signatureStatus: cpr.signatureStatus, provider: cpr.signatureProvider },
+          newValue: { signatureStatus: updated.signatureStatus, provider: 'zapsign', reason: reason ?? null },
+        }).catch(() => undefined);
         return {
           provider: 'zapsign',
           signatureStatus: updated.signatureStatus,
@@ -278,6 +299,14 @@ export class CprService {
     });
 
     this.logger.log(`Assinatura interna solicitada para CPR ${cprId} (hash ${documentHash.slice(0, 12)}…)`);
+    void this.audit.log({
+      userId,
+      action: restarting ? 'SIGNATURE_RESTART' : 'SIGNATURE_REQUEST',
+      entity: 'cpr',
+      entityId: cprId,
+      oldValue: { signatureStatus: cpr.signatureStatus, provider: cpr.signatureProvider },
+      newValue: { signatureStatus: updated.signatureStatus, provider: 'interno', reason: reason ?? null },
+    }).catch(() => undefined);
 
     return {
       provider: 'interno',
@@ -819,12 +848,21 @@ export class CprService {
     });
   }
 
-  async delete(cprId: string, userId: string, role: string) {
-    await this.assertOwner(cprId, userId, role);
-    return this.prisma.cprDocument.update({
+  async delete(cprId: string, userId: string, role: string, reason?: string) {
+    const cpr = await this.assertOwner(cprId, userId, role);
+    const updated = await this.prisma.cprDocument.update({
       where: { id: cprId },
       data: { deletedAt: new Date(), status: 'CANCELADA' },
     });
+    void this.audit.log({
+      userId,
+      action: 'CANCEL',
+      entity: 'cpr',
+      entityId: cprId,
+      oldValue: { status: cpr.status },
+      newValue: { status: updated.status, reason: reason ?? null },
+    }).catch(() => undefined);
+    return updated;
   }
 
   // ─── Emissão (muda status para EMITIDA e gera número) ────────────────────────

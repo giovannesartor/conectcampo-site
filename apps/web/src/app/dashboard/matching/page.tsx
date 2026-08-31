@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import { Modal } from '@/components/dashboard/Modal';
 
 const CROPS = ['Todos', 'Soja', 'Milho', 'Café', 'Algodão', 'Arroz', 'Trigo', 'Cana-de-açúcar', 'Feijão', 'Pecuária (Corte)', 'Outro'];
 const STATUS_OPTIONS = ['Todos', 'SUBMITTED', 'SCORING', 'MATCHING', 'PROPOSALS_RECEIVED'];
@@ -252,18 +253,16 @@ export default function MatchingPage() {
 
       {/* Proposal modal */}
       {canSubmitProposal && proposalOp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-xl w-full max-w-md">
-            <div className="p-6 border-b border-gray-100 dark:border-dark-border">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Enviar Proposta</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {OP_TYPE_LABELS[proposalOp.type]} — {proposalOp.crop} — {formatCurrency(proposalOp.amount || 0)}
-              </p>
+        <Modal title="Enviar proposta" onClose={() => setProposalOp(null)} maxWidth="max-w-md">
+          <div className="space-y-5">
+            <div className="rounded-xl border border-brand-100 bg-brand-50 p-3 text-sm text-gray-700 dark:border-brand-900 dark:bg-brand-950/20 dark:text-gray-200">
+              {OP_TYPE_LABELS[proposalOp.type] || proposalOp.type} — {proposalOp.crop || 'Cultura não informada'} — {formatCurrency(proposalOp.amount || 0)}
             </div>
-            <div className="p-6 space-y-4">
+            <div className="space-y-4">
               <div>
                 <label className="label">Valor proposto (R$)</label>
                 <input
+                  data-autofocus="true"
                   type="text"
                   value={proposalForm.amount}
                   onChange={(e) => {
@@ -309,7 +308,7 @@ export default function MatchingPage() {
                 />
               </div>
             </div>
-            <div className="p-6 border-t border-gray-100 dark:border-dark-border flex gap-3 justify-end">
+            <div className="flex gap-3 justify-end border-t border-gray-100 pt-5 dark:border-dark-border">
               <button
                 onClick={() => setProposalOp(null)}
                 className="btn-ghost"
@@ -329,7 +328,7 @@ export default function MatchingPage() {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

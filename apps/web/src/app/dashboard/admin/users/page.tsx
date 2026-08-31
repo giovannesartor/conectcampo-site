@@ -17,8 +17,16 @@ import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatDate, formatRelative } from '@/lib/format';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 
 const ROLES = ['ALL', 'PRODUCER', 'COMPANY', 'FINANCIAL_INSTITUTION', 'CREDIT_ANALYST', 'ADMIN'];
+const ROLE_LABELS: Record<string, string> = {
+  PRODUCER: 'Produtor',
+  COMPANY: 'Empresa',
+  FINANCIAL_INSTITUTION: 'Instituição financeira',
+  CREDIT_ANALYST: 'Analista de crédito',
+  ADMIN: 'Administrador',
+};
 
 export default function AdminUsersPage() {
   const { user, isLoading } = useAuth();
@@ -30,6 +38,7 @@ export default function AdminUsersPage() {
   const [role, setRole] = useState('ALL');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const confirmAction = useConfirmDialog();
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'ADMIN')) router.push('/dashboard');
@@ -55,9 +64,26 @@ export default function AdminUsersPage() {
     }
   }
 
-  async function handleToggleActive(id: string) {
+  async function handleToggleActive(target: any) {
+    const action = target.isActive ? 'desativar' : 'ativar';
+    const result = await confirmAction({
+      title: `${target.isActive ? 'Desativar' : 'Ativar'} usuário`,
+      description: target.isActive
+        ? 'O usuário perderá acesso à plataforma imediatamente. Seus dados e histórico serão preservados.'
+        : 'O usuário voltará a acessar a plataforma com o perfil e permissões atuais.',
+      confirmLabel: target.isActive ? 'Desativar acesso' : 'Ativar acesso',
+      tone: target.isActive ? 'danger' : 'primary',
+      details: [
+        { label: 'Usuário', value: target.name || target.email },
+        { label: 'Perfil', value: ROLE_LABELS[target.role] ?? target.role },
+      ],
+      requireReason: target.isActive,
+      reasonLabel: 'Motivo do bloqueio',
+    });
+    if (!result.confirmed) return;
     try {
-      await api.patch(`/admin/users/${id}/toggle-active`);
+      await api.patch(`/admin/users/${target.id}/toggle-active`, { reason: result.reason });
+      toast.success(`Usuário ${action === 'desativar' ? 'desativado' : 'ativado'} com sucesso.`);
       loadUsers();
     } catch {
       toast.error('Ocorreu um erro. Tente novamente.');
@@ -98,7 +124,7 @@ export default function AdminUsersPage() {
         >
           {ROLES.map((r) => (
             <option key={r} value={r}>
-              {r === 'ALL' ? 'Todos os perfis' : r}
+              {r === 'ALL' ? 'Todos os perfis' : ROLE_LABELS[r] ?? r}
             </option>
           ))}
         </select>
@@ -164,7 +190,7 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
-                        onClick={() => handleToggleActive(u.id)}
+                        onClick={() => handleToggleActive(u)}
                         className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
                           u.isActive
                             ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30'

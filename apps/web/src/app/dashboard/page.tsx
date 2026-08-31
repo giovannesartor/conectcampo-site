@@ -6,12 +6,9 @@ import { useRouter } from 'next/navigation';
 import {
   BarChart3,
   FileText,
-  CreditCard,
   Users,
-  Plus,
   TrendingUp,
   AlertTriangle,
-  Clock,
   Shield,
   ArrowRight,
 } from 'lucide-react';
@@ -25,6 +22,8 @@ import { DashboardStart } from '@/components/dashboard/DashboardStart';
 import { DashboardPro } from '@/components/dashboard/DashboardPro';
 import { DashboardCooperative } from '@/components/dashboard/DashboardCooperative';
 import { DashboardCorporate } from '@/components/dashboard/DashboardCorporate';
+import { DashboardAnalyst } from '@/components/dashboard/DashboardAnalyst';
+import { ErrorState } from '@/components/dashboard/PageKit';
 import { Eye } from 'lucide-react';
 import { usePreview } from '@/lib/preview-context';
 
@@ -89,11 +88,12 @@ export default function DashboardPage() {
   // Admin-only state
   const [operations, setOperations] = useState<Operation[]>([]);
   const [loadingData, setLoadingData] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [stats, setStats] = useState({
     totalOperations: 0,
     activeOperations: 0,
-    totalProposals: 0,
-    score: null as number | null,
+    totalUsers: 0,
+    totalPartners: 0,
   });
 
   useEffect(() => {
@@ -113,16 +113,28 @@ export default function DashboardPage() {
 
   async function loadAdminDashboard() {
     setLoadingData(true);
+    setLoadError(false);
     try {
-      const { data } = await api.get('/operations?page=1&perPage=5');
+      const [operationsResponse, statsResponse] = await Promise.all([
+        api.get('/operations?page=1&perPage=5'),
+        api.get('/admin/stats'),
+      ]);
+      const data = operationsResponse.data;
+      const adminStats = statsResponse.data;
       const ops = data.data || data.operations || data || [];
       setOperations(Array.isArray(ops) ? ops : []);
-      const active = Array.isArray(ops) ? ops.filter((o: Operation) =>
-        !['COMPLETED', 'CANCELLED', 'REJECTED', 'DRAFT'].includes(o.status)).length : 0;
-      const proposals = Array.isArray(ops) ? ops.reduce(
-        (acc: number, o: Operation) => acc + (o._count?.proposals || 0), 0) : 0;
-      setStats({ totalOperations: data.meta?.total || (Array.isArray(ops) ? ops.length : 0), activeOperations: active, totalProposals: proposals, score: null });
-    } catch { /* new */ } finally { setLoadingData(false); }
+      const terminal = new Set(['COMPLETED', 'CANCELLED', 'REJECTED']);
+      const active = (adminStats.operationsByStatus ?? []).reduce(
+        (sum: number, item: { status: string; count: number }) => terminal.has(item.status) ? sum : sum + item.count,
+        0,
+      );
+      setStats({
+        totalOperations: Number(adminStats.totalOperations ?? 0),
+        activeOperations: active,
+        totalUsers: Number(adminStats.totalUsers ?? 0),
+        totalPartners: Number(adminStats.totalPartners ?? 0),
+      });
+    } catch { setLoadError(true); } finally { setLoadingData(false); }
   }
 
   if (isLoading || planLoading) {
@@ -137,41 +149,7 @@ export default function DashboardPage() {
 
   // ── Role router ──────────────────────────────────────────────
   if (user.role === 'FINANCIAL_INSTITUTION') return <DashboardCorporate />;
-  if (user.role === 'CREDIT_ANALYST') {
-    const analystActions = [
-      { title: 'Fila de operações', description: 'Revise operações submetidas sem alterar propostas.', href: '/dashboard/matching', icon: FileText },
-      { title: 'Score & risco', description: 'Calcule e explique a pontuação das operações em análise.', href: '/dashboard/scoring', icon: BarChart3 },
-      { title: 'Documentos inteligentes', description: 'Extraia e confira campos dos documentos recebidos.', href: '/dashboard/smart-docs', icon: Shield },
-      { title: 'CPR', description: 'Acompanhe instrumentos e o status das assinaturas.', href: '/dashboard/cpr', icon: CreditCard },
-    ];
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Central de Análise</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Priorize operações submetidas, confira documentos e registre sua análise de risco.
-          </p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {analystActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <Link key={action.href} href={action.href} className="card group flex items-start gap-4">
-                <span className="rounded-xl bg-brand-50 p-3 text-brand-700 dark:bg-brand-950/30 dark:text-brand-400">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="font-semibold text-gray-900 dark:text-white">{action.title}</span>
-                  <span className="mt-1 block text-sm text-gray-500 dark:text-gray-400">{action.description}</span>
-                </span>
-                <ArrowRight className="mt-1 h-4 w-4 text-gray-400 transition-colors group-hover:text-brand-600" />
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
+  if (user.role === 'CREDIT_ANALYST') return <DashboardAnalyst />;
   if (user.role === 'COMPANY' && plan === 'COOPERATIVE') return <DashboardCooperative />;
   if (user.role === 'COMPANY') return <DashboardPro />;
   if (user.role === 'PRODUCER') return <DashboardStart />;
@@ -216,46 +194,45 @@ export default function DashboardPage() {
               Painel Admin
             </Link>
           )}
-          <Link href="/dashboard/operations/new" className="btn-primary text-sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Operação
-          </Link>
         </div>
       </div>
 
+      {loadError && <ErrorState onRetry={loadAdminDashboard} />}
+
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {!loadError && <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          title="Operações Ativas"
-          value={stats.activeOperations}
-          subtitle={`${stats.totalOperations} total`}
-          icon={<FileText className="h-6 w-6" />}
+          title="Usuários"
+          value={stats.totalUsers}
+          subtitle="cadastros na plataforma"
+          icon={<Users className="h-6 w-6" />}
           color="blue"
         />
         <KPICard
-          title="Score ConectCampo"
-          value={stats.score !== null ? stats.score : '--'}
-          subtitle={stats.score !== null ? (stats.score >= 70 ? 'Excelente' : stats.score >= 50 ? 'Bom' : 'Regular') : 'Complete seu perfil'}
-          icon={<BarChart3 className="h-6 w-6" />}
+          title="Operações"
+          value={stats.totalOperations}
+          subtitle="volume total registrado"
+          icon={<FileText className="h-6 w-6" />}
           color="green"
         />
         <KPICard
-          title="Propostas Recebidas"
-          value={stats.totalProposals}
-          icon={<CreditCard className="h-6 w-6" />}
+          title="Operações Ativas"
+          value={stats.activeOperations}
+          subtitle="em andamento"
+          icon={<BarChart3 className="h-6 w-6" />}
           color="purple"
         />
         <KPICard
-          title="Parceiros Match"
-          value={0}
-          subtitle="Parceiros compatíveis"
+          title="Parceiros Ativos"
+          value={stats.totalPartners}
+          subtitle="instituições integradas"
           icon={<Users className="h-6 w-6" />}
           color="amber"
         />
-      </div>
+      </div>}
 
       {/* Two column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {!loadError && <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent operations */}
         <div className="lg:col-span-2">
           <div className="card">
@@ -275,12 +252,8 @@ export default function DashboardPage() {
             ) : operations.length === 0 ? (
               <EmptyState
                 icon={<FileText className="h-16 w-16" />}
-                title="Nenhuma operação ainda"
-                description="Crie seu perfil de produtor e comece sua primeira operação de crédito."
-                action={{
-                  label: 'Criar Primeira Operação',
-                  onClick: () => router.push('/dashboard/operations/new'),
-                }}
+                title="Nenhuma operação registrada"
+                description="As operações criadas pelos usuários aparecerão aqui para acompanhamento administrativo."
               />
             ) : (
               <div className="space-y-3">
@@ -355,7 +328,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

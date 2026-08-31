@@ -55,11 +55,12 @@ export class AdminController {
   @ApiOperation({ summary: 'Ativar/desativar usuário' })
   async toggleUserActive(
     @Param('id') id: string,
+    @Body() body: { reason?: string },
     @CurrentUser('sub') actorId: string,
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string,
   ) {
-    return this.adminService.toggleUserActive(id, { actorId, ip, userAgent });
+    return this.adminService.toggleUserActive(id, { actorId, ip, userAgent, reason: body?.reason });
   }
 
   @Patch('users/:id/role')

@@ -6,7 +6,6 @@ import { ProductShowcase } from '@/components/landing/ProductShowcase';
 import { CprShowcase } from '@/components/landing/CprShowcase';
 import { Platform } from '@/components/landing/Platform';
 import { HowItWorks } from '@/components/landing/HowItWorks';
-import { Segments } from '@/components/landing/Segments';
 import { Security } from '@/components/landing/Security';
 import { Plans } from '@/components/landing/Plans';
 import { FAQ } from '@/components/landing/FAQ';
@@ -117,19 +116,16 @@ export default function LandingPage() {
       <HowItWorks />
       {/* 3. Veja a plataforma em ação */}
       <ProductShowcase />
-      {/* 4. Fluxo premium de CPR */}
-      <CprShowcase />
-      {/* 5. Expansão: todas as ferramentas */}
+      {/* 4. Seis ferramentas centrais */}
       <Platform />
-      {/* 6. Para cada porte */}
-      <Segments />
-      {/* 6. Prova social (só depois de entender o produto) */}
+      {/* 5. Fluxo premium de CPR */}
+      <CprShowcase />
+      {/* 6. Prova e segurança */}
       <SocialProof />
-      {/* 7. Segurança (remove objeção antes do preço) */}
       <Security />
-      {/* 8. Planos + FAQ + CTA */}
+      {/* 7. Planos + dúvidas essenciais + CTA */}
       <Plans />
-      <FAQ />
+      <FAQ limit={5} />
       <CTA />
       <Footer />
       <RevealInit />

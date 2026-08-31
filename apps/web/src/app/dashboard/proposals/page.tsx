@@ -7,6 +7,8 @@ import { formatCurrency, formatDate } from '@/lib/format';
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
+import { Modal } from '@/components/dashboard/Modal';
 
 interface Proposal {
   id: string;
@@ -30,6 +32,7 @@ function pmt(amount?: number, annualRatePct?: number, months?: number): number |
 }
 
 export default function ProposalsPage() {
+  const confirmAction = useConfirmDialog();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [compareOpId, setCompareOpId] = useState<string | null>(null);
@@ -48,8 +51,22 @@ export default function ProposalsPage() {
   }
 
   async function handleAccept(id: string) {
+    const proposal = proposals.find((item) => item.id === id);
+    const { confirmed } = await confirmAction({
+      title: 'Aceitar esta proposta?',
+      description: 'A operação seguirá com esta instituição e as demais propostas pendentes serão recusadas automaticamente.',
+      confirmLabel: 'Aceitar proposta',
+      tone: 'primary',
+      details: proposal ? [
+        { label: 'Instituição', value: proposal.partner?.name || 'Parceiro financeiro' },
+        { label: 'Valor', value: formatCurrency(proposal.amount || proposal.operation?.amount || 0) },
+        { label: 'Taxa', value: proposal.interestRate ? `${proposal.interestRate}% a.a.` : 'Não informada' },
+        { label: 'Prazo', value: proposal.termMonths ? `${proposal.termMonths} meses` : 'Não informado' },
+      ] : undefined,
+    });
+    if (!confirmed) return;
     try {
-      await api.patch(`/operations/proposals/${id}/accept`);
+      await api.patch(`/operations/proposals/${id}/accept`, {});
       toast.success('Proposta aceita!');
       setCompareOpId(null);
       loadProposals();
@@ -59,8 +76,22 @@ export default function ProposalsPage() {
   }
 
   async function handleReject(id: string) {
+    const proposal = proposals.find((item) => item.id === id);
+    const { confirmed, reason } = await confirmAction({
+      title: 'Recusar esta proposta?',
+      description: 'A proposta deixará de estar disponível para aceite. A justificativa ficará registrada na trilha de auditoria.',
+      confirmLabel: 'Recusar proposta',
+      tone: 'warning',
+      details: proposal ? [
+        { label: 'Instituição', value: proposal.partner?.name || 'Parceiro financeiro' },
+        { label: 'Valor', value: formatCurrency(proposal.amount || proposal.operation?.amount || 0) },
+      ] : undefined,
+      requireReason: true,
+      reasonLabel: 'Motivo da recusa',
+    });
+    if (!confirmed) return;
     try {
-      await api.patch(`/operations/proposals/${id}/reject`);
+      await api.patch(`/operations/proposals/${id}/reject`, { reason });
       toast('Proposta recusada.');
       loadProposals();
     } catch {
@@ -188,19 +219,8 @@ export default function ProposalsPage() {
 
       {/* Modal comparador */}
       {compareOpId && compareItems.length > 0 && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={() => setCompareOpId(null)}>
-          <div className="relative w-full max-w-3xl max-h-[90vh] overflow-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <GitCompareArrows className="h-5 w-5 text-brand-600" />
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Comparar propostas</h2>
-              </div>
-              <button onClick={() => setCompareOpId(null)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-                <X className="h-5 w-5 text-gray-500" />
-              </button>
-            </div>
-
-            <div className="p-4 overflow-x-auto">
+        <Modal title="Comparar propostas" onClose={() => setCompareOpId(null)} maxWidth="max-w-3xl">
+            <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr>
@@ -257,8 +277,7 @@ export default function ProposalsPage() {
                 <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> parcela/total são estimativas (sistema Price)</span>
               </div>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

@@ -22,6 +22,7 @@ import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatCurrency, formatRelative, formatNumber } from '@/lib/format';
 import { api } from '@/lib/api';
 import { RevenueAreaChart, OperationsBarChart, UsersPieChart, GMVChart } from '@/components/dashboard/AdminCharts';
+import { ErrorState } from '@/components/dashboard/PageKit';
 
 interface AdminStats {
   totalUsers: number;
@@ -45,6 +46,7 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'ADMIN')) {
@@ -57,11 +59,14 @@ export default function AdminDashboardPage() {
   }, [user]);
 
   async function loadStats() {
+    setLoadError(false);
+    setLoading(true);
     try {
       const { data } = await api.get('/admin/stats');
       setStats(data);
     } catch (err) {
       console.error('Failed to load admin stats', err);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -76,6 +81,16 @@ export default function AdminDashboardPage() {
   }
 
   if (!user || user.role !== 'ADMIN') return null;
+
+  if (loadError && !stats) {
+    return (
+      <ErrorState
+        title="Painel administrativo indisponível"
+        description="Não foi possível consultar os indicadores consolidados. Os números não serão apresentados como zero enquanto a origem estiver indisponível."
+        onRetry={loadStats}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

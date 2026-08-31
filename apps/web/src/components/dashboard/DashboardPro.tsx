@@ -13,6 +13,7 @@ import { api } from '@/lib/api';
 import { formatCurrency, formatRelative } from '@/lib/format';
 import { KPICard } from './KPICard';
 import { StatusBadge } from './StatusBadge';
+import { ErrorState } from './PageKit';
 import {
   Plus,
   FileText,
@@ -33,12 +34,15 @@ interface Operation {
   id: string;
   type: string;
   status: string;
-  amount: number;
+  amount?: number;
+  requestedAmount?: number;
   termMonths: number;
   purpose: string;
   createdAt: string;
   _count?: { proposals: number };
 }
+
+const operationAmount = (operation: Operation) => Number(operation.amount ?? operation.requestedAmount ?? 0);
 
 function greeting(name?: string) {
   const h = new Date().getHours();
@@ -52,6 +56,7 @@ export function DashboardPro() {
   const [operations, setOperations] = useState<Operation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [stats, setStats] = useState({
     totalOps: 0,
     activeOps: 0,
@@ -68,9 +73,14 @@ export function DashboardPro() {
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     else setRefreshing(true);
+    setLoadError(false);
     try {
-      const opsRes = await api.get('/operations?page=1&perPage=10');
+      const [opsRes, docsRes] = await Promise.all([
+        api.get('/operations?page=1&perPage=50'),
+        api.get('/documents/me'),
+      ]);
       const ops: Operation[] = opsRes.data.data ?? opsRes.data.operations ?? opsRes.data ?? [];
+      const documents = Array.isArray(docsRes.data) ? docsRes.data : [];
       if (!Array.isArray(ops)) { setLoading(false); setRefreshing(false); return; }
       setOperations(ops.slice(0, 5));
 
@@ -78,7 +88,7 @@ export function DashboardPro() {
       const approved = ops.filter((o) => o.status === 'COMPLETED').length;
       const proposals = ops.reduce((a, o) => a + (o._count?.proposals ?? 0), 0);
       const newProposals = ops.filter((o) => (o._count?.proposals ?? 0) > 0 && !['COMPLETED', 'CANCELLED', 'REJECTED'].includes(o.status)).length;
-      const volume = ops.reduce((a, o) => a + (o.amount ?? 0), 0);
+      const volume = ops.reduce((a, o) => a + operationAmount(o), 0);
 
       let score: number | null = null;
       if (ops.length > 0) {
@@ -97,10 +107,10 @@ export function DashboardPro() {
         totalVolume: volume,
         avgTicket: ops.length > 0 ? volume / ops.length : 0,
         approvalRate: ops.length > 0 ? Math.round((approved / ops.length) * 100) : 0,
-        docs: 0,
+        docs: documents.length,
         score,
       });
-    } catch { /* new user */ } finally {
+    } catch { setLoadError(true); } finally {
       setLoading(false);
       setRefreshing(false);
     }
@@ -121,6 +131,10 @@ export function DashboardPro() {
     { done: stats.proposals > 0, label: 'Receber proposta', href: '/dashboard/proposals' },
   ];
   const onboardingDone = onboardingSteps.filter((s) => s.done).length;
+
+  if (loadError && !loading) {
+    return <ErrorState onRetry={() => load()} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -144,7 +158,7 @@ export function DashboardPro() {
           <button onClick={() => load(true)} disabled={refreshing} className="btn-ghost flex items-center gap-1.5 text-sm" title="Atualizar">
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
-          <Link href="/dashboard/scoring" className="btn-secondary text-sm flex items-center gap-2">
+          <Link href="/dashboard/analytics" className="btn-secondary text-sm flex items-center gap-2">
             <BarChart3 className="h-4 w-4" /> Analytics
           </Link>
           <Link href="/dashboard/operations/new" className="btn-primary text-sm flex items-center gap-2">
@@ -223,7 +237,7 @@ export function DashboardPro() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-white">{op.purpose ?? op.type}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{formatCurrency(op.amount)} · {op.termMonths}m · {formatRelative(op.createdAt)}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{formatCurrency(operationAmount(op))} · {op.termMonths}m · {formatRelative(op.createdAt)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -248,7 +262,7 @@ export function DashboardPro() {
                 { href: '/dashboard/operations/new', icon: <Plus className="h-4 w-4 text-blue-600" />,    label: 'Nova Operação',    bg: 'bg-blue-50 dark:bg-blue-950/30' },
                 { href: '/dashboard/documents',      icon: <FileText className="h-4 w-4 text-green-600" />, label: 'Documentos',      bg: 'bg-green-50 dark:bg-green-950/30' },
                 { href: '/dashboard/scoring',        icon: <BarChart3 className="h-4 w-4 text-purple-600" />, label: 'Score Premium', bg: 'bg-purple-50 dark:bg-purple-950/30' },
-                { href: '/dashboard/scoring',        icon: <TrendingUp className="h-4 w-4 text-blue-600" />, label: 'Analytics',      bg: 'bg-blue-50 dark:bg-blue-950/30' },
+                { href: '/dashboard/analytics',      icon: <TrendingUp className="h-4 w-4 text-blue-600" />, label: 'Analytics',      bg: 'bg-blue-50 dark:bg-blue-950/30' },
               ].map((a, i) => (
                 <Link key={i} href={a.href} className="flex items-center gap-3 p-2.5 rounded-lg transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
                   <div className={`h-8 w-8 rounded-lg ${a.bg} flex items-center justify-center`}>{a.icon}</div>

@@ -61,6 +61,13 @@ export class OperationsController {
     return this.operationsService.getUserProposals(userId);
   }
 
+  @Get('portfolio')
+  @Roles(UserRole.FINANCIAL_INSTITUTION, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Portfólio de propostas da instituição financeira' })
+  async getPartnerPortfolio(@CurrentUser('sub') userId: string) {
+    return this.operationsService.getPartnerPortfolio(userId);
+  }
+
   @Post('proposals')
   @Roles(UserRole.FINANCIAL_INSTITUTION, UserRole.ADMIN)
   @ApiOperation({ summary: 'Instituição financeira envia proposta para uma operação' })
@@ -76,10 +83,11 @@ export class OperationsController {
   @ApiOperation({ summary: 'Produtor aceita uma proposta' })
   async acceptProposal(
     @Param('id') id: string,
+    @Body() body: { reason?: string },
     @CurrentUser('sub') userId: string,
     @CurrentUser('role') role: string,
   ) {
-    return this.operationsService.acceptProposal(id, userId, role);
+    return this.operationsService.acceptProposal(id, userId, role, body?.reason);
   }
 
   @Patch('proposals/:id/reject')
@@ -87,10 +95,11 @@ export class OperationsController {
   @ApiOperation({ summary: 'Produtor recusa uma proposta' })
   async rejectProposal(
     @Param('id') id: string,
+    @Body() body: { reason?: string },
     @CurrentUser('sub') userId: string,
     @CurrentUser('role') role: string,
   ) {
-    return this.operationsService.rejectProposal(id, userId, role);
+    return this.operationsService.rejectProposal(id, userId, role, body?.reason);
   }
 
   @Get(':id')

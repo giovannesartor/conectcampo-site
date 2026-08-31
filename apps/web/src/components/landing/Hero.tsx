@@ -40,10 +40,10 @@ export function Hero() {
               transition={{ duration: 0.5, delay: 0.08 }}
               className="mt-6 text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl [text-wrap:balance]"
             >
-              Crédito rural sem{' '}
-              <span className="text-brand-600 dark:text-brand-400">burocracia</span>
-              ,{' '}
-              <span className="text-agro-gold">sem balcão</span>.
+              Crédito rural com{' '}
+              <span className="text-brand-600 dark:text-brand-400">menos burocracia</span>
+              {' '}e{' '}
+              <span className="text-agro-gold">mais clareza</span>.
             </motion.h1>
 
             <motion.p
@@ -52,8 +52,8 @@ export function Hero() {
               transition={{ duration: 0.5, delay: 0.16 }}
               className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400 sm:text-xl max-w-xl mx-auto lg:mx-0 [text-wrap:pretty]"
             >
-              Conectamos sua operação a bancos, cooperativas, FIDCs, securitizadoras e ao
-              mercado de capitais — com gestão da fazenda, CPR, documentos, satélite, cotações e marketplace na mesma plataforma.
+              Organize sua operação, documentos e garantias, acompanhe a análise e compare
+              propostas de fontes de crédito compatíveis em um só lugar.
             </motion.p>
 
             <motion.div

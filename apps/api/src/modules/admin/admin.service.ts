@@ -8,6 +8,7 @@ export interface AdminActionMeta {
   actorId?: string;
   ip?: string;
   userAgent?: string;
+  reason?: string;
 }
 
 @Injectable()
@@ -173,13 +174,23 @@ export class AdminService {
           _count: {
             select: { documents: true },
           },
+          producerProfile: {
+            select: { _count: { select: { operations: true } } },
+          },
         },
       }),
       this.prisma.user.count({ where }),
     ]);
 
     return {
-      users,
+      users: users.map((user) => ({
+        ...user,
+        _count: {
+          documents: user._count.documents,
+          operations: user.producerProfile?._count.operations ?? 0,
+        },
+        producerProfile: undefined,
+      })),
       total,
       page,
       perPage,
@@ -206,7 +217,7 @@ export class AdminService {
       entity: 'user',
       entityId: id,
       oldValue: { isActive: user.isActive },
-      newValue: { isActive: updated.isActive },
+      newValue: { isActive: updated.isActive, reason: meta?.reason ?? null },
       ipAddress: meta?.ip,
       userAgent: meta?.userAgent,
     }).catch(() => undefined);

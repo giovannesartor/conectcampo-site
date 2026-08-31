@@ -14,6 +14,7 @@ import { formatCurrency, formatRelative } from '@/lib/format';
 import { KPICard } from './KPICard';
 import { StatusBadge } from './StatusBadge';
 import { AgroOverview } from './AgroOverview';
+import { ErrorState } from './PageKit';
 import {
   Plus,
   FileText,
@@ -37,12 +38,15 @@ interface Operation {
   id: string;
   type: string;
   status: string;
-  amount: number;
+  amount?: number;
+  requestedAmount?: number;
   termMonths: number;
   purpose: string;
   createdAt: string;
   _count?: { proposals: number };
 }
+
+const operationAmount = (operation: Operation) => Number(operation.amount ?? operation.requestedAmount ?? 0);
 
 function greeting(name?: string) {
   const h = new Date().getHours();
@@ -56,6 +60,7 @@ export function DashboardStart() {
   const [operations, setOperations] = useState<Operation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [stats, setStats] = useState({
     totalOps: 0,
     activeOps: 0,
@@ -68,13 +73,18 @@ export function DashboardStart() {
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     else setRefreshing(true);
+    setLoadError(false);
     try {
-      const opsRes = await api.get('/operations?page=1&perPage=5');
+      const [opsRes, docsRes] = await Promise.all([
+        api.get('/operations?page=1&perPage=50'),
+        api.get('/documents/me'),
+      ]);
       const ops: Operation[] = opsRes.data.data ?? opsRes.data.operations ?? opsRes.data ?? [];
       const safeOps = Array.isArray(ops) ? ops : [];
-      setOperations(safeOps);
+      const documents = Array.isArray(docsRes.data) ? docsRes.data : [];
+      setOperations(safeOps.slice(0, 5));
 
-      const active = safeOps.filter((o) => !['COMPLETED', 'CANCELLED', 'REJECTED', 'DRAFT'].includes(o.status)).length;
+      const active = safeOps.filter((o) => !['COMPLETED', 'CANCELLED', 'REJECTED'].includes(o.status)).length;
       const proposals = safeOps.reduce((a, o) => a + (o._count?.proposals ?? 0), 0);
       const newProposals = safeOps.filter((o) => (o._count?.proposals ?? 0) > 0 && !['COMPLETED', 'CANCELLED', 'REJECTED'].includes(o.status)).length;
 
@@ -86,8 +96,8 @@ export function DashboardStart() {
         } catch { /* score not calculated yet */ }
       }
 
-      setStats({ totalOps: safeOps.length, activeOps: active, proposals, newProposals, docs: 0, score });
-    } catch { /* new user */ } finally {
+      setStats({ totalOps: safeOps.length, activeOps: active, proposals, newProposals, docs: documents.length, score });
+    } catch { setLoadError(true); } finally {
       setLoading(false);
       setRefreshing(false);
     }
@@ -95,7 +105,7 @@ export function DashboardStart() {
 
   useEffect(() => { load(); }, [load]);
 
-  const atLimit = stats.totalOps >= MAX_OPERATIONS;
+  const atLimit = stats.activeOps >= MAX_OPERATIONS;
 
   const scoreLabel = stats.score === null ? '—'
     : stats.score >= 80 ? 'Excelente'
@@ -116,6 +126,10 @@ export function DashboardStart() {
     { done: stats.proposals > 0, label: 'Receber proposta', href: '/dashboard/proposals' },
   ];
   const onboardingDone = onboardingSteps.filter((s) => s.done).length;
+
+  if (loadError && !loading) {
+    return <ErrorState onRetry={() => load()} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -146,7 +160,7 @@ export function DashboardStart() {
           <LockKeyhole className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Limite de operações atingido</p>
-            <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">O plano START permite até 2 operações. Faça upgrade para operações ilimitadas.</p>
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">O Plano Produtor Rural permite até 2 operações simultâneas. Conclua uma operação ou faça upgrade.</p>
           </div>
           <Link href="/dashboard/subscription" className="flex-shrink-0 inline-flex items-center gap-1 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition-colors">
             Fazer Upgrade <ArrowRight className="h-3.5 w-3.5" />
@@ -175,10 +189,10 @@ export function DashboardStart() {
           <div className="flex-1">
             <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1.5">
               <span>Operações simultâneas</span>
-              <span className={atLimit ? 'font-bold text-amber-600' : ''}>{stats.totalOps}/{MAX_OPERATIONS}</span>
+              <span className={atLimit ? 'font-bold text-amber-600' : ''}>{stats.activeOps}/{MAX_OPERATIONS}</span>
             </div>
             <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
-              <div className={`h-full rounded-full transition-all ${atLimit ? 'bg-amber-500' : 'bg-brand-500'}`} style={{ width: `${Math.min((stats.totalOps / MAX_OPERATIONS) * 100, 100)}%` }} />
+              <div className={`h-full rounded-full transition-all ${atLimit ? 'bg-amber-500' : 'bg-brand-500'}`} style={{ width: `${Math.min((stats.activeOps / MAX_OPERATIONS) * 100, 100)}%` }} />
             </div>
           </div>
           {atLimit && (
@@ -189,7 +203,7 @@ export function DashboardStart() {
         </div>
         <div className="mt-4 grid grid-cols-3 gap-3 text-center">
           {[
-            { label: 'Operações', value: `${stats.totalOps}/${MAX_OPERATIONS}`, locked: false },
+            { label: 'Operações ativas', value: `${stats.activeOps}/${MAX_OPERATIONS}`, locked: false },
             { label: 'Analytics', value: 'Bloqueado', locked: true },
             { label: 'Score Premium', value: 'Bloqueado', locked: true },
           ].map((f) => (
@@ -248,7 +262,7 @@ export function DashboardStart() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-white">{op.purpose ?? op.type}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{formatCurrency(op.amount)} · {op.termMonths}m · {formatRelative(op.createdAt)}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{formatCurrency(operationAmount(op))} · {op.termMonths}m · {formatRelative(op.createdAt)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

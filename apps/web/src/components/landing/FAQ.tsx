@@ -108,8 +108,9 @@ function FAQItem({
   );
 }
 
-export function FAQ() {
+export function FAQ({ limit }: { limit?: number }) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const visibleFaqs = typeof limit === 'number' ? faqs.slice(0, limit) : faqs;
 
   return (
     <section className="py-24 px-6 lg:px-8 bg-white dark:bg-dark-bg">
@@ -138,7 +139,7 @@ export function FAQ() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="card p-6 sm:p-8"
         >
-          {faqs.map((faq, i) => (
+          {visibleFaqs.map((faq, i) => (
             <FAQItem
               key={faq.question}
               id={`faq-${i}`}

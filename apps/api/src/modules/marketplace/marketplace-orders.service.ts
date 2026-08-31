@@ -281,7 +281,7 @@ export class MarketplaceOrdersService {
     return updated;
   }
 
-  async confirmReceipt(id: string, userId: string, role: string) {
+  async confirmReceipt(id: string, userId: string, role: string, reason?: string) {
     const order = await this.getOwned(id, userId, role);
     if (role !== UserRole.ADMIN && order.buyerId !== userId) {
       throw new ForbiddenException('Apenas o comprador pode confirmar o recebimento');
@@ -294,8 +294,16 @@ export class MarketplaceOrdersService {
       where: { id },
       data: { status: MarketplaceOrderStatus.RECEBIDO_LIBERADO, confirmedAt: new Date() },
     });
-    this.recordEvent(id, 'CONFIRMADO', 'Comprador confirmou o recebimento; valor liberado ao vendedor.', userId);
-    this.notify(order.sellerId, 'Valor liberado 🎉', `O comprador confirmou o recebimento de "${order.product}". O repasse de ${this.round(Number(order.sellerNet))} será processado.`);
+    this.recordEvent(id, role === UserRole.ADMIN ? 'DECISAO_ADMINISTRATIVA' : 'CONFIRMADO', reason
+      ? `Valor liberado ao vendedor. Fundamentação: ${reason}`
+      : 'Comprador confirmou o recebimento; valor liberado ao vendedor.', userId);
+    this.notify(
+      order.sellerId,
+      role === UserRole.ADMIN ? 'Disputa resolvida: valor liberado' : 'Valor liberado 🎉',
+      role === UserRole.ADMIN
+        ? `A análise administrativa liberou o valor de "${order.product}". O repasse de ${this.round(Number(order.sellerNet))} será processado.`
+        : `O comprador confirmou o recebimento de "${order.product}". O repasse de ${this.round(Number(order.sellerNet))} será processado.`,
+    );
     return updated;
   }
 
@@ -345,7 +353,7 @@ export class MarketplaceOrdersService {
   }
 
   /** Admin: reembolsa o comprador (em disputa). */
-  async refund(id: string) {
+  async refund(id: string, reason?: string) {
     const order = await this.prisma.marketplaceOrder.findUnique({ where: { id } });
     if (!order) throw new NotFoundException('Pedido não encontrado');
     if (!this.inStatus(order.status, [MarketplaceOrderStatus.DISPUTA, MarketplaceOrderStatus.PAGO_EM_CUSTODIA, MarketplaceOrderStatus.ENVIADO])) {
@@ -355,7 +363,7 @@ export class MarketplaceOrdersService {
       where: { id },
       data: { status: MarketplaceOrderStatus.REEMBOLSADO },
     });
-    this.recordEvent(id, 'REEMBOLSADO', 'Comprador reembolsado.');
+    this.recordEvent(id, 'REEMBOLSADO', reason ? `Comprador reembolsado. Fundamentação: ${reason}` : 'Comprador reembolsado.');
     this.notify(order.buyerId, 'Reembolso processado', `Seu pagamento de "${order.product}" foi devolvido.`);
     return updated;
   }

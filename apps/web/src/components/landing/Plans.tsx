@@ -3,81 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
-
-const plans = [
-  {
-    name: 'Plano Produtor Rural',
-    price: 'R$ 299',
-    period: '/mês',
-    description: 'Para o produtor rural (pessoa física) que quer gerir a propriedade e acessar crédito com agilidade.',
-    features: [
-      'Perfil e gestão da propriedade (talhões e safras)',
-      'Score ConectCampo de crédito',
-      'Monitoramento por satélite (NDVI) e alertas de clima',
-      'Cotações de commodities e câmbio',
-      'Até 2 operações de crédito simultâneas',
-      'Matching automático com financiadores',
-      'Gestão de documentos',
-      'Suporte por e-mail',
-    ],
-    cta: 'Começar 7 dias grátis',
-    highlighted: false,
-    href: '/register?plan=START',
-  },
-  {
-    name: 'Plano Empresa',
-    price: 'R$ 799',
-    period: '/mês',
-    description: 'Para empresas do agronegócio que precisam organizar crédito e documentos em escala.',
-    features: [
-      'Tudo do Plano Produtor Rural',
-      'Operações de crédito ilimitadas',
-      'Score Premium com análise detalhada',
-      'Prioridade no matching com financiadores',
-      'CPR completa: minuta, PDF e assinatura digital',
-      'Gestão de documentos avançada',
-      'Relatórios e analytics da operação',
-      'Suporte prioritário',
-    ],
-    cta: 'Começar 7 dias grátis',
-    highlighted: false,
-    href: '/register?plan=PRO',
-  },
-  {
-    name: 'Plano Cooperativa',
-    price: 'R$ 2.890',
-    period: '/mês',
-    description: 'Para cooperativas agropecuárias que querem oferecer crédito e gestão aos seus cooperados.',
-    features: [
-      'Tudo do Plano Empresa',
-      'Gestão multi-CNPJ de cooperados',
-      'Painel de gestão coletiva da carteira',
-      'API completa de integração',
-      'Relatórios consolidados por cooperado',
-      'Suporte dedicado com gerente de conta',
-    ],
-    cta: 'Começar 7 dias grátis',
-    highlighted: true,
-    href: '/register?plan=COOPERATIVE',
-  },
-  {
-    name: 'Instituição Financeira',
-    price: 'Grátis',
-    description: 'Para bancos, FIDCs, securitizadoras e FIAGROs que fornecem crédito aos produtores.',
-    features: [
-      'Acesso a solicitações com dados organizados',
-      'Filtros avançados de risco e perfil',
-      'API completa de integração',
-      'Dashboards de portfólio',
-      'Gestão de propostas',
-      'Compliance e rastreabilidade',
-      'Suporte por e-mail e acompanhamento comercial',
-    ],
-    cta: 'Cadastre-se grátis',
-    highlighted: false,
-    href: '/register?plan=CORPORATE',
-  },
-];
+import { PRODUCT_PLANS } from '@/lib/product-plans';
 
 export function Plans() {
   return (
@@ -92,7 +18,7 @@ export function Plans() {
         </div>
 
         <div className="mt-14 grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {plans.map((plan, index) => (
+          {PRODUCT_PLANS.map((plan, index) => (
             <motion.div
               key={plan.name}
               initial={{ opacity: 0, y: 30 }}

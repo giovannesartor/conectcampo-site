@@ -69,7 +69,7 @@ export default function AdminRevenuePage() {
               value={formatCurrency(paidCommissions)}
               icon={<TrendingUp className="h-6 w-6" />}
               color="blue"
-              subtitle="Status: PAID"
+              subtitle="Comissões com pagamento confirmado"
             />
             <KPICard
               title="Comissões Pendentes"

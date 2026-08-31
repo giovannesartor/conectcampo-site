@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/dashboard/EmptyState';
 import { Modal } from '@/components/dashboard/Modal';
 import { Spinner, PageHeader, StatCard } from '@/components/dashboard/PageKit';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 
 const TYPES = ['CPR','PARCELA_CREDITO','SEGURO','IMPOSTO','ARRENDAMENTO','FORNECEDOR','OUTRO'];
 const TYPE_LABEL: Record<string, string> = {
@@ -29,6 +30,7 @@ interface Summary {
 }
 
 export default function CalendarPage() {
+  const confirmAction = useConfirmDialog();
   const [events, setEvents] = useState<Event[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,7 +50,9 @@ export default function CalendarPage() {
     catch { toast.error('Erro'); }
   };
   const remove = async (id: string) => {
-    try { await api.delete(`/calendar/${id}`); load(); } catch { toast.error('Erro'); }
+    const { confirmed } = await confirmAction({ title: 'Excluir vencimento?', description: 'O lembrete será removido do calendário e deixará de gerar acompanhamento.', confirmLabel: 'Excluir vencimento' });
+    if (!confirmed) return;
+    try { await api.delete(`/calendar/${id}`); toast.success('Vencimento excluído'); load(); } catch { toast.error('Não foi possível excluir o vencimento.'); }
   };
   const sync = async () => {
     try {

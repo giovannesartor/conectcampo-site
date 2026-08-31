@@ -23,6 +23,7 @@ import {
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 
 /* ─── Types ──────────────────────────────── */
 
@@ -69,6 +70,7 @@ const QV_URL = 'https://quantovale.online';
 /* ─── Component ──────────────────────────── */
 
 export default function ValuationPage() {
+  const confirmAction = useConfirmDialog();
   const [status, setStatus] = useState<ConnectionStatus | null>(null);
   const [valuations, setValuations] = useState<Valuation[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
@@ -133,7 +135,13 @@ export default function ValuationPage() {
   }
 
   async function handleDisconnect() {
-    if (!confirm('Deseja desconectar sua conta QuantoVale?')) return;
+    const { confirmed } = await confirmAction({
+      title: 'Desconectar o QuantoVale?',
+      description: 'Novos valuations deixarão de ser sincronizados. Os registros já importados permanecerão visíveis.',
+      confirmLabel: 'Desconectar conta',
+      tone: 'warning',
+    });
+    if (!confirmed) return;
     setDisconnecting(true);
     try {
       await api.delete('/quantovale/disconnect');

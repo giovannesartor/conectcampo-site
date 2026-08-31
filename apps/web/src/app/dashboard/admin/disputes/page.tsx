@@ -7,6 +7,7 @@ import { formatCurrency, formatDateTime } from '@/lib/format';
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import { Spinner, PageHeader } from '@/components/dashboard/PageKit';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 
 interface OrderEvent { id: string; type: string; description: string; createdAt: string }
 interface Dispute {
@@ -17,6 +18,7 @@ interface Dispute {
 }
 
 export default function AdminDisputesPage() {
+  const confirmAction = useConfirmDialog();
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,14 +32,33 @@ export default function AdminDisputesPage() {
   useEffect(load, []);
 
   const release = async (id: string) => {
-    if (!confirm('Liberar o valor ao vendedor (resolver a favor do vendedor)?')) return;
-    try { await api.patch(`/marketplace/orders/${id}/confirm`, {}); toast.success('Liberado ao vendedor'); load(); }
-    catch { toast.error('Erro'); }
+    const dispute = disputes.find((item) => item.id === id);
+    const { confirmed, reason } = await confirmAction({
+      title: 'Resolver a favor do vendedor?',
+      description: 'O valor em custódia será liberado ao vendedor. Esta decisão financeira ficará registrada no histórico do pedido.',
+      confirmLabel: 'Liberar ao vendedor',
+      tone: 'warning',
+      requireReason: true,
+      reasonLabel: 'Fundamentação da decisão',
+      details: dispute ? [{ label: 'Produto', value: dispute.product }, { label: 'Valor líquido', value: formatCurrency(dispute.sellerNet) }] : undefined,
+    });
+    if (!confirmed || !reason) return;
+    try { await api.patch(`/marketplace/orders/${id}/confirm`, { reason }); toast.success('Valor liberado ao vendedor'); load(); }
+    catch { toast.error('Não foi possível concluir a liberação.'); }
   };
   const refund = async (id: string) => {
-    if (!confirm('Reembolsar o comprador (resolver a favor do comprador)?')) return;
-    try { await api.patch(`/marketplace/orders/${id}/refund`, {}); toast.success('Comprador reembolsado'); load(); }
-    catch { toast.error('Erro'); }
+    const dispute = disputes.find((item) => item.id === id);
+    const { confirmed, reason } = await confirmAction({
+      title: 'Resolver a favor do comprador?',
+      description: 'O pagamento em custódia será marcado para reembolso ao comprador. A justificativa ficará registrada no pedido.',
+      confirmLabel: 'Reembolsar comprador',
+      requireReason: true,
+      reasonLabel: 'Fundamentação da decisão',
+      details: dispute ? [{ label: 'Produto', value: dispute.product }, { label: 'Valor do comprador', value: formatCurrency(dispute.buyerTotal) }] : undefined,
+    });
+    if (!confirmed || !reason) return;
+    try { await api.patch(`/marketplace/orders/${id}/refund`, { reason }); toast.success('Comprador reembolsado'); load(); }
+    catch { toast.error('Não foi possível concluir o reembolso.'); }
   };
 
   if (loading) return <Spinner />;

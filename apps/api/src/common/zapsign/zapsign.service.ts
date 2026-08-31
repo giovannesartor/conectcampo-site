@@ -158,4 +158,29 @@ export class ZapSignService {
       return null;
     }
   }
+
+  /** Interrompe um fluxo pendente antes de emitir novos links de assinatura. */
+  async cancelDocument(docToken: string, reason: string): Promise<boolean> {
+    if (!this.isEnabled() || !docToken) return false;
+    try {
+      await axios.post(
+        `${this.baseUrl}/refuse/`,
+        { doc_token: docToken, rejected_reason: reason, notify_signer: false },
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+            'User-Agent': 'ConectCampo/1.0',
+          },
+          timeout: 20000,
+        },
+      );
+      this.logger.log(`ZapSign: documento ${docToken} cancelado antes da renovação dos links`);
+      return true;
+    } catch (err) {
+      const e = err as { response?: { status?: number }; message?: string };
+      this.logger.error(`ZapSign: falha ao cancelar documento (${e?.response?.status ?? e?.message})`);
+      return false;
+    }
+  }
 }

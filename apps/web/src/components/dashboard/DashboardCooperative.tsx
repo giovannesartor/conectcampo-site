@@ -12,6 +12,7 @@ import { api } from '@/lib/api';
 import { formatCurrency, formatRelative } from '@/lib/format';
 import { KPICard } from './KPICard';
 import { StatusBadge } from './StatusBadge';
+import { ErrorState } from './PageKit';
 import {
   Plus,
   FileText,
@@ -31,12 +32,16 @@ interface Operation {
   id: string;
   type: string;
   status: string;
-  amount: number;
+  amount?: number;
+  requestedAmount?: number;
   termMonths: number;
   purpose: string;
   createdAt: string;
   producerName?: string;
+  _count?: { documents?: number; proposals?: number };
 }
+
+const operationAmount = (operation: Operation) => Number(operation.amount ?? operation.requestedAmount ?? 0);
 
 type Tab = 'operacoes' | 'cooperados';
 
@@ -52,6 +57,7 @@ export function DashboardCooperative() {
   const [operations, setOperations] = useState<Operation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [stats, setStats] = useState({
     totalOps: 0,
     activeOps: 0,
@@ -65,8 +71,9 @@ export function DashboardCooperative() {
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     else setRefreshing(true);
+    setLoadError(false);
     try {
-      const opsRes = await api.get('/operations?page=1&perPage=50');
+      const opsRes = await api.get('/operations?page=1&perPage=100');
       const ops: Operation[] = opsRes.data.data ?? opsRes.data.operations ?? opsRes.data ?? [];
       if (!Array.isArray(ops)) { setLoading(false); setRefreshing(false); return; }
       setOperations(ops);
@@ -74,11 +81,12 @@ export function DashboardCooperative() {
       const active = ops.filter((o) => !['COMPLETED', 'CANCELLED', 'REJECTED', 'DRAFT'].includes(o.status)).length;
       const approved = ops.filter((o) => o.status === 'COMPLETED').length;
       const pending = ops.filter((o) => ['SUBMITTED', 'UNDER_REVIEW'].includes(o.status)).length;
-      const volume = ops.reduce((a, o) => a + (o.amount ?? 0), 0);
-      const approvedVol = ops.filter((o) => o.status === 'COMPLETED').reduce((a, o) => a + (o.amount ?? 0), 0);
+      const volume = ops.reduce((a, o) => a + operationAmount(o), 0);
+      const approvedVol = ops.filter((o) => o.status === 'COMPLETED').reduce((a, o) => a + operationAmount(o), 0);
 
-      setStats({ totalOps: ops.length, activeOps: active, approvedOps: approved, totalVolume: volume, approvedVolume: approvedVol, pendingOps: pending, docs: 0 });
-    } catch { /* new user */ } finally {
+      const documents = ops.reduce((sum, operation) => sum + (operation._count?.documents ?? 0), 0);
+      setStats({ totalOps: ops.length, activeOps: active, approvedOps: approved, totalVolume: volume, approvedVolume: approvedVol, pendingOps: pending, docs: documents });
+    } catch { setLoadError(true); } finally {
       setLoading(false);
       setRefreshing(false);
     }
@@ -93,7 +101,7 @@ export function DashboardCooperative() {
       op.id,
       op.type,
       op.status,
-      op.amount?.toFixed(2) ?? '0.00',
+      operationAmount(op).toFixed(2),
       op.termMonths ?? '',
       `"${(op.purpose ?? '').replace(/"/g, '""')}"`,
       `"${(op.producerName ?? '').replace(/"/g, '""')}"`,
@@ -118,6 +126,26 @@ export function DashboardCooperative() {
     { done: stats.approvedOps > 0, label: 'Ter operação aprovada', href: '/dashboard/operations' },
   ];
   const onboardingDone = onboardingSteps.filter((s) => s.done).length;
+  const cooperados = Object.values(operations.reduce<Record<string, {
+    name: string;
+    operations: number;
+    active: number;
+    approved: number;
+    volume: number;
+  }>>((acc, operation) => {
+    const name = operation.producerName?.trim() || 'Cooperado sem identificação';
+    const current = acc[name] ?? { name, operations: 0, active: 0, approved: 0, volume: 0 };
+    current.operations += 1;
+    current.volume += operationAmount(operation);
+    if (!['COMPLETED', 'CANCELLED', 'REJECTED'].includes(operation.status)) current.active += 1;
+    if (['APPROVED', 'COMPLETED'].includes(operation.status)) current.approved += 1;
+    acc[name] = current;
+    return acc;
+  }, {})).sort((a, b) => b.volume - a.volume);
+
+  if (loadError && !loading) {
+    return <ErrorState onRetry={() => load()} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -211,7 +239,7 @@ export function DashboardCooperative() {
                         <p className="text-xs text-gray-500 dark:text-gray-400">{op.termMonths}m</p>
                       </td>
                       <td className="py-3 pr-4 text-gray-600 dark:text-gray-400">{op.producerName ?? '—'}</td>
-                      <td className="py-3 pr-4 font-medium text-gray-900 dark:text-white">{formatCurrency(op.amount)}</td>
+                      <td className="py-3 pr-4 font-medium text-gray-900 dark:text-white">{formatCurrency(operationAmount(op))}</td>
                       <td className="py-3 pr-4"><StatusBadge status={op.status} /></td>
                       <td className="py-3 pr-4 text-gray-500 dark:text-gray-400">{formatRelative(op.createdAt)}</td>
                       <td className="py-3">
@@ -225,17 +253,47 @@ export function DashboardCooperative() {
               </table>
             </div>
           )
-        ) : (
-          /* Cooperados tab — under development */
+        ) : cooperados.length === 0 ? (
           <div className="text-center py-12 px-6">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-50 dark:bg-green-950/20">
               <Users className="h-7 w-7 text-green-500" />
             </div>
-            <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Gestão de Cooperados</h4>
-            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
-              O módulo de cooperados está em desenvolvimento e será disponibilizado em breve. Acompanhe as atualizações da plataforma.
+            <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Nenhum cooperado com operação</h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+              Os cooperados aparecem aqui automaticamente quando suas operações são vinculadas à carteira da cooperativa.
             </p>
-            <span className="mt-4 inline-block text-xs text-gray-400 dark:text-gray-500">Previsão: Q3 2025</span>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-dark-border">
+                  <th className="pb-3 font-medium">Cooperado</th>
+                  <th className="pb-3 font-medium">Operações</th>
+                  <th className="pb-3 font-medium">Ativas</th>
+                  <th className="pb-3 font-medium">Aprovadas</th>
+                  <th className="pb-3 font-medium text-right">Volume</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50 dark:divide-dark-border">
+                {cooperados.map((cooperado) => (
+                  <tr key={cooperado.name} className="hover:bg-gray-50 dark:hover:bg-gray-800/30">
+                    <td className="py-3 pr-4">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-sm font-bold text-green-700 dark:bg-green-950/30 dark:text-green-300">
+                          {cooperado.name.charAt(0).toUpperCase()}
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-white">{cooperado.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 pr-4 text-gray-600 dark:text-gray-300">{cooperado.operations}</td>
+                    <td className="py-3 pr-4 text-amber-600 dark:text-amber-400">{cooperado.active}</td>
+                    <td className="py-3 pr-4 text-green-600 dark:text-green-400">{cooperado.approved}</td>
+                    <td className="py-3 text-right font-semibold text-gray-900 dark:text-white">{formatCurrency(cooperado.volume)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

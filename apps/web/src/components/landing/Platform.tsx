@@ -8,7 +8,7 @@ import {
   ArrowRight, ShieldCheck,
 } from 'lucide-react';
 
-const TOOLS = [
+export const PLATFORM_TOOLS = [
   { icon: MapPin, title: 'Gestão de Áreas', desc: 'Fazendas e talhões com CAR, cultura e safra — base para tudo.' },
   { icon: Satellite, title: 'Satélite (NDVI)', desc: 'Saúde da lavoura por imagens de satélite, talhão a talhão.', badge: 'Novo' },
   { icon: CloudSun, title: 'Clima & Alertas', desc: 'Previsão de 7 dias, geada, seca e janela ideal de plantio.' },
@@ -34,13 +34,13 @@ export function Platform() {
           </span>
           <h2 className="section-title mt-3">Muito além do crédito</h2>
           <p className="section-subtitle">
-            O ConectCampo virou o sistema operacional do produtor: da gestão da fazenda ao
-            monitoramento por satélite, da comercialização ao crédito de carbono — tudo integrado.
+            Crédito, campo e comercialização conectados para você decidir com dados e
+            acompanhar cada etapa da operação.
           </p>
         </div>
 
         <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {TOOLS.map((t, i) => (
+          {PLATFORM_TOOLS.slice(0, 6).map((t, i) => (
             <motion.div
               key={t.title}
               initial={{ opacity: 0, y: 24 }}
@@ -67,6 +67,12 @@ export function Platform() {
               </div>
             </motion.div>
           ))}
+        </div>
+
+        <div className="mt-8 text-center">
+          <Link href="/plataforma" className="btn-secondary">
+            Conhecer todas as ferramentas <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
 
         {/* Faixa de destaque — pagamento seguro */}

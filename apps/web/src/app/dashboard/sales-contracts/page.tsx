@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/dashboard/EmptyState';
 import { Modal } from '@/components/dashboard/Modal';
 import { Spinner, PageHeader, StatCard } from '@/components/dashboard/PageKit';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 
 const STATUS = ['RASCUNHO','ATIVO','ENTREGUE','LIQUIDADO','CANCELADO'];
 const STATUS_STYLE: Record<string, string> = {
@@ -26,6 +27,7 @@ interface Contract {
 interface Summary { total: number; ativos: number; entregues: number; totalContratado: number; totalHedge: number; }
 
 export default function SalesContractsPage() {
+  const confirmAction = useConfirmDialog();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +43,11 @@ export default function SalesContractsPage() {
   useEffect(load, []);
 
   const setStatus = async (id: string, status: string) => { try { await api.patch(`/sales-contracts/${id}`, { status }); load(); } catch { toast.error('Erro'); } };
-  const remove = async (id: string) => { try { await api.delete(`/sales-contracts/${id}`); load(); } catch { toast.error('Erro'); } };
+  const remove = async (id: string) => {
+    const { confirmed } = await confirmAction({ title: 'Excluir contrato de venda?', description: 'O contrato deixará de compor os volumes comercializados e vencimentos associados.', confirmLabel: 'Excluir contrato' });
+    if (!confirmed) return;
+    try { await api.delete(`/sales-contracts/${id}`); toast.success('Contrato excluído'); load(); } catch { toast.error('Não foi possível excluir o contrato.'); }
+  };
 
   if (loading) return <Spinner />;
 

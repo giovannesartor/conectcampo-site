@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateLeadDto } from './dto/create-lead.dto';
+import { LEAD_STATUSES } from './dto/update-lead-status.dto';
 
 @Injectable()
 export class LeadsService {
@@ -36,5 +37,14 @@ export class LeadsService {
       this.prisma.lead.count({ where }),
     ]);
     return { data, total, page, perPage, totalPages: Math.ceil(total / perPage) };
+  }
+
+  async updateStatus(id: string, status: (typeof LEAD_STATUSES)[number]) {
+    const lead = await this.prisma.lead.update({
+      where: { id },
+      data: { status },
+    });
+    this.logger.log(`Lead ${id} movido para ${status}`);
+    return lead;
   }
 }

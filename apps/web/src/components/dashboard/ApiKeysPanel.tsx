@@ -5,6 +5,7 @@ import { KeyRound, Plus, Copy, Trash2, Loader2, CheckCircle2, AlertTriangle } fr
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/format';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from './ConfirmDialog';
 
 interface ApiKey {
   id: string;
@@ -19,6 +20,7 @@ interface ApiKey {
 }
 
 export function ApiKeysPanel() {
+  const confirmAction = useConfirmDialog();
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
@@ -69,9 +71,18 @@ export function ApiKeysPanel() {
   };
 
   const revoke = async (id: string) => {
-    if (!confirm('Revogar esta chave? Integrações que a usam deixarão de funcionar.')) return;
+    const key = keys.find((item) => item.id === id);
+    const { confirmed, reason } = await confirmAction({
+      title: 'Revogar chave de API?',
+      description: 'A revogação é imediata. Sistemas que usam esta chave deixarão de acessar a API e precisarão de uma nova credencial.',
+      confirmLabel: 'Revogar chave',
+      details: key ? [{ label: 'Chave', value: key.name || key.prefix }] : undefined,
+      requireReason: true,
+      reasonLabel: 'Motivo da revogação',
+    });
+    if (!confirmed) return;
     try {
-      await api.delete(`/api-keys/${id}`);
+      await api.delete(`/api-keys/${id}`, { data: { reason } });
       toast.success('Chave revogada.');
       load();
     } catch {

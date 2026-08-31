@@ -13,11 +13,20 @@ import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatCurrency, formatDate, formatRelative } from '@/lib/format';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
+import Link from 'next/link';
+import { ArrowUpRight } from 'lucide-react';
 
 const STATUSES = [
   'ALL', 'DRAFT', 'SUBMITTED', 'SCORING', 'MATCHING', 'PROPOSALS_RECEIVED',
   'ACCEPTED', 'IN_ANALYSIS', 'APPROVED', 'REJECTED', 'CONTRACTED', 'COMPLETED', 'CANCELLED',
 ];
+
+const STATUS_LABELS: Record<string, string> = {
+  DRAFT: 'Rascunho', SUBMITTED: 'Enviada', SCORING: 'Em scoring', MATCHING: 'Em matching',
+  PROPOSALS_RECEIVED: 'Propostas recebidas', ACCEPTED: 'Aceita', IN_ANALYSIS: 'Em análise',
+  APPROVED: 'Aprovada', REJECTED: 'Rejeitada', CONTRACTED: 'Contratada', COMPLETED: 'Concluída',
+  CANCELLED: 'Cancelada',
+};
 
 export default function AdminOperationsPage() {
   const { user, isLoading } = useAuth();
@@ -71,7 +80,7 @@ export default function AdminOperationsPage() {
         >
           {STATUSES.map((s) => (
             <option key={s} value={s}>
-              {s === 'ALL' ? 'Todos os status' : s}
+              {s === 'ALL' ? 'Todos os status' : STATUS_LABELS[s] ?? s}
             </option>
           ))}
         </select>
@@ -91,20 +100,21 @@ export default function AdminOperationsPage() {
                 <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 hidden lg:table-cell">Propostas</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Status</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400 hidden lg:table-cell">Data</th>
+                <th className="px-4 py-3"><span className="sr-only">Abrir</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-dark-border">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
-                    <td colSpan={8} className="px-4 py-4">
+                    <td colSpan={9} className="px-4 py-4">
                       <div className="animate-pulse h-8 bg-gray-100 dark:bg-gray-800 rounded" />
                     </td>
                   </tr>
                 ))
               ) : operations.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
                     Nenhuma operação encontrada
                   </td>
                 </tr>
@@ -130,6 +140,15 @@ export default function AdminOperationsPage() {
                     <td className="px-4 py-3 hidden lg:table-cell text-gray-600 dark:text-gray-400">{op.proposalsCount || 0}</td>
                     <td className="px-4 py-3"><StatusBadge status={op.status} /></td>
                     <td className="px-4 py-3 hidden lg:table-cell text-xs text-gray-500">{formatRelative(op.createdAt)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        href={`/dashboard/operations/${op.id}`}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/30 dark:hover:text-brand-300"
+                        aria-label={`Abrir operação de ${op.user?.name || 'solicitante'}`}
+                      >
+                        <ArrowUpRight className="h-4 w-4" />
+                      </Link>
+                    </td>
                   </tr>
                 ))
               )}

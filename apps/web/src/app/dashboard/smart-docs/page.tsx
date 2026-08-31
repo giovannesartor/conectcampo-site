@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/dashboard/EmptyState';
 import { Modal } from '@/components/dashboard/Modal';
 import { Spinner, PageHeader } from '@/components/dashboard/PageKit';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 
 const DOC_TYPES = ['MATRICULA','CAR','NOTA_FISCAL','CONTRATO','CPR','LAUDO','OUTRO'];
 const TYPE_LABEL: Record<string, string> = {
@@ -27,6 +28,7 @@ interface Extraction {
 }
 
 export default function SmartDocsPage() {
+  const confirmAction = useConfirmDialog();
   const [docs, setDocs] = useState<Extraction[]>([]);
   const [loading, setLoading] = useState(true);
   const [show, setShow] = useState(false);
@@ -41,7 +43,11 @@ export default function SmartDocsPage() {
   };
   useEffect(load, []);
 
-  const remove = async (id: string) => { try { await api.delete(`/smart-docs/${id}`); load(); } catch { toast.error('Erro'); } };
+  const remove = async (id: string) => {
+    const { confirmed } = await confirmAction({ title: 'Excluir documento inteligente?', description: 'O documento e os campos extraídos serão removidos desta central.', confirmLabel: 'Excluir documento' });
+    if (!confirmed) return;
+    try { await api.delete(`/smart-docs/${id}`); toast.success('Documento excluído'); load(); } catch { toast.error('Não foi possível excluir o documento.'); }
+  };
 
   if (loading) return <Spinner />;
 

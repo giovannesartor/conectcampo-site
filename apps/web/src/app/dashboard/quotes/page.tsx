@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import { Modal } from '@/components/dashboard/Modal';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 
 interface Quote {
   symbol: string;
@@ -43,6 +44,7 @@ function Sparkline({ data, up }: { data: number[]; up: boolean }) {
 }
 
 export default function QuotesPage() {
+  const confirmAction = useConfirmDialog();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [updatedAt, setUpdatedAt] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,9 @@ export default function QuotesPage() {
   };
 
   const removeAlert = async (id: string) => {
-    try { await api.delete(`/quotes/alerts/${id}`); load(); } catch { toast.error('Erro'); }
+    const { confirmed } = await confirmAction({ title: 'Excluir alerta de preço?', description: 'Você deixará de receber avisos quando a cotação atingir a condição configurada.', confirmLabel: 'Excluir alerta' });
+    if (!confirmed) return;
+    try { await api.delete(`/quotes/alerts/${id}`); toast.success('Alerta excluído'); load(); } catch { toast.error('Não foi possível excluir o alerta.'); }
   };
 
   useEffect(load, []);

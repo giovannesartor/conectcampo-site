@@ -1,82 +1,7 @@
 import { PublicLayout } from '@/components/landing/PublicLayout';
 import { Check, ArrowRight, Zap } from 'lucide-react';
 import Link from 'next/link';
-
-const plans = [
-  {
-    name: 'Plano Produtor Rural',
-    description: 'Para o produtor rural (pessoa física) que quer gerir a propriedade e acessar crédito com agilidade.',
-    price: 'R$ 299',
-    period: '/mês',
-    highlight: false,
-    cta: 'Começar 7 dias grátis',
-    href: '/register?plan=START',
-    features: [
-      'Perfil e gestão da propriedade (talhões e safras)',
-      'Score ConectCampo de crédito',
-      'Monitoramento por satélite (NDVI) e alertas de clima',
-      'Cotações de commodities e câmbio',
-      'Até 2 operações de crédito simultâneas',
-      'Matching automático com financiadores',
-      'Gestão de documentos',
-      'Suporte por e-mail',
-    ],
-  },
-  {
-    name: 'Plano Empresa',
-    description: 'Para empresas do agronegócio que precisam organizar crédito e documentos em escala.',
-    price: 'R$ 799',
-    period: '/mês',
-    highlight: false,
-    cta: 'Começar 7 dias grátis',
-    href: '/register?plan=PRO',
-    features: [
-      'Tudo do Plano Produtor Rural',
-      'Operações de crédito ilimitadas',
-      'Score Premium com análise detalhada',
-      'Prioridade no matching com financiadores',
-      'CPR completa: minuta, PDF e assinatura digital',
-      'Gestão de documentos avançada',
-      'Relatórios e analytics da operação',
-      'Suporte prioritário',
-    ],
-  },
-  {
-    name: 'Plano Cooperativa',
-    description: 'Para cooperativas agropecuárias que querem oferecer crédito e gestão aos seus cooperados.',
-    price: 'R$ 2.890',
-    period: '/mês',
-    highlight: true,
-    cta: 'Começar 7 dias grátis',
-    href: '/register?plan=COOPERATIVE',
-    features: [
-      'Tudo do Plano Empresa',
-      'Gestão multi-CNPJ de cooperados',
-      'Painel de gestão coletiva da carteira',
-      'API completa de integração',
-      'Relatórios consolidados por cooperado',
-      'Suporte dedicado com gerente de conta',
-    ],
-  },
-  {
-    name: 'Instituição Financeira',
-    description: 'Para bancos, FIDCs, securitizadoras e FIAGROs que fornecem crédito aos produtores.',
-    price: 'Grátis',
-    period: '',
-    highlight: false,
-    cta: 'Cadastre-se grátis',
-    href: '/register?plan=CORPORATE',
-    features: [
-      'Acesso a solicitações com dados organizados',
-      'Filtros avançados de risco e perfil',
-      'API completa de integração',
-      'Dashboards de portfólio',
-      'Gestão de propostas',
-      'Compliance e rastreabilidade',
-      'Suporte por e-mail e acompanhamento comercial',
-    ],
-  },
-];
+import { PRODUCT_PLANS } from '@/lib/product-plans';
 
 export default function PlanosPage() {
   return (
@@ -97,16 +22,16 @@ export default function PlanosPage() {
       {/* Plans grid */}
       <section className="px-6 py-20 lg:px-8">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {plans.map((plan) => (
+          {PRODUCT_PLANS.map((plan) => (
             <div
               key={plan.name}
               className={`card card-hover relative flex flex-col ${
-                plan.highlight
+                plan.highlighted
                   ? 'border-brand-400 ring-1 ring-brand-500 shadow-xl shadow-brand-500/10'
                   : ''
               }`}
             >
-              {plan.highlight && (
+              {plan.highlighted && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-4 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
                     <Zap className="h-3 w-3" /> Mais completo
@@ -149,7 +74,7 @@ export default function PlanosPage() {
 
               <Link
                 href={plan.href}
-                className={`mt-8 ${plan.highlight ? 'btn-primary' : 'btn-secondary'}`}
+                className={`mt-8 ${plan.highlighted ? 'btn-primary' : 'btn-secondary'}`}
               >
                 {plan.cta} <ArrowRight className="h-4 w-4" />
               </Link>

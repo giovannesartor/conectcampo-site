@@ -3,10 +3,12 @@ import { Logo } from '@/components/Logo';
 
 const footerLinks = {
   Plataforma: [
+    { name: 'Ferramentas', href: '/plataforma' },
     { name: 'Como Funciona', href: '/como-funciona' },
     { name: 'Planos', href: '/planos' },
     { name: 'Parceiros', href: '/parceiros' },
     { name: 'API para Devs', href: '/api-docs' },
+    { name: 'Central de Ajuda', href: '/ajuda' },
   ],
   Legal: [
     { name: 'Termos de Uso', href: '/legal/termos-de-uso' },
@@ -16,6 +18,7 @@ const footerLinks = {
   ],
   Empresa: [
     { name: 'Sobre Nós', href: '/sobre' },
+    { name: 'Blog', href: '/blog' },
     { name: 'Carreiras', href: '/carreiras' },
     { name: 'Contato', href: '/contato' },
   ],

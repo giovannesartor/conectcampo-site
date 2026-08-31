@@ -132,10 +132,11 @@ export class CprController {
   @ApiOperation({ summary: 'Cancelar / remover CPR' })
   async remove(
     @Param('id') id: string,
+    @Body() body: { reason?: string },
     @CurrentUser('sub') userId: string,
     @CurrentUser('role') role: string,
   ) {
-    return this.service.delete(id, userId, role);
+    return this.service.delete(id, userId, role, body?.reason);
   }
 
   // ─── Fluxo de vida ────────────────────────────────────────────────────────
@@ -159,10 +160,11 @@ export class CprController {
   @ApiOperation({ summary: 'Solicitar assinatura eletrônica (gera links de emitente e credor)' })
   async requestSignature(
     @Param('id') id: string,
+    @Body() body: { reason?: string },
     @CurrentUser('sub') userId: string,
     @CurrentUser('role') role: string,
   ) {
-    return this.service.requestSignature(id, userId, role);
+    return this.service.requestSignature(id, userId, role, body?.reason);
   }
 
   @Get(':id/signature')

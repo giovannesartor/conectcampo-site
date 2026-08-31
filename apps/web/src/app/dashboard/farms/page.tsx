@@ -16,6 +16,7 @@ import { api } from '@/lib/api';
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import toast from 'react-hot-toast';
 import type { PlotMapValue } from '@/components/dashboard/PlotMap';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 
 const PlotMap = dynamic(() => import('@/components/dashboard/PlotMap'), {
   ssr: false,
@@ -86,6 +87,7 @@ class FarmsErrorBoundary extends Component<{ children: ReactNode }, { error: Err
 }
 
 function FarmsPageInner() {
+  const confirmAction = useConfirmDialog();
   const [farms, setFarms] = useState<Farm[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,7 +110,14 @@ function FarmsPageInner() {
   useEffect(() => { load(); }, []);
 
   const removeFarm = async (id: string) => {
-    if (!confirm('Remover esta fazenda e seus talhões?')) return;
+    const farm = farms.find((item) => item.id === id);
+    const { confirmed } = await confirmAction({
+      title: 'Excluir fazenda e talhões?',
+      description: 'A fazenda, seus talhões e os vínculos operacionais deixarão de aparecer na gestão de áreas.',
+      confirmLabel: 'Excluir fazenda',
+      details: farm ? [{ label: 'Fazenda', value: farm.name }] : undefined,
+    });
+    if (!confirmed) return;
     try {
       await api.delete(`/farms/${id}`);
       toast.success('Fazenda removida');
@@ -119,6 +128,12 @@ function FarmsPageInner() {
   };
 
   const removePlot = async (id: string) => {
+    const { confirmed } = await confirmAction({
+      title: 'Excluir talhão?',
+      description: 'O talhão será removido do mapa e dos acompanhamentos de safra, clima e NDVI.',
+      confirmLabel: 'Excluir talhão',
+    });
+    if (!confirmed) return;
     try {
       await api.delete(`/farms/plots/${id}`);
       toast.success('Talhão removido');

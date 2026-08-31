@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/dashboard/EmptyState';
 import { Modal } from '@/components/dashboard/Modal';
 import { Spinner, PageHeader, StatCard } from '@/components/dashboard/PageKit';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 
 const CATEGORIES = ['VENDA_GRAO','CUSTEIO','INSUMOS','MAO_DE_OBRA','MAQUINARIO','ARRENDAMENTO','FINANCIAMENTO','IMPOSTOS','OUTRO'];
 const CAT_LABEL: Record<string, string> = {
@@ -23,6 +24,7 @@ interface Summary {
 }
 
 export default function CashflowPage() {
+  const confirmAction = useConfirmDialog();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,11 @@ export default function CashflowPage() {
   };
   useEffect(load, []);
 
-  const remove = async (id: string) => { try { await api.delete(`/cashflow/${id}`); load(); } catch { toast.error('Erro'); } };
+  const remove = async (id: string) => {
+    const { confirmed } = await confirmAction({ title: 'Excluir lançamento?', description: 'O lançamento deixará de compor os saldos e projeções do fluxo de caixa.', confirmLabel: 'Excluir lançamento' });
+    if (!confirmed) return;
+    try { await api.delete(`/cashflow/${id}`); toast.success('Lançamento excluído'); load(); } catch { toast.error('Não foi possível excluir o lançamento.'); }
+  };
 
   const exportCsv = async () => {
     try {

@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/dashboard/EmptyState';
 import { Modal } from '@/components/dashboard/Modal';
 import { Spinner, PageHeader, StatCard } from '@/components/dashboard/PageKit';
 import toast from 'react-hot-toast';
+import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 
 const TYPES = ['PLANTIO','PULVERIZACAO','ADUBACAO','IRRIGACAO','COLHEITA','MANEJO','MONITORAMENTO','OUTRO'];
 const TYPE_LABEL: Record<string, string> = {
@@ -24,6 +25,7 @@ interface Farm { id: string; name: string; plots: { id: string; name: string }[]
 interface Summary { totalEntries: number; totalCost: number; byType: Record<string, number>; }
 
 export default function FieldJournalPage() {
+  const confirmAction = useConfirmDialog();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [farms, setFarms] = useState<Farm[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -39,7 +41,11 @@ export default function FieldJournalPage() {
   };
   useEffect(load, []);
 
-  const remove = async (id: string) => { try { await api.delete(`/field-journal/${id}`); load(); } catch { toast.error('Erro'); } };
+  const remove = async (id: string) => {
+    const { confirmed } = await confirmAction({ title: 'Excluir registro do diário?', description: 'Este registro de campo será removido do histórico da safra.', confirmLabel: 'Excluir registro' });
+    if (!confirmed) return;
+    try { await api.delete(`/field-journal/${id}`); toast.success('Registro excluído'); load(); } catch { toast.error('Não foi possível excluir o registro.'); }
+  };
 
   if (loading) return <Spinner />;
 

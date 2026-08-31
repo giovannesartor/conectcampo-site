@@ -55,6 +55,7 @@ import { CommandPalette } from './CommandPalette';
 import { OnboardingTour } from './OnboardingTour';
 import { api } from '@/lib/api';
 import { usePreview } from '@/lib/preview-context';
+import { ConfirmDialogProvider } from './ConfirmDialog';
 
 // ─── Plan config ──────────────────────────────────────────────────────────────
 
@@ -75,8 +76,8 @@ const ROLE_LABELS: Record<string, string> = {
 
 // ─── Nav builder per role+plan ────────────────────────────────────────────────
 
-interface NavItem { label: string; href: string; icon: ReactNode; badge?: string }
-interface NavSection { title: string; items: NavItem[] }
+export interface NavItem { label: string; href: string; icon: ReactNode; badge?: string }
+export interface NavSection { title: string; items: NavItem[] }
 
 // Mapeia rotas da sidebar para os marcadores usados pelo OnboardingTour
 const TOUR_ATTR: Record<string, string> = {
@@ -145,12 +146,12 @@ const CONTA_SECTION_COM_ASSINATURA: NavSection = {
 
 // Injeta as seções agro (Produção, Financeiro, Mercado) antes da seção "Conta",
 // garantindo que aparecem para todos os perfis sem duplicar código.
-function buildNav(role: string, plan: string): NavSection[] {
+export function buildDashboardNav(role: string, plan: string): NavSection[] {
   const base = buildRoleNav(role, plan);
   if (base.length === 0) return base;
   // Instituições financeiras recebem um fluxo focado em deal-flow e análise;
   // ferramentas operacionais de fazenda não pertencem a esse perfil.
-  if (role === 'FINANCIAL_INSTITUTION' || role === 'CREDIT_ANALYST') return base;
+  if (role === 'FINANCIAL_INSTITUTION' || role === 'CREDIT_ANALYST' || role === 'ADMIN') return base;
   const conta = base[base.length - 1];
   const rest = base.slice(0, -1);
   return [...rest, PRODUCAO_SECTION, FINANCEIRO_SECTION, MERCADO_SECTION, conta];
@@ -197,7 +198,7 @@ function buildRoleNav(role: string, plan: string): NavSection[] {
       {
         title: 'Análise',
         items: [
-          { label: 'Visão Geral',      href: '/dashboard',            icon: <LayoutDashboard className="h-5 w-5" /> },
+          { label: 'Minha Fila',       href: '/dashboard',            icon: <LayoutDashboard className="h-5 w-5" /> },
           { label: 'Fila de Operações', href: '/dashboard/matching',   icon: <ClipboardList className="h-5 w-5" /> },
           { label: 'Score & Risco',    href: '/dashboard/scoring',     icon: <BarChart3 className="h-5 w-5" /> },
           { label: 'Docs Inteligentes', href: '/dashboard/smart-docs', icon: <FileScan className="h-5 w-5" /> },
@@ -213,16 +214,16 @@ function buildRoleNav(role: string, plan: string): NavSection[] {
       {
         title: 'Deal-flow',
         items: [
-          { label: 'Visão Geral',        href: '/dashboard',                   icon: <LayoutDashboard className="h-5 w-5" /> },
+          { label: 'Painel de Crédito',  href: '/dashboard',                   icon: <LayoutDashboard className="h-5 w-5" /> },
           { label: 'Oportunidades',      href: '/dashboard/matching',          icon: <Landmark className="h-5 w-5" /> },
           { label: 'Minhas Propostas',   href: '/dashboard/proposals',         icon: <ScrollText className="h-5 w-5" /> },
-          { label: 'Portfólio',          href: '/dashboard/scoring',           icon: <Briefcase className="h-5 w-5" /> },
+          { label: 'Portfólio',          href: '/dashboard/portfolio',         icon: <Briefcase className="h-5 w-5" /> },
         ],
       },
       {
         title: 'Análise',
         items: [
-          { label: 'Analytics',          href: '/dashboard/matching',           icon: <PieChart className="h-5 w-5" /> },
+          { label: 'Analytics',          href: '/dashboard/analytics',          icon: <PieChart className="h-5 w-5" /> },
           { label: 'Valuations',         href: '/dashboard/valuation',         icon: <TrendingUp className="h-5 w-5" /> },
         ],
       },
@@ -236,7 +237,7 @@ function buildRoleNav(role: string, plan: string): NavSection[] {
       {
         title: 'Principal',
         items: [
-          { label: 'Visão Geral',            href: '/dashboard',               icon: <LayoutDashboard className="h-5 w-5" /> },
+          { label: 'Hoje',                    href: '/dashboard',               icon: <LayoutDashboard className="h-5 w-5" /> },
           { label: 'Operações Consolidadas', href: '/dashboard/operations',    icon: <FileText className="h-5 w-5" /> },
           { label: 'Documentos',             href: '/dashboard/documents',     icon: <FolderOpen className="h-5 w-5" /> },
         ],
@@ -258,7 +259,7 @@ function buildRoleNav(role: string, plan: string): NavSection[] {
       {
         title: 'Principal',
         items: [
-          { label: 'Visão Geral',        href: '/dashboard',                   icon: <LayoutDashboard className="h-5 w-5" /> },
+          { label: 'Hoje',               href: '/dashboard',                   icon: <LayoutDashboard className="h-5 w-5" /> },
           { label: 'Operações',          href: '/dashboard/operations',        icon: <FileText className="h-5 w-5" /> },
           { label: 'Propostas',          href: '/dashboard/proposals',         icon: <CreditCard className="h-5 w-5" /> },
           { label: 'Documentos',         href: '/dashboard/documents',         icon: <FolderOpen className="h-5 w-5" /> },
@@ -266,9 +267,9 @@ function buildRoleNav(role: string, plan: string): NavSection[] {
       },
       INSTRUMENTOS_SECTION,
       {
-        title: 'Analytics',
+        title: 'Inteligência',
         items: [
-          { label: 'Analytics',          href: '/dashboard/matching',          icon: <TrendingUp className="h-5 w-5" /> },
+          { label: 'Analytics',          href: '/dashboard/analytics',         icon: <TrendingUp className="h-5 w-5" /> },
           { label: 'Score Premium',      href: '/dashboard/scoring',           icon: <Sparkles className="h-5 w-5" />, badge: 'PRO' },
           { label: 'Valuations',         href: '/dashboard/valuation',         icon: <DollarSign className="h-5 w-5" /> },
         ],
@@ -282,7 +283,7 @@ function buildRoleNav(role: string, plan: string): NavSection[] {
     {
       title: 'Principal',
       items: [
-        { label: 'Visão Geral',          href: '/dashboard',                   icon: <LayoutDashboard className="h-5 w-5" /> },
+        { label: 'Hoje',                 href: '/dashboard',                   icon: <LayoutDashboard className="h-5 w-5" /> },
         { label: 'Operações',            href: '/dashboard/operations',        icon: <FileText className="h-5 w-5" /> },
         { label: 'Propostas',            href: '/dashboard/proposals',         icon: <CreditCard className="h-5 w-5" /> },
         { label: 'Documentos',           href: '/dashboard/documents',         icon: <FolderOpen className="h-5 w-5" /> },
@@ -333,7 +334,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const effectivePlan = isPreviewMode ? (previewPlan ?? '') : planKey;
 
   const planInfo = PLAN_LABELS[effectivePlan] ?? null;
-  const navSections = buildNav(effectiveRole, effectivePlan);
+  const navSections = buildDashboardNav(effectiveRole, effectivePlan);
   const activeNavItem = navSections
     .flatMap((section) => section.items)
     .filter((item) => item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href))
@@ -511,6 +512,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   );
 
   return (
+    <ConfirmDialogProvider>
     <div className="flex min-h-screen bg-[#f7faf8] dark:bg-dark-bg">
       {mobileOpen && (
         <button type="button" className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Fechar menu" />
@@ -602,7 +604,11 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
       <OnboardingTour />
       <RealtimeNotifications />
-      <CommandPalette />
+      <CommandPalette
+        navSections={navSections}
+        operationSearchEndpoint={effectiveRole === 'FINANCIAL_INSTITUTION' || effectiveRole === 'CREDIT_ANALYST' ? '/operations/available' : '/operations'}
+      />
     </div>
+    </ConfirmDialogProvider>
   );
 }

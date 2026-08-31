@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { AlertTriangle, Plus, RefreshCw } from 'lucide-react';
 
 export function Spinner() {
   return (
@@ -77,6 +77,37 @@ export function StatCard({
         {value}
       </p>
       {sub && <p className="mt-1 text-xs leading-5 text-gray-400">{sub}</p>}
+    </div>
+  );
+}
+
+export function ErrorState({
+  title = 'Não foi possível carregar os dados',
+  description = 'A conexão falhou ou o serviço está temporariamente indisponível. Nenhum valor foi substituído por zero.',
+  onRetry,
+  compact = false,
+}: {
+  title?: string;
+  description?: string;
+  onRetry?: () => void;
+  compact?: boolean;
+}) {
+  return (
+    <div className={`rounded-2xl border border-red-200 bg-red-50 text-red-900 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-200 ${compact ? 'p-4' : 'p-6 text-center'}`} role="alert">
+      <div className={compact ? 'flex items-start gap-3' : 'mx-auto flex max-w-xl flex-col items-center'}>
+        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-white text-red-600 shadow-sm dark:bg-red-950/60 dark:text-red-300">
+          <AlertTriangle className="h-5 w-5" />
+        </span>
+        <div className={compact ? 'min-w-0 flex-1' : 'mt-4'}>
+          <p className="font-bold">{title}</p>
+          <p className="mt-1 text-sm leading-6 text-red-700 dark:text-red-300">{description}</p>
+          {onRetry && (
+            <button type="button" onClick={onRetry} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700">
+              <RefreshCw className="h-4 w-4" /> Tentar novamente
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
