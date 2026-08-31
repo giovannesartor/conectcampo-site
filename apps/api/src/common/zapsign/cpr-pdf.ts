@@ -44,9 +44,10 @@ export function renderCprPdf(c: any): Promise<Buffer> {
       const left = doc.page.margins.left;
       const right = doc.page.width - doc.page.margins.right;
       const width = right - left;
-      // Folga deliberada: evita que o fluxo automático do PDFKit quebre uma
-      // linha ou tabela em uma página sem o cabeçalho contratual.
-      const bottom = doc.page.height - doc.page.margins.bottom - 103;
+      // Reserva o rodapé sem desperdiçar a faixa útil da página. Os blocos
+      // continuam passando integralmente para a página seguinte quando não
+      // cabem, mas a nota final pode permanecer junto das assinaturas.
+      const bottom = doc.page.height - doc.page.margins.bottom - 60;
       const isDraft = !c?.numeroCpr || c?.status === 'RASCUNHO';
       const isExample = Boolean(data.minutaExemplo);
       const type = c?.type === 'FISICA' ? 'CPR FÍSICA' : 'CPR FINANCEIRA';
