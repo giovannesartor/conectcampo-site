@@ -349,7 +349,7 @@ export class CprService {
             contractData: {
               ...contractData,
               signatureParties,
-            } as Prisma.InputJsonValue,
+            } as unknown as Prisma.InputJsonValue,
           },
         });
 
@@ -579,7 +579,7 @@ export class CprService {
       data.contractData = {
         ...contractData,
         signatureParties: [...additionalByExternalId.values()],
-      } as Prisma.InputJsonValue;
+      } as unknown as Prisma.InputJsonValue;
     }
 
     const fullySigned = doc.status === 'signed';
