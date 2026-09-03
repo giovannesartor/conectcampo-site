@@ -19,13 +19,13 @@ const steps = [
     icon: Download,
     index: '02',
     title: 'Revise a minuta e o PDF',
-    description: 'Quadro-resumo, condições financeiras e cláusulas padronizadas no mesmo documento, com campos pendentes claramente sinalizados.',
+    description: 'Quadro-resumo, conferência financeira, garantias detalhadas e 35 cláusulas no mesmo documento, com pendências sinalizadas.',
   },
   {
     icon: FileSignature,
     index: '03',
     title: 'Assine e acompanhe',
-    description: 'Links individuais, autenticação por token quando o contato está cadastrado e trilha de auditoria, seguidos do controle operacional do registro e da liquidação.',
+    description: 'Links individuais para emitente, credor e avalistas, autenticação por token e trilha de auditoria até o arquivo final assinado.',
   },
 ];
 
@@ -42,7 +42,7 @@ export function CprShowcase() {
             Da minuta ao acompanhamento, sem perder o controle do título.
           </h2>
           <p className="mt-5 max-w-xl text-base leading-7 text-gray-600 dark:text-gray-300">
-            A nova área de CPR organiza o conteúdo contratual, gera um PDF completo por cliente e mantém o histórico da emissão, assinatura e registro. A plataforma não substitui a análise jurídica nem o comprovante oficial da registradora.
+            A área de CPR transforma os dados de cada operação em uma minuta completa, PDF profissional e fluxo de assinatura com todas as partes. O padrão cobre produção, armazenamento, garantias, cronograma e registro, sem substituir a análise jurídica nem o comprovante oficial da registradora.
           </p>
 
           <div className="mt-8 grid max-w-xl grid-cols-2 gap-3">
@@ -51,8 +51,8 @@ export function CprShowcase() {
               <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">custo de emissão da CPR Financeira sobre o valor de face</p>
             </div>
             <div className="rounded-2xl border border-amber-200 bg-white p-4 shadow-sm dark:border-amber-900 dark:bg-amber-950/20">
-              <p className="text-3xl font-extrabold text-amber-700 dark:text-amber-300">1 fluxo</p>
-              <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">dados, PDF, assinatura, registro e liquidação acompanhados</p>
+              <p className="text-3xl font-extrabold text-amber-700 dark:text-amber-300">35 cláusulas</p>
+              <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">conteúdo completo e personalizado conforme cada operação</p>
             </div>
           </div>
 

@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Database,
   Scale,
+  Pencil,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
@@ -41,6 +42,7 @@ interface CprSummary {
   totalValor: number;
   totalCaptacao: number;
   totalFeeConectCampo: number;
+  totalCustoEmissao: number;
 }
 
 interface CprItem {
@@ -77,6 +79,7 @@ interface SignatureInfo {
   signedFileUrl?: string | null;
   emitente: SignatureParty;
   credor: SignatureParty;
+  additionalSigners?: Array<SignatureParty & { qualification?: string }>;
 }
 
 interface CreateCprForm {
@@ -117,9 +120,12 @@ interface CreateCprForm {
   propriedadeNome: string;
   propriedadeEndereco: string;
   propriedadeMatricula: string;
+  armazenamentoNome: string;
+  armazenamentoEndereco: string;
   indicePreco: string;
   fontePreco: string;
   mercadoReferencia: string;
+  criterioSubstituicaoIndice: string;
   localEntrega: string;
   dataEntrega: string;
   dataVencimento: string;
@@ -132,15 +138,28 @@ interface CreateCprForm {
   garantiaProprietario: string;
   garantiaRegistro: string;
   garantiaGrau: string;
+  garantiaCartorio: string;
+  garantiaAreaHectares: string;
+  garantiaOnus: string;
+  garantiaAnuencias: string;
+  garantiaDocumentos: string;
   finalidade: string;
   valorCaptacao: string;
   valorCredito: string;
   valorIof: string;
   valorLiquido: string;
+  valorResgate: string;
   taxaJurosMensal: string;
   taxaJurosAnual: string;
   cetMensal: string;
   cetAnual: string;
+  capitalizacao: string;
+  sistemaAmortizacao: string;
+  periodicidadePagamento: string;
+  baseCalculoDias: string;
+  beneficiarioLiberacao: string;
+  condicoesPrecedentes: string;
+  comprovacaoDestinacao: string;
   multaMoraPct: string;
   jurosMoraMensalPct: string;
   encargosAdicionais: string;
@@ -152,10 +171,20 @@ interface CreateCprForm {
   numeroRegistro: string;
   foroCidade: string;
   foroEstado: string;
+  prazoCuraDias: string;
+  avisoVistoriaDias: string;
+  formulaLiquidacaoAntecipada: string;
+  canalOuvidoria: string;
   avalistaNome: string;
   avalistaCpfCnpj: string;
   avalistaQualificacao: string;
   avalistaEndereco: string;
+  avalistaEmail: string;
+  avalistaTelefone: string;
+  testemunha1Nome: string;
+  testemunha1Cpf: string;
+  testemunha2Nome: string;
+  testemunha2Cpf: string;
   cronograma: Array<{ vencimento: string; principal: string; encargos: string }>;
   observacoes: string;
 }
@@ -182,12 +211,12 @@ const EMPTY_FORM: CreateCprForm = {
   emitenteNome: '', emitenteCpfCnpj: '', emitenteEndereco: '', emitenteCep: '', emitenteQualificacao: '', emitenteRepresentante: '', emitenteCidade: '', emitenteEstado: '', emitenteCarNumero: '',
   emitenteEmail: '', emitenteTelefone: '', emitenteBanco: '', emitenteAgencia: '', emitenteConta: '',
   credorNome: '', credorCpfCnpj: '', credorEndereco: '', credorCidade: '', credorEstado: '', credorCep: '', credorQualificacao: '', credorRepresentante: '', credorTipo: '', credorEmail: '', credorTelefone: '',
-  produto: '', quantidade: '', unidade: 'sacas', precoUnitario: '', valorFace: '', produtoQualidade: '', produtoPadrao: '', propriedadeNome: '', propriedadeEndereco: '', propriedadeMatricula: '', indicePreco: '', fontePreco: '', mercadoReferencia: '',
+  produto: '', quantidade: '', unidade: 'sacas', precoUnitario: '', valorFace: '', produtoQualidade: '', produtoPadrao: '', propriedadeNome: '', propriedadeEndereco: '', propriedadeMatricula: '', armazenamentoNome: '', armazenamentoEndereco: '', indicePreco: '', fontePreco: '', mercadoReferencia: '', criterioSubstituicaoIndice: '',
   localEntrega: '', dataEntrega: '',
   dataVencimento: '', prazoAnos: '', carenciaAnos: '', safras: [],
-  garantiaTipo: '', garantiaDescricao: '', garantiaValor: '', garantiaProprietario: '', garantiaRegistro: '', garantiaGrau: '',
-  finalidade: '', valorCaptacao: '', valorCredito: '', valorIof: '', valorLiquido: '', taxaJurosMensal: '', taxaJurosAnual: '', cetMensal: '', cetAnual: '', multaMoraPct: '', jurosMoraMensalPct: '', encargosAdicionais: '', formaLiquidacao: '', localPagamento: '', localEmissao: '', dataEmissao: '', registradora: '', numeroRegistro: '', foroCidade: '', foroEstado: '',
-  avalistaNome: '', avalistaCpfCnpj: '', avalistaQualificacao: '', avalistaEndereco: '',
+  garantiaTipo: '', garantiaDescricao: '', garantiaValor: '', garantiaProprietario: '', garantiaRegistro: '', garantiaGrau: '', garantiaCartorio: '', garantiaAreaHectares: '', garantiaOnus: '', garantiaAnuencias: '', garantiaDocumentos: '',
+  finalidade: '', valorCaptacao: '', valorCredito: '', valorIof: '', valorLiquido: '', valorResgate: '', taxaJurosMensal: '', taxaJurosAnual: '', cetMensal: '', cetAnual: '', capitalizacao: '', sistemaAmortizacao: '', periodicidadePagamento: '', baseCalculoDias: '', beneficiarioLiberacao: '', condicoesPrecedentes: '', comprovacaoDestinacao: '', multaMoraPct: '', jurosMoraMensalPct: '', encargosAdicionais: '', formaLiquidacao: '', localPagamento: '', localEmissao: '', dataEmissao: '', registradora: '', numeroRegistro: '', foroCidade: '', foroEstado: '', prazoCuraDias: '', avisoVistoriaDias: '', formulaLiquidacaoAntecipada: '', canalOuvidoria: '',
+  avalistaNome: '', avalistaCpfCnpj: '', avalistaQualificacao: '', avalistaEndereco: '', avalistaEmail: '', avalistaTelefone: '', testemunha1Nome: '', testemunha1Cpf: '', testemunha2Nome: '', testemunha2Cpf: '',
   cronograma: [],
   observacoes: '',
 };
@@ -226,6 +255,7 @@ export default function CprPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<CreateCprForm>(EMPTY_FORM);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -254,6 +284,13 @@ export default function CprPage() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const openCreate = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setError('');
+    setShowForm(true);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -312,22 +349,35 @@ export default function CprPage() {
             cpfCnpj: form.avalistaCpfCnpj || undefined,
             qualificacao: form.avalistaQualificacao || undefined,
             endereco: form.avalistaEndereco || undefined,
+            email: form.avalistaEmail || undefined,
+            telefone: form.avalistaTelefone || undefined,
           }] : [],
           produtoQualidade: form.produtoQualidade || undefined,
           produtoPadrao: form.produtoPadrao || undefined,
           propriedadeNome: form.propriedadeNome || undefined,
           propriedadeEndereco: form.propriedadeEndereco || undefined,
           propriedadeMatricula: form.propriedadeMatricula || undefined,
+          armazenamentoNome: form.armazenamentoNome || undefined,
+          armazenamentoEndereco: form.armazenamentoEndereco || undefined,
           indicePreco: form.indicePreco || undefined,
           fontePreco: form.fontePreco || undefined,
           mercadoReferencia: form.mercadoReferencia || undefined,
+          criterioSubstituicaoIndice: form.criterioSubstituicaoIndice || undefined,
           valorCredito: form.valorCredito ? parseFloat(form.valorCredito) : undefined,
           valorIof: form.valorIof ? parseFloat(form.valorIof) : undefined,
           valorLiquido: form.valorLiquido ? parseFloat(form.valorLiquido) : undefined,
+          valorResgate: form.valorResgate ? parseFloat(form.valorResgate) : undefined,
           taxaJurosMensal: form.taxaJurosMensal ? parseFloat(form.taxaJurosMensal) : undefined,
           taxaJurosAnual: form.taxaJurosAnual ? parseFloat(form.taxaJurosAnual) : undefined,
           cetMensal: form.cetMensal ? parseFloat(form.cetMensal) : undefined,
           cetAnual: form.cetAnual ? parseFloat(form.cetAnual) : undefined,
+          capitalizacao: form.capitalizacao || undefined,
+          sistemaAmortizacao: form.sistemaAmortizacao || undefined,
+          periodicidadePagamento: form.periodicidadePagamento || undefined,
+          baseCalculoDias: form.baseCalculoDias ? parseInt(form.baseCalculoDias) : undefined,
+          beneficiarioLiberacao: form.beneficiarioLiberacao || undefined,
+          condicoesPrecedentes: form.condicoesPrecedentes || undefined,
+          comprovacaoDestinacao: form.comprovacaoDestinacao || undefined,
           multaMoraPct: form.multaMoraPct ? parseFloat(form.multaMoraPct) : undefined,
           jurosMoraMensalPct: form.jurosMoraMensalPct ? parseFloat(form.jurosMoraMensalPct) : undefined,
           encargosAdicionais: form.encargosAdicionais || undefined,
@@ -336,11 +386,24 @@ export default function CprPage() {
           garantiaProprietario: form.garantiaProprietario || undefined,
           garantiaRegistro: form.garantiaRegistro || undefined,
           garantiaGrau: form.garantiaGrau || undefined,
+          garantiaCartorio: form.garantiaCartorio || undefined,
+          garantiaAreaHectares: form.garantiaAreaHectares ? parseFloat(form.garantiaAreaHectares) : undefined,
+          garantiaOnus: form.garantiaOnus || undefined,
+          garantiaAnuencias: form.garantiaAnuencias || undefined,
+          garantiaDocumentos: form.garantiaDocumentos || undefined,
           registradora: form.registradora || undefined,
           numeroRegistro: form.numeroRegistro || undefined,
           foroCidade: form.foroCidade || undefined,
           foroEstado: form.foroEstado || undefined,
+          prazoCuraDias: form.prazoCuraDias ? parseInt(form.prazoCuraDias) : undefined,
+          avisoVistoriaDias: form.avisoVistoriaDias ? parseInt(form.avisoVistoriaDias) : undefined,
+          formulaLiquidacaoAntecipada: form.formulaLiquidacaoAntecipada || undefined,
           contatoNotificacoes: [form.emitenteEmail, form.credorEmail].filter(Boolean).join(' · ') || undefined,
+          canalOuvidoria: form.canalOuvidoria || undefined,
+          testemunhas: [
+            form.testemunha1Nome ? { nome: form.testemunha1Nome, cpfCnpj: form.testemunha1Cpf || undefined } : null,
+            form.testemunha2Nome ? { nome: form.testemunha2Nome, cpfCnpj: form.testemunha2Cpf || undefined } : null,
+          ].filter(Boolean),
           cronograma: form.cronograma
             .filter(item => item.vencimento || item.principal || item.encargos)
             .map((item, index) => ({
@@ -353,10 +416,13 @@ export default function CprPage() {
         },
         observacoes: form.observacoes || undefined,
       };
-      await api.post('/cpr', payload);
+      if (editingId) await api.patch(`/cpr/${editingId}`, payload);
+      else await api.post('/cpr', payload);
       setShowForm(false);
+      setEditingId(null);
       setForm(EMPTY_FORM);
       await load();
+      toast.success(editingId ? 'Rascunho atualizado.' : 'CPR criada como rascunho.');
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
       setError(e?.response?.data?.message || 'Erro ao criar CPR');
@@ -370,6 +436,10 @@ export default function CprPage() {
     try {
       await api.post(`/cpr/${id}/emit`);
       await load();
+      toast.success('CPR emitida e numerada. Agora ela pode seguir para assinatura.');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      toast.error(e?.response?.data?.message || 'Não foi possível emitir a CPR.');
     } finally {
       setActionLoading(null);
     }
@@ -437,6 +507,42 @@ export default function CprPage() {
     }
   };
 
+  const openEdit = async (cpr: CprItem) => {
+    setActionLoading(cpr.id);
+    setError('');
+    try {
+      const { data: raw } = await api.get(`/cpr/${cpr.id}`);
+      const detail = raw as Record<string, any>;
+      const contract = detail.contractData && typeof detail.contractData === 'object' ? detail.contractData : {};
+      const avalista = Array.isArray(contract.avalistas) ? contract.avalistas[0] || {} : {};
+      const testemunhas = Array.isArray(contract.testemunhas) ? contract.testemunhas : [];
+      const value = (item: unknown) => item == null ? '' : String(item);
+      const dateInput = (item: unknown) => item ? String(item).slice(0, 10) : '';
+
+      setForm({
+        ...EMPTY_FORM,
+        purpose: detail.purpose === 'CAPTACAO' ? 'CAPTACAO' : 'EMISSAO',
+        type: detail.type === 'FISICA' ? 'FISICA' : 'FINANCEIRA',
+        emitenteNome: value(detail.emitenteNome), emitenteCpfCnpj: value(detail.emitenteCpfCnpj), emitenteEndereco: value(detail.emitenteEndereco), emitenteCep: value(contract.emitenteCep), emitenteQualificacao: value(contract.emitenteQualificacao), emitenteRepresentante: value(contract.emitenteRepresentante), emitenteCidade: value(detail.emitenteCidade), emitenteEstado: value(detail.emitenteEstado), emitenteCarNumero: value(detail.emitenteCarNumero),
+        emitenteEmail: value(detail.emitenteEmail), emitenteTelefone: value(detail.emitenteTelefone), emitenteBanco: value(contract.emitenteBanco), emitenteAgencia: value(contract.emitenteAgencia), emitenteConta: value(contract.emitenteConta),
+        credorNome: value(detail.credorNome), credorCpfCnpj: value(detail.credorCpfCnpj), credorEndereco: value(contract.credorEndereco), credorCidade: value(contract.credorCidade), credorEstado: value(contract.credorEstado), credorCep: value(contract.credorCep), credorQualificacao: value(contract.credorQualificacao), credorRepresentante: value(contract.credorRepresentante), credorTipo: value(detail.credorTipo), credorEmail: value(detail.credorEmail), credorTelefone: value(detail.credorTelefone),
+        produto: value(detail.produto), quantidade: value(detail.quantidade), unidade: value(detail.unidade) || 'sacas', precoUnitario: value(detail.precoUnitario), valorFace: value(detail.valorFace), produtoQualidade: value(contract.produtoQualidade), produtoPadrao: value(contract.produtoPadrao), propriedadeNome: value(contract.propriedadeNome), propriedadeEndereco: value(contract.propriedadeEndereco), propriedadeMatricula: value(contract.propriedadeMatricula), armazenamentoNome: value(contract.armazenamentoNome), armazenamentoEndereco: value(contract.armazenamentoEndereco), indicePreco: value(contract.indicePreco), fontePreco: value(contract.fontePreco), mercadoReferencia: value(contract.mercadoReferencia), criterioSubstituicaoIndice: value(contract.criterioSubstituicaoIndice),
+        localEntrega: value(detail.localEntrega), dataEntrega: dateInput(detail.dataEntrega), dataVencimento: dateInput(detail.dataVencimento), prazoAnos: detail.prazoMeses ? String(Math.floor(Number(detail.prazoMeses) / 12)) : '', carenciaAnos: detail.carenciaMeses ? String(Math.floor(Number(detail.carenciaMeses) / 12)) : '', safras: value(detail.safraAno).split(',').map(item => item.trim()).filter(Boolean),
+        garantiaTipo: value(detail.garantiaTipo), garantiaDescricao: value(detail.garantiaDescricao), garantiaValor: value(detail.garantiaValor), garantiaProprietario: value(contract.garantiaProprietario), garantiaRegistro: value(contract.garantiaRegistro), garantiaGrau: value(contract.garantiaGrau), garantiaCartorio: value(contract.garantiaCartorio), garantiaAreaHectares: value(contract.garantiaAreaHectares), garantiaOnus: value(contract.garantiaOnus), garantiaAnuencias: value(contract.garantiaAnuencias), garantiaDocumentos: value(contract.garantiaDocumentos),
+        finalidade: value(detail.finalidade), valorCaptacao: value(detail.valorCaptacao), valorCredito: value(contract.valorCredito), valorIof: value(contract.valorIof), valorLiquido: value(contract.valorLiquido), valorResgate: value(contract.valorResgate), taxaJurosMensal: value(contract.taxaJurosMensal), taxaJurosAnual: value(contract.taxaJurosAnual), cetMensal: value(contract.cetMensal), cetAnual: value(contract.cetAnual), capitalizacao: value(contract.capitalizacao), sistemaAmortizacao: value(contract.sistemaAmortizacao), periodicidadePagamento: value(contract.periodicidadePagamento), baseCalculoDias: value(contract.baseCalculoDias), beneficiarioLiberacao: value(contract.beneficiarioLiberacao), condicoesPrecedentes: value(contract.condicoesPrecedentes), comprovacaoDestinacao: value(contract.comprovacaoDestinacao), multaMoraPct: value(contract.multaMoraPct), jurosMoraMensalPct: value(contract.jurosMoraMensalPct), encargosAdicionais: value(contract.encargosAdicionais), formaLiquidacao: value(contract.formaLiquidacao), localPagamento: value(contract.localPagamento), localEmissao: value(contract.localEmissao), dataEmissao: dateInput(contract.dataEmissao), registradora: value(contract.registradora), numeroRegistro: value(contract.numeroRegistro), foroCidade: value(contract.foroCidade), foroEstado: value(contract.foroEstado), prazoCuraDias: value(contract.prazoCuraDias), avisoVistoriaDias: value(contract.avisoVistoriaDias), formulaLiquidacaoAntecipada: value(contract.formulaLiquidacaoAntecipada), canalOuvidoria: value(contract.canalOuvidoria),
+        avalistaNome: value(avalista.nome), avalistaCpfCnpj: value(avalista.cpfCnpj), avalistaQualificacao: value(avalista.qualificacao), avalistaEndereco: value(avalista.endereco), avalistaEmail: value(avalista.email), avalistaTelefone: value(avalista.telefone), testemunha1Nome: value(testemunhas[0]?.nome), testemunha1Cpf: value(testemunhas[0]?.cpfCnpj), testemunha2Nome: value(testemunhas[1]?.nome), testemunha2Cpf: value(testemunhas[1]?.cpfCnpj),
+        cronograma: Array.isArray(contract.cronograma) ? contract.cronograma.map((item: any) => ({ vencimento: dateInput(item.vencimento), principal: value(item.principal), encargos: value(item.encargos) })) : [],
+        observacoes: value(detail.observacoes),
+      });
+      setEditingId(cpr.id);
+      setShowForm(true);
+    } catch {
+      toast.error('Não foi possível abrir o rascunho para edição.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const openSignature = async (cpr: CprItem) => {
     if (cpr.status === 'RASCUNHO') {
       toast('Emita a CPR antes de solicitar assinaturas.');
@@ -450,8 +556,9 @@ export default function CprPage() {
       const { data } = await api.get<SignatureInfo>(`/cpr/${cpr.id}/signature`);
       setSignModal({ cpr, info: data });
       await load();
-    } catch {
-      toast.error('Não foi possível abrir a assinatura agora.');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      toast.error(e?.response?.data?.message || 'Não foi possível abrir a assinatura agora.');
     } finally {
       setActionLoading(null);
     }
@@ -603,6 +710,19 @@ export default function CprPage() {
     form.garantiaTipo || 'sem-garantia', form.foroCidade,
   ];
   const completeness = Math.round((completenessFields.filter(Boolean).length / completenessFields.length) * 100);
+  const readinessGroups = [
+    { label: 'Partes', ready: Boolean(form.emitenteNome && form.emitenteCpfCnpj && form.credorNome && form.credorCpfCnpj) },
+    { label: 'Produto', ready: Boolean(form.produto && form.quantidade && form.valorFace && form.propriedadeNome) },
+    { label: 'Financeiro', ready: Boolean(form.dataVencimento && form.formaLiquidacao && form.localPagamento) },
+    { label: 'Garantias', ready: !form.garantiaTipo || Boolean(form.garantiaDescricao && form.garantiaProprietario && form.garantiaRegistro) },
+    { label: 'Emissão', ready: Boolean(form.localEmissao && form.foroCidade && form.foroEstado) },
+  ];
+  const productReferenceValue = Number(form.quantidade || 0) * Number(form.precoUnitario || 0);
+  const faceValueNumber = Number(form.valorFace || 0);
+  const emissionCost = faceValueNumber * (pricing.financeiraRatePct / 100);
+  const valuesReconciled = productReferenceValue > 0 && faceValueNumber > 0
+    ? Math.abs(productReferenceValue - faceValueNumber) < 0.01
+    : null;
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
@@ -627,7 +747,7 @@ export default function CprPage() {
           </div>
         </div>
         <button
-          onClick={() => { setShowForm(true); setError(''); }}
+          onClick={openCreate}
           className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
           <Plus className="h-4 w-4" /> Nova CPR
@@ -652,7 +772,7 @@ export default function CprPage() {
       )}
 
       {summary && (summary.totalValor > 0 || summary.totalCaptacao > 0) && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Valor Total CPRs</p>
             <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(summary.totalValor)}</p>
@@ -663,9 +783,15 @@ export default function CprPage() {
           </div>
           <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4">
             <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1 flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" /> Fee ConectCampo (6%)
+              <ScrollText className="h-3 w-3" /> Custos de emissão de CPR
             </p>
-            <p className="text-xl font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(summary.totalFeeConectCampo)}</p>
+            <p className="text-xl font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(summary.totalCustoEmissao ?? 0)}</p>
+          </div>
+          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+            <p className="text-xs text-amber-700 dark:text-amber-400 mb-1 flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" /> Fee de captação (6%)
+            </p>
+            <p className="text-xl font-bold text-amber-700 dark:text-amber-400">{formatCurrency(summary.totalFeeConectCampo)}</p>
           </div>
         </div>
       )}
@@ -679,7 +805,7 @@ export default function CprPage() {
           title="Nenhuma CPR criada ainda"
           description="Emita uma Cédula de Produto Rural ou use uma CPR para captar crédito."
           actionLabel="Nova CPR"
-          onAction={() => { setShowForm(true); setError(''); }}
+          onAction={openCreate}
         />
       ) : (
         <>
@@ -707,7 +833,10 @@ export default function CprPage() {
                   <button onClick={() => handlePdf(cpr.id)} disabled={isLoading} className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-2.5 py-1.5 text-xs font-semibold text-blue-700 dark:border-blue-800 dark:text-blue-300"><Download className="h-3.5 w-3.5" /> PDF</button>
                   <button onClick={() => handleDocument(cpr.id)} disabled={isLoading} className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:text-emerald-300"><FileText className="h-3.5 w-3.5" /> Prévia</button>
                   {cpr.status === 'RASCUNHO' ? (
-                    <button onClick={() => handleEmit(cpr.id)} disabled={isLoading} className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white"><ChevronRight className="h-3.5 w-3.5" /> Emitir</button>
+                    <>
+                      <button onClick={() => openEdit(cpr)} disabled={isLoading} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-semibold text-gray-700 dark:border-gray-700 dark:text-gray-300"><Pencil className="h-3.5 w-3.5" /> Editar</button>
+                      <button onClick={() => handleEmit(cpr.id)} disabled={isLoading} className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white"><ChevronRight className="h-3.5 w-3.5" /> Emitir</button>
+                    </>
                   ) : (
                     <button onClick={() => openSignature(cpr)} disabled={isLoading} className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-2.5 py-1.5 text-xs font-semibold text-white"><PenLine className="h-3.5 w-3.5" /> Assinatura</button>
                   )}
@@ -799,6 +928,15 @@ export default function CprPage() {
                           )}
                           {cpr.status === 'RASCUNHO' && (
                             <button
+                              onClick={() => openEdit(cpr)}
+                              disabled={isLoading}
+                              className="text-xs text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white font-medium disabled:opacity-50 flex items-center gap-1"
+                            >
+                              <Pencil className="h-3.5 w-3.5" /> Editar
+                            </button>
+                          )}
+                          {cpr.status === 'RASCUNHO' && (
+                            <button
                               onClick={() => handleEmit(cpr.id)}
                               disabled={isLoading}
                               className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 font-medium disabled:opacity-50 flex items-center gap-1"
@@ -840,8 +978,8 @@ export default function CprPage() {
             <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 px-6 py-4 backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
               <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Nova CPR completa</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Dados comerciais, jurídicos, garantias e registro em uma única minuta</p>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{editingId ? 'Editar rascunho da CPR' : 'Nova CPR completa'}</h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Dados comerciais, jurídicos, garantias e registro no padrão documental completo</p>
               </div>
               <button onClick={() => setShowForm(false)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
                 <X className="h-5 w-5 text-gray-500" />
@@ -852,6 +990,13 @@ export default function CprPage() {
                   <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-700 transition-all" style={{ width: `${completeness}%` }} />
                 </div>
                 <span className="min-w-24 text-right text-[11px] font-semibold text-gray-500 dark:text-gray-400">{completeness}% preenchido</span>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {readinessGroups.map(group => (
+                  <span key={group.label} className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${group.ready ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300' : 'border-gray-200 bg-gray-50 text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'}`}>
+                    {group.ready ? '✓ ' : '○ '}{group.label}
+                  </span>
+                ))}
               </div>
             </div>
 
@@ -992,10 +1137,13 @@ export default function CprPage() {
                   <Field label="Índice de preço" value={form.indicePreco} onChange={set('indicePreco')} placeholder="Ex.: indicador CEPEA" />
                   <Field label="Fonte do preço" value={form.fontePreco} onChange={set('fontePreco')} placeholder="Fonte verificável" />
                   <div className="sm:col-span-2"><Field label="Mercado / praça de referência" value={form.mercadoReferencia} onChange={set('mercadoReferencia')} /></div>
+                  <div className="sm:col-span-2"><Field label="Critério para substituição do índice" value={form.criterioSubstituicaoIndice} onChange={set('criterioSubstituicaoIndice')} placeholder="Fonte equivalente, prazo de apuração e regra de comunicação" /></div>
                   <div className="sm:col-span-2"><Field label="Propriedade / local de produção" value={form.propriedadeNome} onChange={set('propriedadeNome')} placeholder="Nome da fazenda ou unidade produtiva" /></div>
                   <div className="sm:col-span-2"><Field label="Endereço da produção" value={form.propriedadeEndereco} onChange={set('propriedadeEndereco')} /></div>
                   <Field label="Matrícula do imóvel" value={form.propriedadeMatricula} onChange={set('propriedadeMatricula')} />
                   <Field label="Local de entrega" value={form.localEntrega} onChange={set('localEntrega')} />
+                  <Field label="Armazém / unidade armazenadora" value={form.armazenamentoNome} onChange={set('armazenamentoNome')} />
+                  <Field label="Endereço do armazenamento" value={form.armazenamentoEndereco} onChange={set('armazenamentoEndereco')} />
                   {form.type === 'FISICA' && (
                     <Field label="Data de entrega" value={form.dataEntrega} onChange={set('dataEntrega')} type="date" />
                   )}
@@ -1091,10 +1239,18 @@ export default function CprPage() {
                   <Field label="Crédito bruto (R$)" value={form.valorCredito} onChange={set('valorCredito')} type="number" placeholder="0,00" />
                   <Field label="IOF informado (R$)" value={form.valorIof} onChange={set('valorIof')} type="number" placeholder="0,00" />
                   <Field label="Valor líquido (R$)" value={form.valorLiquido} onChange={set('valorLiquido')} type="number" placeholder="0,00" />
+                  <Field label="Valor de resgate previsto (R$)" value={form.valorResgate} onChange={set('valorResgate')} type="number" placeholder="0,00" />
                   <Field label="Taxa mensal (%)" value={form.taxaJurosMensal} onChange={set('taxaJurosMensal')} type="number" placeholder="0,00" />
                   <Field label="Taxa anual (%)" value={form.taxaJurosAnual} onChange={set('taxaJurosAnual')} type="number" placeholder="0,00" />
                   <Field label="CET mensal (%)" value={form.cetMensal} onChange={set('cetMensal')} type="number" placeholder="0,00" />
                   <Field label="CET anual (%)" value={form.cetAnual} onChange={set('cetAnual')} type="number" placeholder="0,00" />
+                  <Field label="Capitalização dos encargos" value={form.capitalizacao} onChange={set('capitalizacao')} placeholder="Ex.: mensal durante a carência" />
+                  <Field label="Sistema de amortização" value={form.sistemaAmortizacao} onChange={set('sistemaAmortizacao')} placeholder="Ex.: Price, SAC ou fluxo customizado" />
+                  <Field label="Periodicidade de pagamento" value={form.periodicidadePagamento} onChange={set('periodicidadePagamento')} placeholder="Ex.: anual" />
+                  <Field label="Base de cálculo (dias)" value={form.baseCalculoDias} onChange={set('baseCalculoDias')} type="number" placeholder="360 ou 365" />
+                  <div className="sm:col-span-2"><Field label="Beneficiário da liberação" value={form.beneficiarioLiberacao} onChange={set('beneficiarioLiberacao')} placeholder="Emitente ou terceiro expressamente identificado" /></div>
+                  <div className="sm:col-span-2"><Field label="Condições precedentes ao desembolso" value={form.condicoesPrecedentes} onChange={set('condicoesPrecedentes')} placeholder="Assinaturas, registros, certidões, anuências e demais documentos" /></div>
+                  <div className="sm:col-span-2"><Field label="Comprovação da destinação dos recursos" value={form.comprovacaoDestinacao} onChange={set('comprovacaoDestinacao')} placeholder="Notas fiscais, contratos, comprovantes e prazo de entrega" /></div>
                   <Field label="Multa por mora (%)" value={form.multaMoraPct} onChange={set('multaMoraPct')} type="number" placeholder="Preencher se contratada" />
                   <Field label="Juros de mora (% a.m.)" value={form.jurosMoraMensalPct} onChange={set('jurosMoraMensalPct')} type="number" placeholder="Preencher se contratado" />
                   <div className="sm:col-span-2"><Field label="Demais encargos de inadimplemento" value={form.encargosAdicionais} onChange={set('encargosAdicionais')} placeholder="Despesas comprovadas, índice de atualização ou outra condição expressa" /></div>
@@ -1158,6 +1314,11 @@ export default function CprPage() {
                   <Field label="Proprietário / garantidor" value={form.garantiaProprietario} onChange={set('garantiaProprietario')} />
                   <Field label="Matrícula / registro" value={form.garantiaRegistro} onChange={set('garantiaRegistro')} />
                   <Field label="Grau / prioridade" value={form.garantiaGrau} onChange={set('garantiaGrau')} placeholder="Ex.: primeiro grau" />
+                  <Field label="Cartório / circunscrição" value={form.garantiaCartorio} onChange={set('garantiaCartorio')} />
+                  <Field label="Área vinculada (hectares)" value={form.garantiaAreaHectares} onChange={set('garantiaAreaHectares')} type="number" placeholder="0,0000" />
+                  <div className="sm:col-span-2"><Field label="Ônus e restrições conhecidos" value={form.garantiaOnus} onChange={set('garantiaOnus')} placeholder="Descrever ou indicar inexistência conforme certidão" /></div>
+                  <div className="sm:col-span-2"><Field label="Anuências necessárias" value={form.garantiaAnuencias} onChange={set('garantiaAnuencias')} placeholder="Cônjuge, coproprietários, credores anteriores ou terceiros" /></div>
+                  <div className="sm:col-span-2"><Field label="Documentos da garantia" value={form.garantiaDocumentos} onChange={set('garantiaDocumentos')} placeholder="Matrícula atualizada, certidões, CCIR, CIB, ITR, CAR, laudo..." /></div>
                 </div>
 
                 <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-700 dark:bg-gray-800/40">
@@ -1167,6 +1328,8 @@ export default function CprPage() {
                     <Field label="CPF / CNPJ" value={form.avalistaCpfCnpj} onChange={setMasked('avalistaCpfCnpj', maskCpfCnpj)} inputMode="numeric" />
                     <Field label="Qualificação" value={form.avalistaQualificacao} onChange={set('avalistaQualificacao')} />
                     <Field label="Endereço" value={form.avalistaEndereco} onChange={set('avalistaEndereco')} />
+                    <Field label="E-mail para assinatura" value={form.avalistaEmail} onChange={set('avalistaEmail')} type="email" />
+                    <Field label="Telefone / WhatsApp" value={form.avalistaTelefone} onChange={setMasked('avalistaTelefone', maskPhone)} inputMode="tel" />
                   </div>
                 </div>
               </section>
@@ -1183,6 +1346,20 @@ export default function CprPage() {
                   <Field label="Número do registro" value={form.numeroRegistro} onChange={set('numeroRegistro')} placeholder="Preencher após registro" />
                   <Field label="Cidade do foro" value={form.foroCidade} onChange={set('foroCidade')} />
                   <Field label="UF do foro" value={form.foroEstado} onChange={set('foroEstado')} placeholder="UF" />
+                  <Field label="Prazo de cura (dias)" value={form.prazoCuraDias} onChange={set('prazoCuraDias')} type="number" placeholder="Ex.: 10" />
+                  <Field label="Aviso prévio para vistoria (dias)" value={form.avisoVistoriaDias} onChange={set('avisoVistoriaDias')} type="number" placeholder="Ex.: 5" />
+                  <div className="sm:col-span-2"><Field label="Liquidação antecipada / custo de ruptura" value={form.formulaLiquidacaoAntecipada} onChange={set('formulaLiquidacaoAntecipada')} placeholder="Fórmula objetiva, descontos e memória de cálculo" /></div>
+                  <div className="sm:col-span-2"><Field label="Canal de atendimento / ouvidoria" value={form.canalOuvidoria} onChange={set('canalOuvidoria')} placeholder="E-mail, telefone ou endereço do canal responsável" /></div>
+                </div>
+
+                <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-700 dark:bg-gray-800/40">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Testemunhas do instrumento (opcional)</p>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <Field label="Testemunha 1" value={form.testemunha1Nome} onChange={set('testemunha1Nome')} />
+                    <Field label="CPF da testemunha 1" value={form.testemunha1Cpf} onChange={setMasked('testemunha1Cpf', maskCpfCnpj)} inputMode="numeric" />
+                    <Field label="Testemunha 2" value={form.testemunha2Nome} onChange={set('testemunha2Nome')} />
+                    <Field label="CPF da testemunha 2" value={form.testemunha2Cpf} onChange={setMasked('testemunha2Cpf', maskCpfCnpj)} inputMode="numeric" />
+                  </div>
                 </div>
               </section>
 
@@ -1234,6 +1411,21 @@ export default function CprPage() {
                 </div>
               )}
 
+              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800/60">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">Conferência automática da minuta</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Ajuda a identificar divergências antes da emissão e da assinatura.</p>
+                  </div>
+                  <ListChecks className="h-5 w-5 text-emerald-600" />
+                </div>
+                <div className="mt-3 grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
+                  <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/60"><span className="text-gray-500">Produto x preço</span><strong className="mt-1 block text-gray-900 dark:text-white">{productReferenceValue > 0 ? formatCurrency(productReferenceValue) : 'A preencher'}</strong></div>
+                  <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/60"><span className="text-gray-500">Valor de face</span><strong className="mt-1 block text-gray-900 dark:text-white">{faceValueNumber > 0 ? formatCurrency(faceValueNumber) : 'A preencher'}</strong></div>
+                  <div className={`rounded-lg p-3 ${valuesReconciled === false ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300' : 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300'}`}><span>{valuesReconciled === false ? 'Valores divergentes' : valuesReconciled ? 'Valores conciliados' : 'Custo CPR Financeira'}</span><strong className="mt-1 block">{faceValueNumber > 0 ? formatCurrency(emissionCost) : '0,8% do valor de face'}</strong></div>
+                </div>
+              </div>
+
               {error && (
                 <p className="text-sm text-red-600 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-3">
                   {error}
@@ -1255,7 +1447,7 @@ export default function CprPage() {
                   className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium disabled:opacity-60 flex items-center justify-center gap-2 transition-colors"
                 >
                   {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Criar CPR
+                  {editingId ? 'Salvar rascunho' : 'Criar CPR'}
                 </button>
               </div>
 
@@ -1270,8 +1462,9 @@ export default function CprPage() {
             <div className="space-y-4">
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 A ZapSign envia o link individual por e-mail quando o endereço está preenchido e exige
-                o token recebido para autenticar a parte. Os links também ficam disponíveis abaixo para
-                compartilhamento manual. Ao assinar, registramos data, status e o hash do documento.
+                o token recebido para autenticar cada parte, inclusive avalistas e garantidores cadastrados.
+                Os links também ficam disponíveis abaixo para compartilhamento manual. A plataforma nunca
+                assina automaticamente: cada participante precisa autenticar e concluir a própria assinatura.
               </p>
               <div className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
                 {signModal.info.provider === 'zapsign' ? 'Assinatura via ZapSign' : 'Assinatura interna'}
@@ -1280,7 +1473,12 @@ export default function CprPage() {
               {([
                 { who: 'emitente', label: 'Emitente', party: signModal.info.emitente },
                 { who: 'credor', label: 'Credor', party: signModal.info.credor },
-              ] as const).map(({ who, label, party }) => (
+                ...(signModal.info.additionalSigners || []).map((party, index) => ({
+                  who: `avalista-${index + 1}`,
+                  label: party.qualification || `Avalista / garantidor ${index + 1}`,
+                  party,
+                })),
+              ]).map(({ who, label, party }) => (
                 <div key={who} className="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div>

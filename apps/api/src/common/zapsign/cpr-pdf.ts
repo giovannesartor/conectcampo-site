@@ -51,10 +51,22 @@ export function renderCprPdf(c: any): Promise<Buffer> {
       const isDraft = !c?.numeroCpr || c?.status === 'RASCUNHO';
       const isExample = Boolean(data.minutaExemplo);
       const type = c?.type === 'FISICA' ? 'CPR FÍSICA' : 'CPR FINANCEIRA';
+      const faceValue = getFaceValue(c);
+      const productReferenceValue = c?.precoUnitario != null && c?.quantidade != null
+        ? Number(c.precoUnitario) * Number(c.quantidade)
+        : null;
+      const expectedEmissionCost = faceValue == null ? null : faceValue * 0.008;
       let pageNumber = 1;
       let y = 0;
 
       const drawHeader = () => {
+        if (isExample) {
+          doc.save();
+          doc.fillOpacity(0.07).fillColor(GREEN).font('Helvetica-Bold').fontSize(42);
+          doc.rotate(-35, { origin: [doc.page.width / 2, doc.page.height / 2] });
+          doc.text('EXEMPLO FICTÍCIO', 80, doc.page.height / 2 - 24, { width: doc.page.width - 160, align: 'center' });
+          doc.restore();
+        }
         try {
           doc.image(Buffer.from(LOGO_ICON_BASE64, 'base64'), left, 34, { width: 34, height: 34 });
         } catch {
@@ -203,20 +215,38 @@ export function renderCprPdf(c: any): Promise<Buffer> {
       keyRow('Produto / quantidade', `${c?.produto || 'Não informado'} · ${numberBR(c?.quantidade, 4)} ${c?.unidade || ''}`);
       keyRow('Safra / qualidade / padrão', `${c?.safraAno || 'Não informado'} · ${data.produtoQualidade || 'qualidade a definir'} · ${data.produtoPadrao || 'padrão a definir'}`);
       keyRow('Origem da produção', `${data.propriedadeNome || 'Propriedade não informada'} · ${data.propriedadeEndereco || 'local não informado'} · matrícula ${data.propriedadeMatricula || 'não informada'} · CAR ${c?.emitenteCarNumero || 'não informado'}`);
+      keyRow('Armazenamento', `${data.armazenamentoNome || 'Não informado'} · ${data.armazenamentoEndereco || 'endereço não informado'}`);
       keyRow('Entrega', `${c?.localEntrega || 'Não informado'} · ${dateBR(c?.dataEntrega)}`);
-      keyRow('Preço e referência', `${brl(c?.precoUnitario)} · ${[data.indicePreco, data.fontePreco, data.mercadoReferencia].filter(Boolean).join(' · ') || 'índice/fonte não informados'}`);
+      keyRow('Preço e referência', `${brl(c?.precoUnitario)} · ${[data.indicePreco, data.fontePreco, data.mercadoReferencia].filter(Boolean).join(' · ') || 'índice/fonte não informados'} · substituição: ${data.criterioSubstituicaoIndice || 'a definir'}`);
 
       y += 10;
       sectionTitle('Condições financeiras');
       keyRow('Valor de face', brl(getFaceValue(c)));
       keyRow('Crédito bruto / IOF / líquido', `${brl(data.valorCredito ?? c?.valorCaptacao)} · ${brl(data.valorIof)} · ${brl(data.valorLiquido)}`);
+      keyRow('Valor de resgate previsto', brl(data.valorResgate ?? getFaceValue(c)));
       keyRow('Taxas remuneratórias', `${percentBR(data.taxaJurosMensal, 'a.m.')} · ${percentBR(data.taxaJurosAnual, 'a.a.')}`);
       keyRow('Custo efetivo total', `${percentBR(data.cetMensal, 'a.m.')} · ${percentBR(data.cetAnual, 'a.a.')}`);
+      keyRow('Capitalização / amortização', `${data.capitalizacao || 'Não informada'} · ${data.sistemaAmortizacao || 'sistema não informado'} · base ${data.baseCalculoDias || 'não informada'} dias`);
+      keyRow('Periodicidade', data.periodicidadePagamento || 'Conforme cronograma');
       keyRow('Mora e demais encargos', `Multa ${percentBR(data.multaMoraPct, '')} · juros ${percentBR(data.jurosMoraMensalPct, 'a.m.')} · ${data.encargosAdicionais || 'demais encargos não informados'}`);
       keyRow('Custo de emissão ConectCampo', c?.type === 'FINANCEIRA'
         ? `${brl(c?.custoEmissao)} · 0,8% do valor de face`
         : `${brl(c?.custoEmissao)} · pagamento único`);
       keyRow('Liquidação / local', `${data.formaLiquidacao || (c?.type === 'FISICA' ? 'Entrega física' : 'Liquidação financeira')} · ${data.localPagamento || c?.localEntrega || 'local não informado'}`);
+      keyRow('Liberação / condições', `${data.beneficiarioLiberacao || c?.emitenteNome || 'beneficiário não informado'} · ${data.condicoesPrecedentes || 'condições precedentes não informadas'}`);
+
+      y += 10;
+      sectionTitle('Conferência automática dos valores');
+      keyRow('Produto x preço', productReferenceValue == null ? 'Não conciliado: informe quantidade e preço' : `${numberBR(c?.quantidade, 4)} ${c?.unidade || ''} x ${brl(c?.precoUnitario)} = ${brl(productReferenceValue)}`);
+      keyRow('Valor de face', faceValue == null ? 'Não informado' : brl(faceValue));
+      keyRow('Conciliação', productReferenceValue == null || faceValue == null
+        ? 'Pendente de dados'
+        : Math.abs(productReferenceValue - faceValue) < 0.01
+          ? 'Valores conciliados'
+          : `Divergência de ${brl(faceValue - productReferenceValue)} - revisar antes da emissão`);
+      keyRow('Custo de emissão', c?.type === 'FINANCEIRA'
+        ? `${brl(c?.custoEmissao)} · esperado a 0,8%: ${brl(expectedEmissionCost)}`
+        : `${brl(c?.custoEmissao)} · pagamento único`);
 
       y += 10;
       sectionTitle('Cronograma de liquidação');
@@ -225,6 +255,9 @@ export function renderCprPdf(c: any): Promise<Buffer> {
       sectionTitle('Garantias e registro');
       keyRow('Garantia', `${c?.garantiaTipo || 'Não informada'} · ${c?.garantiaDescricao || 'descrição não informada'} · ${brl(c?.garantiaValor)}`);
       keyRow('Proprietário / registro / grau', `${data.garantiaProprietario || 'Não informado'} · ${data.garantiaRegistro || 'registro não informado'} · ${data.garantiaGrau || 'grau não informado'}`);
+      keyRow('Cartório / área', `${data.garantiaCartorio || 'Não informado'} · ${data.garantiaAreaHectares != null ? `${numberBR(data.garantiaAreaHectares, 4)} ha` : 'área não informada'}`);
+      keyRow('Ônus / anuências', `${data.garantiaOnus || 'Não informados'} · ${data.garantiaAnuencias || 'anuências não informadas'}`);
+      keyRow('Documentação', data.garantiaDocumentos || 'Matrículas, certidões, cadastros e laudos a confirmar');
       keyRow('Registradora / depósito', `${data.registradora || 'Pendente de definição'} · ${data.numeroRegistro || 'sem número'} · ${dateBR(data.dataRegistro)}`);
 
       y += 12;
@@ -250,15 +283,26 @@ export function renderCprPdf(c: any): Promise<Buffer> {
         doc.font('Helvetica-Bold').fontSize(7.5).fillColor(INK).text(label, x, y + 38, { width: signatureWidth, align: 'center' });
         doc.font('Helvetica').fontSize(7.5).fillColor(MUTED).text(name || 'Não informado', x, y + 50, { width: signatureWidth, align: 'center' });
       };
-      signature('EMITENTE', c?.emitenteNome, left);
-      signature('CREDOR', c?.credorNome, left + signatureWidth + 30);
-      y += 86;
-      (data.avalistas || []).forEach((item, index) => {
+      const signatureEntries = [
+        { label: 'EMITENTE', name: c?.emitenteNome || 'Não informado' },
+        { label: 'CREDOR', name: c?.credorNome || 'Não informado' },
+        ...(data.avalistas || []).map((item, index) => ({
+          label: `AVALISTA / GARANTIDOR ${index + 1}`,
+          name: item.nome || 'Não informado',
+        })),
+        ...(data.testemunhas || []).map((item, index) => ({
+          label: `TESTEMUNHA ${index + 1}`,
+          name: `${item.nome || 'Não informado'} · ${item.cpfCnpj || 'CPF não informado'}`,
+        })),
+      ];
+      for (let index = 0; index < signatureEntries.length; index += 2) {
         ensureSpace(82);
-        const column = index % 2;
-        signature(`AVALISTA / GARANTIDOR ${index + 1}`, item.nome || 'Não informado', column === 0 ? left : left + signatureWidth + 30);
-        if (column === 1 || index === data.avalistas!.length - 1) y += 82;
-      });
+        const first = signatureEntries[index];
+        const second = signatureEntries[index + 1];
+        signature(first.label, first.name, left);
+        if (second) signature(second.label, second.name, left + signatureWidth + 30);
+        y += 82;
+      }
 
       ensureSpace(62);
       doc.roundedRect(left, y, width, 48, 5).fillAndStroke('#f8faf8', LINE);

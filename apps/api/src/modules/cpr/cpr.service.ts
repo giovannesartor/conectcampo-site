@@ -12,7 +12,7 @@ import { UpdateCprDto } from './dto/update-cpr.dto';
 import { Prisma, UserRole } from '@prisma/client';
 import { ZapSignService } from '../../common/zapsign/zapsign.service';
 import { renderCprPdf } from '../../common/zapsign/cpr-pdf';
-import { renderCprHtml, renderCprMarkdown } from '../../common/cpr/cpr-document';
+import { cprContractData, getFaceValue, renderCprHtml, renderCprMarkdown } from '../../common/cpr/cpr-document';
 import { CPR_PRICING } from '../../common/pricing/pricing';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AuditService } from '../audit/audit.service';
@@ -50,6 +50,68 @@ export class CprService {
     const year = new Date().getFullYear();
     const seq = randomInt(100000, 1000000);
     return `CPR-${year}-${seq}`;
+  }
+
+  private contractDataFromClient(value?: Record<string, unknown>) {
+    if (!value) return undefined;
+    const safe = { ...value };
+    delete safe.signatureParties;
+    return safe as Prisma.InputJsonValue;
+  }
+
+  private assertReadyForEmission(cpr: any) {
+    const data = cprContractData(cpr);
+    const missing: string[] = [];
+    const requireText = (label: string, value: unknown) => {
+      if (typeof value !== 'string' || value.trim().length === 0) missing.push(label);
+    };
+    const requireValue = (label: string, value: unknown) => {
+      if (value == null || value === '' || !Number.isFinite(Number(value))) missing.push(label);
+    };
+
+    requireText('qualificação do emitente', data.emitenteQualificacao);
+    requireText('endereço do emitente', cpr.emitenteEndereco);
+    requireText('cidade do emitente', cpr.emitenteCidade);
+    requireText('UF do emitente', cpr.emitenteEstado);
+    requireText('qualificação do credor', data.credorQualificacao || cpr.credorTipo);
+    requireText('endereço do credor', data.credorEndereco);
+    requireText('cidade do credor', data.credorCidade);
+    requireText('UF do credor', data.credorEstado);
+    requireValue('valor de face', getFaceValue(cpr));
+    requireText('qualidade do produto', data.produtoQualidade);
+    requireText('padrão do produto', data.produtoPadrao);
+    requireText('local de produção', data.propriedadeNome);
+    requireText('endereço da produção', data.propriedadeEndereco);
+    requireText('matrícula da produção', data.propriedadeMatricula);
+    requireText('local de emissão', data.localEmissao);
+    requireText('cidade do foro', data.foroCidade);
+    requireText('UF do foro', data.foroEstado);
+
+    if (cpr.type !== 'FISICA') {
+      requireValue('crédito bruto', data.valorCredito ?? cpr.valorCaptacao);
+      requireValue('valor líquido', data.valorLiquido);
+      requireText('forma de liquidação', data.formaLiquidacao);
+      requireText('local de pagamento', data.localPagamento);
+      if (data.taxaJurosMensal == null && data.taxaJurosAnual == null) missing.push('taxa remuneratória');
+      if (!data.cronograma?.length) missing.push('cronograma financeiro');
+    }
+
+    if (cpr.garantiaTipo) {
+      requireText('descrição da garantia', cpr.garantiaDescricao);
+      requireText('proprietário da garantia', data.garantiaProprietario);
+      requireText('matrícula ou registro da garantia', data.garantiaRegistro);
+    }
+
+    for (const [index, avalista] of (data.avalistas || []).entries()) {
+      requireText(`CPF/CNPJ do avalista ${index + 1}`, avalista.cpfCnpj);
+      if (!avalista.email && !avalista.telefone) missing.push(`contato do avalista ${index + 1}`);
+    }
+
+    if (missing.length > 0) {
+      throw new BadRequestException(
+        `Complete os dados obrigatórios antes de emitir: ${[...new Set(missing)].join(', ')}.`,
+      );
+    }
   }
 
   // ─── CRUD ────────────────────────────────────────────────────────────────────
@@ -139,7 +201,7 @@ export class CprService {
         custoEmissao,
 
         observacoes: dto.observacoes,
-        contractData: dto.contractData as Prisma.InputJsonValue | undefined,
+        contractData: this.contractDataFromClient(dto.contractData),
       },
     });
 
@@ -176,6 +238,8 @@ export class CprService {
 
     const snapshot = renderCprHtml(cpr);
     const documentHash = createHash('sha256').update(snapshot).digest('hex');
+    const contractData = cprContractData(cpr);
+    const avalistas = contractData.avalistas || [];
 
     // ── ZapSign (documento e links automáticos; a assinatura é sempre da parte) ──
     if (this.zapsign.isEnabled()) {
@@ -210,7 +274,7 @@ export class CprService {
               : cpr.emitenteTelefone
                 ? 'assinaturaTela-tokenSms'
                 : 'assinaturaTela',
-            sendAutomaticEmail: true,
+            sendAutomaticEmail: Boolean(cpr.emitenteEmail),
           },
           {
             name: cpr.credorNome,
@@ -224,14 +288,46 @@ export class CprService {
               : cpr.credorTelefone
                 ? 'assinaturaTela-tokenSms'
                 : 'assinaturaTela',
-            sendAutomaticEmail: true,
+            sendAutomaticEmail: Boolean(cpr.credorEmail),
           },
+          ...avalistas.map((avalista, index) => ({
+            name: avalista.nome || `Avalista ${index + 1}`,
+            externalId: `avalista-${index + 1}`,
+            qualification: avalista.qualificacao || 'Avalista / garantidor',
+            email: avalista.email,
+            phoneCountry: avalista.telefone ? '55' : undefined,
+            phoneNumber: phone(avalista.telefone ?? null),
+            authMode: avalista.email
+              ? 'assinaturaTela-tokenEmail' as const
+              : avalista.telefone
+                ? 'assinaturaTela-tokenSms' as const
+                : 'assinaturaTela' as const,
+            sendAutomaticEmail: Boolean(avalista.email),
+          })),
         ],
       });
 
       if (doc) {
         const emitente = doc.signers.find((s) => s.externalId === 'emitente') ?? doc.signers[0];
         const credor = doc.signers.find((s) => s.externalId === 'credor') ?? doc.signers[1];
+        const signatureParties = avalistas.map((avalista, index) => {
+          const externalId = `avalista-${index + 1}`;
+          const signer = doc.signers.find((item) => item.externalId === externalId)
+            ?? doc.signers[index + 2];
+          return {
+            nome: avalista.nome || `Avalista ${index + 1}`,
+            cpfCnpj: avalista.cpfCnpj || null,
+            qualificacao: avalista.qualificacao || null,
+            email: avalista.email || null,
+            telefone: avalista.telefone || null,
+            externalId,
+            qualification: avalista.qualificacao || 'Avalista / garantidor',
+            token: signer?.token ?? null,
+            signUrl: signer?.signUrl ?? null,
+            signedAt: null,
+            status: 'pending',
+          };
+        });
 
         const updated = await this.prisma.cprDocument.update({
           where: { id: cprId },
@@ -250,6 +346,10 @@ export class CprService {
             credorSignedAt: null,
             credorSignIp: null,
             signedAt: null,
+            contractData: {
+              ...contractData,
+              signatureParties,
+            } as Prisma.InputJsonValue,
           },
         });
 
@@ -272,6 +372,12 @@ export class CprService {
       }
       // Se a ZapSign falhar, cai no fluxo interno abaixo.
       this.logger.warn(`ZapSign indisponível — usando fluxo interno para CPR ${cprId}`);
+    }
+
+    if (avalistas.length > 0) {
+      throw new BadRequestException(
+        'A assinatura de CPR com avalista exige a integração ZapSign ativa. Nenhum fluxo incompleto foi criado.',
+      );
     }
 
     // ── Fluxo interno (fallback) ──
@@ -320,6 +426,7 @@ export class CprService {
   /** Status de assinatura (para o dono acompanhar). */
   async getSignatureStatus(cprId: string, userId: string, role: string) {
     const cpr = await this.assertOwner(cprId, userId, role);
+    const data = cprContractData(cpr);
     return {
       provider: cpr.signatureProvider ?? 'interno',
       signatureStatus: cpr.signatureStatus ?? 'NAO_INICIADA',
@@ -337,6 +444,13 @@ export class CprService {
         token: cpr.credorSignToken,
         signUrl: cpr.credorSignUrl,
       },
+      additionalSigners: (data.signatureParties || []).map((party) => ({
+        nome: party.nome || 'Avalista / garantidor',
+        qualification: party.qualification || party.qualificacao || 'Avalista / garantidor',
+        signedAt: party.signedAt || null,
+        token: party.token || null,
+        signUrl: party.signUrl || null,
+      })),
     };
   }
 
@@ -431,8 +545,27 @@ export class CprService {
     }
 
     const data: Record<string, unknown> = {};
+    const contractData = cprContractData(cpr);
+    const additionalByExternalId = new Map(
+      (contractData.signatureParties || [])
+        .filter((party) => Boolean(party.externalId))
+        .map((party) => [party.externalId!, party]),
+    );
     for (const s of doc.signers) {
       const isSigned = s.status === 'signed' && s.signedAt;
+      const additionalEntry = s.externalId?.startsWith('avalista-')
+        ? [s.externalId, additionalByExternalId.get(s.externalId)] as const
+        : [...additionalByExternalId.entries()].find(([, party]) => party.token === s.token);
+      if (additionalEntry) {
+        const [externalId, current] = additionalEntry;
+        if (current) {
+          additionalByExternalId.set(externalId, {
+            ...current,
+            status: s.status || current.status || null,
+            signedAt: isSigned ? s.signedAt! : current.signedAt || null,
+          });
+        }
+      }
       if (!isSigned) continue;
       if (s.externalId === 'emitente' || s.token === cpr.emitenteSignToken) {
         data.emitenteSignedAt = new Date(s.signedAt!);
@@ -441,6 +574,12 @@ export class CprService {
         data.credorSignedAt = new Date(s.signedAt!);
         data.credorSignIp = 'zapsign';
       }
+    }
+    if (additionalByExternalId.size > 0) {
+      data.contractData = {
+        ...contractData,
+        signatureParties: [...additionalByExternalId.values()],
+      } as Prisma.InputJsonValue;
     }
 
     const fullySigned = doc.status === 'signed';
@@ -808,9 +947,9 @@ export class CprService {
   async update(cprId: string, userId: string, role: string, dto: UpdateCprDto) {
     const cpr = await this.assertOwner(cprId, userId, role);
 
-    if (['REGISTRADA', 'LIQUIDADA', 'CANCELADA'].includes(cpr.status)) {
+    if (cpr.status !== 'RASCUNHO') {
       throw new BadRequestException(
-        `CPR com status "${cpr.status}" não pode ser editada.`,
+        `Apenas CPRs em rascunho podem ser editadas. Status atual: ${cpr.status}.`,
       );
     }
 
@@ -843,7 +982,7 @@ export class CprService {
         valorFace,
         conectcampoFeeValue,
         custoEmissao,
-        ...(contractData !== undefined && { contractData: contractData as Prisma.InputJsonValue }),
+        ...(contractData !== undefined && { contractData: this.contractDataFromClient(contractData) }),
       },
     });
   }
@@ -875,6 +1014,8 @@ export class CprService {
         `Apenas CPRs em rascunho podem ser emitidas. Status atual: ${cpr.status}`,
       );
     }
+
+    this.assertReadyForEmission(cpr);
 
     const numeroCpr = this.generateNumeroCpr();
 
@@ -946,6 +1087,7 @@ export class CprService {
         valorCaptacao: true,
         dataVencimento: true,
         conectcampoFeeValue: true,
+        custoEmissao: true,
       },
     });
 
@@ -968,6 +1110,10 @@ export class CprService {
       (s: number, c: any) => s + Number(c.conectcampoFeeValue ?? 0),
       0,
     );
+    const totalCustoEmissao = all.reduce(
+      (s: number, c: any) => s + Number(c.custoEmissao ?? 0),
+      0,
+    );
 
     return {
       total,
@@ -979,6 +1125,7 @@ export class CprService {
       totalValor,
       totalCaptacao,
       totalFeeConectCampo,
+      totalCustoEmissao,
     };
   }
 }

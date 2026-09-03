@@ -157,7 +157,7 @@ export class CprController {
 
   @Post(':id/signature/request')
   @Roles(UserRole.PRODUCER, UserRole.COMPANY, UserRole.FINANCIAL_INSTITUTION, UserRole.CREDIT_ANALYST, UserRole.ADMIN)
-  @ApiOperation({ summary: 'Solicitar assinatura eletrônica (gera links de emitente e credor)' })
+  @ApiOperation({ summary: 'Solicitar assinatura eletrônica (gera links de emitente, credor e avalistas)' })
   async requestSignature(
     @Param('id') id: string,
     @Body() body: { reason?: string },

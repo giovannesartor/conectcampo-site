@@ -14,7 +14,7 @@
 | **Auditoria não gravava nada** (log nunca chamado) → agora há interceptor global de mutações + eventos de auth (login/logout/cadastro/reset/verificação) | ✅ |
 | **Mudança de role/status** do usuário agora registrada com **diff antes/depois** + ator + IP | ✅ |
 | IP real atrás do proxy (trust proxy) | ✅ |
-| CPR: custo Física R$2.500 / Financeira 3% / fee 6% só captação; prazo 15a; carência 5a; safras por prazo | ✅ |
+| CPR: custo Física R$2.500 / Financeira 0,8% sobre o valor de face / fee 6% só captação; prazo 15a; carência 5a; safras por prazo | ✅ |
 | CPR: PDF profissional com logo (ZapSign), e-mail/telefone, baixar PDF assinado, validação CPF/CNPJ + máscaras | ✅ |
 | Score por IA (explicação + melhorias) | ✅ |
 | Home: redesign estrutural; favicon premium; SEO (robots/sitemap/JSON-LD/OG) | ✅ |
@@ -68,7 +68,7 @@ Legenda: 🟢 ok · 🟡 melhorar · 🔴 corrigir
 | 2 | 🟡 | `NotificationsDropdown.tsx` | `catch {}` silencioso (3x) | Logar/toast discreto em falha de marcar-como-lido |
 | 3 | 🟡 | webhooks (Asaas/ZapSign) | Sem **idempotência** — reenvio reaplica estado | Tabela `WebhookEvent` única por `(provider, externalId)` |
 | 4 | 🟡 | uploads (documents) | Validação de arquivo fraca | `file-type` + limite de tamanho + scan |
-| 5 | 🟡 | preços/taxas | R$2.500 / 3% / 6% **espalhados** entre front e back | Centralizar numa config única servida pela API |
+| 5 | 🟢 | preços/taxas | R$2.500 / 0,8% / 6% centralizados | Fonte única em `common/pricing`, servida por `/pricing` |
 | 6 | 🟡 | carbon `market-prices` | Dados ilustrativos | Integração externa real |
 | 7 | 🟢 | refresh token | Sem detecção de reuso | Revogar família ao detectar token revogado reusado |
 | 8 | 🟡 | observabilidade | Sem Sentry/Web Vitals | Instrumentar erros + RUM |

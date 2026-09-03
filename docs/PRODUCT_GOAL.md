@@ -33,6 +33,8 @@ Transformar o ConectCampo na referência brasileira em organização de crédito
 - Admin possui pipeline de leads, operações navegáveis, filtros compreensíveis e erros explícitos.
 - Home apresenta uma mensagem mais curta, seis módulos principais, catálogo completo, Blog e Central de Ajuda.
 - Planos públicos são carregados de uma única fonte de verdade.
+- CPR-F segue o padrão documental completo da operação: quadro-resumo, produção e armazenamento, condições financeiras conciliadas, garantias e anuências, 35 cláusulas, cronograma, assinaturas de todas as partes e custo ConectCampo de 0,8% sobre o valor de face.
+- A ZapSign cria links individuais e envia o convite ao contato configurado; nenhuma assinatura é gerada automaticamente em nome do participante, e CPR com avalista não pode ser concluída por um fluxo que ignore o garantidor.
 - Publicação só é considerada concluída após Git, Railway, health check, logs e validação das rotas públicas.
 
 ## Próximas frentes
