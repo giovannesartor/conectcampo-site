@@ -156,6 +156,7 @@ describe('AuthService', () => {
       })).rejects.toThrow(BadRequestException);
       expect(prisma.user.create).not.toHaveBeenCalled();
     });
+  });
 
   describe('login', () => {
     const loginDto = { email: 'test@example.com', password: 'Senha@123' };
