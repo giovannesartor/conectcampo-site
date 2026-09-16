@@ -96,6 +96,20 @@ O app coleta dados vinculados à conta para funcionalidade, segurança, personal
 - Compras podem ser testadas no ambiente sandbox da App Store; o backend valida a transação antes de liberar o plano.
 - A exclusão da conta está em `Perfil → Configurações → Conta`.
 
+### Notas sugeridas para a equipe de revisão
+
+```text
+ConectCampo is a Brazilian Portuguese agribusiness management app for rural producers, companies, cooperatives and financial institutions.
+
+Use the dedicated non-admin review account provided in App Review Information. It contains synthetic demonstration data only. Email/password login does not require an emailed code. Face ID and notification permission are optional.
+
+Please do not emit a CPR, request a ZapSign signature, submit a real credit proposal or initiate any real financial operation while reviewing the app. Existing operations and documents in the account are clearly identified as demonstration data.
+
+In-App Purchases: sign in, open the dashboard menu and choose Assinatura. The three monthly plans show prices localized by Apple. The APP_REVIEW account state allows any of the three products to be tested in the App Store sandbox. The backend validates the signed StoreKit 2 transaction before granting access. Restaurar compras restores current Apple entitlements, and Gerenciar na Apple opens Apple's subscription management. The Instituição Financeira plan is free and is not an In-App Purchase. Credit, commodity and other real-world transactions are not digital subscriptions and are not charged through the app.
+
+Account deletion is available at Perfil > Configurações > Conta. Terms and Privacy Policy are linked on the subscription screen and in the public footer.
+```
+
 ## Screenshots
 
 Preparar capturas reais em 1284 × 2778 px para a tela de 6,5 polegadas, priorizando:
