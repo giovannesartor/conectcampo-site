@@ -287,9 +287,23 @@ export class SeedService implements OnApplicationBootstrap {
         where: { id: subscription.id },
         data: {
           plan: SubscriptionPlan.PRO,
+          gateway: 'APP_REVIEW',
           paymentStatus: PaymentStatus.ACTIVE,
           isActive: true,
+          cancelledAt: null,
+          trialEndsAt: null,
           currentPeriodEnd: oneYearFromNow,
+          asaasCustomerId: null,
+          asaasSubscriptionId: null,
+          asaasPaymentId: null,
+          invoiceUrl: null,
+          valsaPaymentId: null,
+          appleOriginalTransactionId: null,
+          appleLatestTransactionId: null,
+          appleProductId: null,
+          appleEnvironment: null,
+          appleAutoRenewStatus: null,
+          appleRevokedAt: null,
         },
       });
     } else {
@@ -297,6 +311,7 @@ export class SeedService implements OnApplicationBootstrap {
         data: {
           userId: user.id,
           plan: SubscriptionPlan.PRO,
+          gateway: 'APP_REVIEW',
           paymentStatus: PaymentStatus.ACTIVE,
           isActive: true,
           currentPeriodEnd: oneYearFromNow,

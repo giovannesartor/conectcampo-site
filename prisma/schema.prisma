@@ -652,7 +652,7 @@ model Subscription {
   invoiceUrl            String?          // URL de pagamento (Asaas ou Valsa)
   paymentStatus         PaymentStatus    @default(PENDING)
 
-  // Gateway de pagamento ("ASAAS" | "VALSA" | "APPLE")
+  // Gateway de pagamento ("ASAAS" | "VALSA" | "APPLE" | "APP_REVIEW")
   gateway               String?          @default("ASAAS")
   valsaPaymentId        String?          // ID do pagamento na Valsa
 

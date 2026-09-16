@@ -52,6 +52,7 @@ export class AppleSubscriptionsService {
 
     const hasExternalPaidPlan = !!current &&
       current.gateway !== 'APPLE' &&
+      current.gateway !== 'APP_REVIEW' &&
       current.plan !== SubscriptionPlan.CORPORATE &&
       (current.paymentStatus === PaymentStatus.ACTIVE ||
         current.paymentStatus === PaymentStatus.TRIALING);
@@ -292,7 +293,11 @@ export class AppleSubscriptionsService {
     }
 
     const pendingApple = owner ?? await this.prisma.subscription.findFirst({
-      where: { userId, gateway: 'APPLE', appleOriginalTransactionId: null },
+      where: {
+        userId,
+        gateway: { in: ['APPLE', 'APP_REVIEW'] },
+        appleOriginalTransactionId: null,
+      },
       orderBy: { createdAt: 'desc' },
       select: { id: true, userId: true },
     });

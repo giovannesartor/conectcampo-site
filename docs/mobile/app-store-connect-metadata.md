@@ -91,6 +91,7 @@ O app coleta dados vinculados à conta para funcionalidade, segurança, personal
 - Conta demonstrativa: `appreview@conectcampo.digital`.
 - A senha não é versionada e deve ser copiada do segredo `APP_REVIEW_PASSWORD` para o campo protegido do App Store Connect.
 - A conta usa somente dados sintéticos identificados como demonstração e possui plano Empresa ativo sem cobrança.
+- O estado `APP_REVIEW` permite testar qualquer um dos três produtos no sandbox. Depois que o backend valida a transação assinada pela Apple, a assinatura demonstrativa é substituída pelo estado `APPLE` real.
 - Nenhuma CPR real, assinatura ZapSign, pagamento, proposta de cliente ou operação financeira deve ser criada pela equipe de revisão.
 - Compras podem ser testadas no ambiente sandbox da App Store; o backend valida a transação antes de liberar o plano.
 - A exclusão da conta está em `Perfil → Configurações → Conta`.
