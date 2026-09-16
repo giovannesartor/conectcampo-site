@@ -124,20 +124,27 @@ describe('AsaasService', () => {
       expect(mockPrisma.subscription.update).not.toHaveBeenCalled();
     });
 
-    it('should mark subscription as OVERDUE on PAYMENT_OVERDUE', async () => {
-      mockPrisma.subscription.updateMany.mockResolvedValue({ count: 1 });
+    it('should mark subscription as OVERDUE and block access on PAYMENT_OVERDUE', async () => {
+      mockPrisma.subscription.findUnique.mockResolvedValue({
+        id: 'sub-1',
+        userId: 'user-1',
+      });
+      mockPrisma.subscription.update.mockResolvedValue({});
+      mockPrisma.user.update.mockResolvedValue({});
 
       const result = await service.handleWebhook('PAYMENT_OVERDUE', {
         payment: { subscription: 'asaas-sub-123' },
       });
 
-      expect(result.userId).toBeNull();
-      expect(mockPrisma.subscription.updateMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { asaasSubscriptionId: 'asaas-sub-123' },
-          data: { paymentStatus: PaymentStatus.OVERDUE },
-        }),
-      );
+      expect(result.userId).toBe('user-1');
+      expect(mockPrisma.subscription.update).toHaveBeenCalledWith({
+        where: { id: 'sub-1' },
+        data: { paymentStatus: PaymentStatus.OVERDUE, isActive: false },
+      });
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { isActive: false },
+      });
     });
 
     it('should cancel subscription on SUBSCRIPTION_DELETED', async () => {
