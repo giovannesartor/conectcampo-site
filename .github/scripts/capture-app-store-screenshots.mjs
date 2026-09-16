@@ -40,6 +40,7 @@ const screens = [
   ['04-campo-producao.png', '/dashboard/farms'],
   ['05-mercado-cotacoes.png', '/dashboard/quotes'],
   ['06-perfil-seguranca.png', '/dashboard/settings'],
+  ['07-assinaturas.png', '/dashboard/subscription'],
 ];
 
 for (const [filename, route] of screens) {
