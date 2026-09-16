@@ -1,0 +1,35 @@
+{
+  "appId": "digital.conectcampo.app",
+  "appName": "ConectCampo",
+  "webDir": "www",
+  "server": {
+    "url": "https://app.conectcampo.digital",
+    "cleartext": false,
+    "errorPath": "offline.html",
+    "allowNavigation": [
+      "app.conectcampo.digital"
+    ]
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#F7FAF8",
+    "preferredContentMode": "mobile"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
+      "backgroundColor": "#003C28",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#003C28",
+      "overlaysWebView": false
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_conectcampo",
+      "iconColor": "#008C3C"
+    }
+  }
+}

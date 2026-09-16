@@ -2,23 +2,43 @@
 
 import { useAuth } from '@/lib/auth-context';
 import { useState, useEffect } from 'react';
-import { User, Lock, Bell, Save, Eye, EyeOff, KeyRound } from 'lucide-react';
+import { User, Lock, Bell, Save, Eye, EyeOff, KeyRound, ScanFace, ShieldCheck } from 'lucide-react';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { ApiKeysPanel } from '@/components/dashboard/ApiKeysPanel';
+import { isNativeApp } from '@/lib/native-platform';
+import {
+  authenticateNativeUser,
+  hasNativeBiometry,
+  isBiometricLockEnabled,
+  setBiometricLockEnabled,
+} from '@/lib/native-biometric';
 
 export default function SettingsPage() {
   const { user } = useAuth();
-  const [tab, setTab] = useState<'profile' | 'password' | 'notifications' | 'apikeys'>('profile');
+  const [tab, setTab] = useState<'profile' | 'password' | 'security' | 'notifications' | 'apikeys'>('profile');
   const canUseApiKeys = !!user;
   const [saving, setSaving] = useState(false);
+  const [nativeSecurity, setNativeSecurity] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [savingBiometric, setSavingBiometric] = useState(false);
 
   // Deep-link: /dashboard/settings?tab=apikeys
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get('tab');
     if (t === 'apikeys' && canUseApiKeys) setTab('apikeys');
-    else if (t === 'profile' || t === 'password' || t === 'notifications') setTab(t);
+    else if (t === 'profile' || t === 'password' || t === 'security' || t === 'notifications') setTab(t);
   }, [canUseApiKeys]);
+
+  useEffect(() => {
+    if (!user) return;
+    const native = isNativeApp();
+    setNativeSecurity(native);
+    if (!native) return;
+    setBiometricEnabled(isBiometricLockEnabled(user.id));
+    void hasNativeBiometry().then(setBiometricAvailable);
+  }, [user]);
 
 
   // Profile form
@@ -87,12 +107,40 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleBiometricToggle() {
+    if (!user || savingBiometric) return;
+    setSavingBiometric(true);
+    try {
+      if (biometricEnabled) {
+        setBiometricLockEnabled(user.id, false);
+        setBiometricEnabled(false);
+        toast.success('Bloqueio biométrico desativado.');
+        return;
+      }
+      if (!(await hasNativeBiometry())) {
+        setBiometricAvailable(false);
+        toast.error('Face ID, Touch ID ou código seguro não está disponível neste aparelho.');
+        return;
+      }
+      await authenticateNativeUser();
+      setBiometricLockEnabled(user.id, true);
+      setBiometricEnabled(true);
+      setBiometricAvailable(true);
+      toast.success('Proteção biométrica ativada.');
+    } catch {
+      toast.error('Não foi possível confirmar sua identidade.');
+    } finally {
+      setSavingBiometric(false);
+    }
+  }
+
   const tabs = [
     { key: 'profile', label: 'Perfil', icon: User },
     { key: 'password', label: 'Senha', icon: Lock },
+    ...(nativeSecurity ? [{ key: 'security', label: 'Segurança', icon: ShieldCheck }] : []),
     { key: 'notifications', label: 'Notificações', icon: Bell },
     ...(canUseApiKeys ? [{ key: 'apikeys', label: 'API Keys', icon: KeyRound }] : []),
-  ] as { key: 'profile' | 'password' | 'notifications' | 'apikeys'; label: string; icon: typeof User }[];
+  ] as { key: 'profile' | 'password' | 'security' | 'notifications' | 'apikeys'; label: string; icon: typeof User }[];
 
   const NOTIFICATION_ITEMS = [
     { label: 'Receber e-mails', desc: 'Interruptor geral — desligue para não receber nenhum e-mail', key: 'email' as const },
@@ -111,7 +159,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-200 dark:border-dark-border">
+      <div className="flex gap-1 overflow-x-auto border-b border-gray-200 dark:border-dark-border">
         {tabs.map((t) => {
           const Icon = t.icon;
           return (
@@ -238,6 +286,47 @@ export default function SettingsPage() {
             {saving ? 'Alterando...' : 'Alterar Senha'}
           </button>
         </form>
+      )}
+
+      {tab === 'security' && nativeSecurity && (
+        <div className="card max-w-lg space-y-5">
+          <div className="flex items-start gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950/30 dark:text-brand-300">
+              <ScanFace className="h-6 w-6" />
+            </span>
+            <div>
+              <h2 className="font-semibold text-gray-950 dark:text-white">Face ID e bloqueio do aparelho</h2>
+              <p className="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                Ao voltar para o aplicativo depois de alguns segundos, o ConectCampo pede uma nova confirmação antes de exibir seus dados.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between rounded-2xl border border-gray-200 bg-gray-50/70 p-4 dark:border-dark-border dark:bg-gray-900/45">
+            <div className="pr-4">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">Proteger ao reabrir</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {biometricAvailable
+                  ? 'Usa Face ID, Touch ID ou o código seguro configurado no aparelho.'
+                  : 'Configure a segurança do aparelho para ativar este recurso.'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { void handleBiometricToggle(); }}
+              disabled={savingBiometric || (!biometricAvailable && !biometricEnabled)}
+              aria-pressed={biometricEnabled}
+              className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+                biometricEnabled ? 'bg-brand-600' : 'bg-gray-300 dark:bg-gray-700'
+              }`}
+            >
+              <span className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${biometricEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+              <span className="sr-only">{biometricEnabled ? 'Desativar' : 'Ativar'} bloqueio biométrico</span>
+            </button>
+          </div>
+          <p className="text-xs leading-5 text-gray-500 dark:text-gray-400">
+            A biometria é validada pelo iPhone e não é enviada nem armazenada pela ConectCampo.
+          </p>
+        </div>
       )}
 
       {/* Notifications tab */}

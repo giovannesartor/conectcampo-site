@@ -4,11 +4,17 @@ import { ReactNode } from 'react';
 import { AuthProvider } from '@/lib/auth-context';
 import { ThemeProvider } from '@/lib/theme-context';
 import { Toaster } from 'react-hot-toast';
+import { NativeDeepLinkHandler } from '@/components/mobile/NativeDeepLinkHandler';
+import { NativeAppBridge } from '@/components/mobile/NativeAppBridge';
+import { NativeBiometricGate } from '@/components/mobile/NativeBiometricGate';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <NativeAppBridge />
+        <NativeDeepLinkHandler />
+        <NativeBiometricGate />
         {children}
         <Toaster
           position="top-right"

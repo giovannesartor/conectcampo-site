@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'" />
+    <title>ConectCampo</title>
+    <style>
+      :root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100svh; display: grid; place-items: center; background: #f7faf8; color: #003c28; }
+      main { display: grid; justify-items: center; gap: 1rem; padding: max(2rem, env(safe-area-inset-top)) 1.5rem max(2rem, env(safe-area-inset-bottom)); text-align: center; }
+      .mark { width: 5.5rem; height: 5.5rem; display: grid; place-items: center; border-radius: 1.75rem; background: linear-gradient(145deg, #00a03c, #003c28); box-shadow: 0 1.25rem 3rem rgba(0, 60, 40, .22); }
+      .leaf { width: 2.7rem; height: 3rem; position: relative; }
+      .leaf::before, .leaf::after { content: ""; position: absolute; width: 2rem; height: 1.35rem; background: #fff; border-radius: 100% 0 100% 0; }
+      .leaf::before { left: 0; top: .9rem; transform: rotate(8deg); }
+      .leaf::after { right: 0; top: .2rem; transform: scaleX(-1) rotate(8deg); opacity: .92; }
+      .stem { position: absolute; left: 50%; bottom: 0; width: .22rem; height: 2.15rem; border-radius: 999px; background: #fff; transform: translateX(-50%); }
+      h1 { margin: .4rem 0 0; font-size: 1.6rem; letter-spacing: -.03em; }
+      p { margin: 0; color: #48635a; font-size: .95rem; }
+      .pulse { width: .55rem; height: .55rem; border-radius: 50%; background: #b48c3c; animation: pulse 1.15s ease-in-out infinite; }
+      @keyframes pulse { 50% { opacity: .35; transform: scale(.78); } }
+      @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+      @media (prefers-color-scheme: dark) { body { background: #0a0f0c; color: #eff7f1; } p { color: #a9bbb0; } }
+    </style>
+  </head>
+  <body>
+    <main aria-label="Carregando ConectCampo">
+      <div class="mark" aria-hidden="true"><div class="leaf"><span class="stem"></span></div></div>
+      <h1>ConectCampo</h1>
+      <p>Conectando você ao agro.</p>
+      <span class="pulse" aria-hidden="true"></span>
+    </main>
+  </body>
+</html>

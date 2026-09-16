@@ -2,9 +2,11 @@
 
 import { useAuth } from '@/lib/auth-context';
 import { useEffect, useState } from 'react';
-import { Package, Check, Star, Zap, Crown, ArrowRight } from 'lucide-react';
+import { Package, Check, Star, Zap, Crown, ArrowRight, Apple, ShieldCheck } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { api } from '@/lib/api';
+import { isIOSNativeApp } from '@/lib/native-platform';
+import { loadAppleSubscriptionOffers, type AppleSubscriptionOffer } from '@/lib/native-subscriptions';
 
 const PLANS = [
   {
@@ -79,9 +81,16 @@ export default function SubscriptionPage() {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isIOSApp, setIsIOSApp] = useState(false);
+  const [appleOffers, setAppleOffers] = useState<AppleSubscriptionOffer[]>([]);
 
   useEffect(() => {
     loadSubscription();
+    const nativeIOS = isIOSNativeApp();
+    setIsIOSApp(nativeIOS);
+    if (nativeIOS) {
+      void loadAppleSubscriptionOffers().then(setAppleOffers).catch(() => setAppleOffers([]));
+    }
   }, []);
 
   async function loadSubscription() {
@@ -105,6 +114,20 @@ export default function SubscriptionPage() {
           Gerencie seu plano e maximize suas oportunidades
         </p>
       </div>
+
+      {isIOSApp && (
+        <div className="card flex items-start gap-3 border-brand-200 bg-brand-50/70 dark:border-brand-800 dark:bg-brand-950/20">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-800 text-white">
+            <Apple className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="font-semibold text-gray-950 dark:text-white">Assinaturas protegidas pela App Store</h2>
+            <p className="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-300">
+              No iPhone, os preços e a cobrança dos planos digitais vêm diretamente da App Store da sua região. Nenhum valor adicional foi definido no aplicativo.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Current plan info */}
       {subscription && (
@@ -158,14 +181,22 @@ export default function SubscriptionPage() {
                 Você está no período de teste gratuito
               </h4>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Acesso completo até{' '}
-                <span className="font-medium">
-                  {formatDate(subscription.trialEndsAt || subscription.currentPeriodEnd)}
-                </span>
-                . Ao fim do teste, a cobrança do plano é emitida no gateway escolhido, no CPF/CNPJ informado — você escolhe PIX, cartão ou boleto na hora de pagar. Cancele quando quiser antes disso, sem custo.
+                {isIOSApp ? (
+                  <>
+                    Acesso completo até{' '}
+                    <span className="font-medium">{formatDate(subscription.trialEndsAt || subscription.currentPeriodEnd)}</span>.
+                    {' '}Assinaturas iniciadas fora do aplicativo continuam gerenciadas no canal original. Novas assinaturas no iPhone usarão a App Store.
+                  </>
+                ) : (
+                  <>
+                    Acesso completo até{' '}
+                    <span className="font-medium">{formatDate(subscription.trialEndsAt || subscription.currentPeriodEnd)}</span>.
+                    {' '}Ao fim do teste, a cobrança do plano é emitida no gateway escolhido, no CPF/CNPJ informado — você escolhe PIX, cartão ou boleto na hora de pagar. Cancele quando quiser antes disso, sem custo.
+                  </>
+                )}
               </p>
             </div>
-            {subscription.invoiceUrl && (
+            {!isIOSApp && subscription.invoiceUrl && (
               <a
                 href={subscription.invoiceUrl}
                 target="_blank"
@@ -180,7 +211,7 @@ export default function SubscriptionPage() {
       )}
 
       {/* Overdue banner */}
-      {subscription?.paymentStatus === 'OVERDUE' && subscription?.invoiceUrl && (
+      {!isIOSApp && subscription?.paymentStatus === 'OVERDUE' && subscription?.invoiceUrl && (
         <div className="card border-red-200 dark:border-red-800 bg-red-50/60 dark:bg-red-950/20">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -215,6 +246,7 @@ export default function SubscriptionPage() {
           {PLANS.map((plan) => {
             const Icon = plan.icon;
             const isCurrent = currentPlan === plan.key;
+            const appleOffer = appleOffers.find((offer) => offer.plan === plan.key);
             return (
               <div
                 key={plan.key}
@@ -231,6 +263,16 @@ export default function SubscriptionPage() {
                   <div className="mt-2">
                     {plan.price === 0 ? (
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">Grátis</p>
+                    ) : isIOSApp ? (
+                      <div>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {appleOffer?.priceString ?? 'Pela App Store'}
+                          {appleOffer && <span className="text-sm font-normal text-gray-400">/mês</span>}
+                        </p>
+                        <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-brand-700 dark:text-brand-300">
+                          <ShieldCheck className="h-3.5 w-3.5" /> Valor localizado pela Apple
+                        </p>
+                      </div>
                     ) : (
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {formatCurrency(plan.price)}
@@ -251,14 +293,18 @@ export default function SubscriptionPage() {
 
                 <button
                   className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition ${
-                    isCurrent
+                    isCurrent || (isIOSApp && plan.price > 0)
                       ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 cursor-default'
                       : 'btn-primary'
                   }`}
-                  disabled={isCurrent}
+                  disabled={isCurrent || (isIOSApp && plan.price > 0)}
                 >
-                  {isCurrent ? 'Plano Atual' : 'Assinar'}
-                  {!isCurrent && <ArrowRight className="h-4 w-4" />}
+                  {isCurrent
+                    ? 'Plano Atual'
+                    : isIOSApp && plan.price > 0
+                    ? 'Disponível após configurar a App Store'
+                    : 'Assinar'}
+                  {!isCurrent && !(isIOSApp && plan.price > 0) && <ArrowRight className="h-4 w-4" />}
                 </button>
               </div>
             );

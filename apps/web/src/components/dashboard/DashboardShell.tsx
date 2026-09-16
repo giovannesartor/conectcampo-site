@@ -56,6 +56,7 @@ import { OnboardingTour } from './OnboardingTour';
 import { api } from '@/lib/api';
 import { usePreview } from '@/lib/preview-context';
 import { ConfirmDialogProvider } from './ConfirmDialog';
+import { nativeSelectionHaptic } from '@/lib/native-platform';
 
 // ─── Plan config ──────────────────────────────────────────────────────────────
 
@@ -342,6 +343,16 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const activeNavSection = navSections.find((section) =>
     section.items.some((item) => item.href === activeNavItem?.href),
   );
+  const flatNavItems = navSections.flatMap((section) => section.items);
+  const pickNavItem = (...hrefs: string[]) => hrefs
+    .map((href) => flatNavItems.find((item) => item.href === href))
+    .find((item): item is NavItem => !!item);
+  const mobileNavItems = [
+    { label: 'Hoje', item: pickNavItem('/dashboard') },
+    { label: 'Operações', item: pickNavItem('/dashboard/operations', '/dashboard/matching', '/dashboard/proposals') },
+    { label: 'Documentos', item: pickNavItem('/dashboard/documents', '/dashboard/smart-docs', '/dashboard/cpr') },
+    { label: 'Campo', item: pickNavItem('/dashboard/farms', '/dashboard/analytics', '/dashboard/scoring', '/dashboard/admin') },
+  ].filter((entry): entry is { label: string; item: NavItem } => !!entry.item);
 
   useEffect(() => {
     const activeSection = navSections.find((section) =>
@@ -596,11 +607,56 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main id="main-content" className="dashboard-surface relative flex-1 overflow-hidden bg-[#f7faf8] p-4 dark:bg-[#07110c] sm:p-6 lg:p-8">
+        <main id="main-content" className="dashboard-surface relative flex-1 overflow-hidden bg-[#f7faf8] p-4 pb-[calc(7rem+env(safe-area-inset-bottom))] dark:bg-[#07110c] sm:p-6 sm:pb-[calc(7rem+env(safe-area-inset-bottom))] lg:p-8">
           <div className="pointer-events-none absolute inset-0 contour-pattern opacity-[0.018] dark:opacity-[0.035]" />
           <div className="relative mx-auto min-h-full w-full max-w-[1600px]">{children}</div>
         </main>
       </div>
+
+      <nav
+        aria-label="Atalhos do aplicativo"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200/80 bg-white/[0.94] px-2 pt-1.5 shadow-[0_-12px_35px_-28px_rgba(0,40,24,0.6)] backdrop-blur-xl dark:border-dark-border dark:bg-dark-card/[0.94] lg:hidden"
+        style={{ paddingBottom: 'max(0.45rem, env(safe-area-inset-bottom))' }}
+      >
+        <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
+          {mobileNavItems.map(({ label, item }) => {
+            const active = isActive(item.href);
+            return (
+              <Link
+                key={`${label}-${item.href}`}
+                href={item.href}
+                onClick={() => { void nativeSelectionHaptic(); }}
+                aria-current={active ? 'page' : undefined}
+                className={`flex min-h-[3.55rem] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-colors ${
+                  active
+                    ? 'bg-brand-50 text-brand-800 dark:bg-brand-950/40 dark:text-brand-300'
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white'
+                }`}
+              >
+                <span className="[&>svg]:h-5 [&>svg]:w-5">{item.icon}</span>
+                <span className="max-w-full truncate">{label}</span>
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => {
+              void nativeSelectionHaptic();
+              setMobileOpen(true);
+            }}
+            aria-controls="dashboard-navigation"
+            aria-expanded={mobileOpen}
+            className={`flex min-h-[3.55rem] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition-colors ${
+              mobileOpen
+                ? 'bg-brand-50 text-brand-800 dark:bg-brand-950/40 dark:text-brand-300'
+                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white'
+            }`}
+          >
+            <Menu className="h-5 w-5" />
+            Mais
+          </button>
+        </div>
+      </nav>
 
       <OnboardingTour />
       <RealtimeNotifications />

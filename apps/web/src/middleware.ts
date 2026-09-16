@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
+const APP_SUBDOMAIN = 'app.conectcampo.digital';
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getJwtSecret(): Uint8Array | null {
@@ -14,6 +16,13 @@ function getJwtSecret(): Uint8Array | null {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const hostname = (request.headers.get('host') ?? '').split(':')[0].toLowerCase();
+
+  // O subdominio do aplicativo e uma porta de entrada operacional. A landing
+  // publica continua exclusiva do dominio principal.
+  if (hostname === APP_SUBDOMAIN && pathname === '/') {
+    return NextResponse.rewrite(new URL('/mobile-app', request.url));
+  }
 
   // Protect /dashboard/admin/* — only ADMIN role may access
   if (pathname.startsWith('/dashboard/admin')) {
@@ -51,5 +60,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/admin/:path*', '/callback', '/oauth/callback'],
+  matcher: ['/', '/dashboard/admin/:path*', '/callback', '/oauth/callback'],
 };

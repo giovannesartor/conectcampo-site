@@ -3,12 +3,13 @@
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, Check, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Check, ArrowLeft, ArrowRight, Loader2, Smartphone } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import Cookies from 'js-cookie';
 import { api } from '@/lib/api';
+import { isIOSNativeApp } from '@/lib/native-platform';
 
 // ─── Plan config ──────────────────────────────────────────────────────────────
 
@@ -115,6 +116,11 @@ function RegisterForm() {
   const [gateway, setGateway] = useState<'VALSA' | 'ASAAS'>('VALSA');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isNativeIOS, setIsNativeIOS] = useState(false);
+
+  useEffect(() => {
+    setIsNativeIOS(isIOSNativeApp());
+  }, []);
 
   // Keep URL in sync when plan is selected
   useEffect(() => {
@@ -144,6 +150,10 @@ function RegisterForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!planConfig || !selectedPlan) return;
+    if (isNativeIOS && !planConfig.free) {
+      setError('As assinaturas pelo iPhone serão liberadas após a aprovação dos planos na App Store. Nenhuma cobrança externa será aberta pelo aplicativo.');
+      return;
+    }
     setError('');
     setLoading(true);
 
@@ -235,9 +245,9 @@ function RegisterForm() {
                 </p>
                 <div className="mt-4 flex items-baseline gap-1">
                   <span className="text-2xl font-black text-brand-600 dark:text-brand-400">
-                    {plan.price}
+                    {isNativeIOS && !plan.free ? 'Pela App Store' : plan.price}
                   </span>
-                  {plan.period && (
+                  {plan.period && !(isNativeIOS && !plan.free) && (
                     <span className="text-xs text-gray-400">{plan.period}</span>
                   )}
                 </div>
@@ -254,7 +264,8 @@ function RegisterForm() {
         <p className="mt-8 text-xs text-gray-400 dark:text-gray-500 text-center">
           ConectCampo é um produto{' '}
           <span className="font-semibold">AG Digital</span>
-          {' '}· CNPJ 54.079.299/0001-40 · Pagamentos via ValsaPay ou Asaas
+          {' '}· CNPJ 54.079.299/0001-40
+          {!isNativeIOS && ' · Pagamentos via ValsaPay ou Asaas'}
         </p>
 
         <div className="mt-4 text-center">
@@ -292,13 +303,15 @@ function RegisterForm() {
               </p>
               <h3 className="text-white text-xl font-bold">{planConfig.name}</h3>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-3xl font-black text-white">{planConfig.price}</span>
-                {planConfig.period && (
+                <span className="text-3xl font-black text-white">
+                  {isNativeIOS && !planConfig.free ? 'Pela App Store' : planConfig.price}
+                </span>
+                {planConfig.period && !(isNativeIOS && !planConfig.free) && (
                   <span className="text-brand-200 text-sm">{planConfig.period}</span>
                 )}
               </div>
               <p className="mt-3 text-brand-100 text-sm">{planConfig.description}</p>
-              {!planConfig.free && (
+              {!planConfig.free && !isNativeIOS && (
                 <div className="mt-4 space-y-2">
                   <div className="flex items-center gap-2 text-xs text-brand-100">
                     <Check className="h-3.5 w-3.5 text-brand-300" />
@@ -336,8 +349,9 @@ function RegisterForm() {
               <div>
                 <p className="text-xs text-brand-500 font-medium">Plano selecionado</p>
                 <p className="text-sm font-bold text-brand-700 dark:text-brand-400">
-                  {planConfig.name} — {planConfig.price}
-                  {planConfig.period}
+                  {planConfig.name} — {isNativeIOS && !planConfig.free
+                    ? 'Pela App Store'
+                    : `${planConfig.price}${planConfig.period ?? ''}`}
                 </p>
               </div>
               <button
@@ -435,6 +449,8 @@ function RegisterForm() {
                 <p className="mt-1 text-xs text-gray-400">
                   {planConfig.free
                     ? 'Usado para identificar a instituição e proteger o cadastro.'
+                    : isNativeIOS
+                      ? 'Usado para proteger o cadastro e vincular sua futura assinatura pela App Store.'
                     : 'Necessário para processamento de pagamento (ValsaPay ou Asaas).'}
                 </p>
               </div>
@@ -470,8 +486,24 @@ function RegisterForm() {
               </p>
             </div>
 
-            {/* Forma de pagamento — apenas planos pagos */}
-            {!planConfig?.free && (
+            {isNativeIOS && !planConfig?.free && (
+              <div className="rounded-2xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800 dark:border-brand-800 dark:bg-brand-950/20 dark:text-brand-200">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-600 text-white">
+                    <Smartphone className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="font-bold">Assinatura segura pela App Store</p>
+                    <p className="mt-1 leading-5 text-brand-700 dark:text-brand-300">
+                      Este plano será ativado pelo sistema de compras da Apple. Estamos concluindo o cadastro dos produtos; nenhum pagamento externo será aberto pelo aplicativo.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Forma de pagamento — apenas planos pagos no site */}
+            {!planConfig?.free && !isNativeIOS && (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Onde emitir a cobrança após o teste
@@ -560,7 +592,7 @@ function RegisterForm() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={loading || !lgpd}
+              disabled={loading || !lgpd || (isNativeIOS && !planConfig?.free)}
               className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {loading ? (
@@ -568,6 +600,8 @@ function RegisterForm() {
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Processando...
                 </>
+              ) : isNativeIOS && !planConfig?.free ? (
+                'Em breve na App Store'
               ) : planConfig?.free ? (
                 'Criar conta gratuita'
               ) : (
@@ -577,7 +611,7 @@ function RegisterForm() {
               )}
             </button>
 
-            {!planConfig?.free && (
+            {!planConfig?.free && !isNativeIOS && (
               <p className="text-center text-xs text-gray-400">
                 Sem cobrança hoje. Após 7 dias, a cobrança do plano é emitida via{' '}
                 <span className="font-medium">
