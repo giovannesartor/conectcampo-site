@@ -10,6 +10,7 @@ O site institucional permanece em `conectcampo.digital`. A aplicação autentica
 
 - Nome: ConectCampo
 - Bundle ID iOS: `digital.conectcampo.app`
+- Apple App ID: `6812836092`
 - Domínio do app: `app.conectcampo.digital`
 - Universal Links: `https://app.conectcampo.digital/*`
 - URL Scheme de contingência: `conectcampo://`
@@ -50,7 +51,7 @@ O conteúdo continua filtrado pelo perfil e plano do usuário. Cada tela mantém
 
 Assinaturas que liberam recursos digitais no aplicativo devem usar StoreKit. Os preços não ficam gravados no frontend: o aplicativo exibe o preço localizado retornado pela App Store e o backend valida a transação assinada antes de liberar o plano.
 
-Produtos sugeridos:
+Produtos cadastrados no grupo `Planos ConectCampo` (`22390243`):
 
 - `digital.conectcampo.start.monthly`
 - `digital.conectcampo.pro.monthly`

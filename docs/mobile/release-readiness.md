@@ -21,15 +21,10 @@
 
 ## Obrigatório antes do TestFlight
 
-1. Criar o identificador do app e habilitar Associated Domains no Apple Developer.
-2. Criar o app e o grupo de assinaturas no App Store Connect.
-3. Cadastrar os produtos START, PRO e COOPERATIVE; preços continuam pendentes de decisão.
-4. Definir os preços e eventual oferta introdutória somente quando a estratégia comercial for aprovada.
-5. Cadastrar a URL de produção de App Store Server Notifications V2: `https://api.conectcampo.digital/webhook/apple`.
-6. Criar a chave APNs e configurar os segredos no Railway, sem versionar a chave `.p8`.
-7. Configurar no Railway o ID numérico do app e os certificados raiz Apple usados pela validação JWS.
-8. Preparar conta demonstrativa sem dados de clientes e textos de revisão da Apple.
-9. Gerar o archive em ambiente temporário/CI, enviar ao TestFlight e validar compra sandbox, restauração, push e links universais em aparelho real.
+1. Definir os preços e eventual oferta introdutória somente quando a estratégia comercial for aprovada.
+2. Completar metadados, privacidade, classificação etária, capturas de tela e informações de revisão no App Store Connect.
+3. Preparar conta demonstrativa sem dados de clientes e textos de revisão da Apple.
+4. Gerar o archive em ambiente temporário/CI, enviar ao TestFlight e validar compra sandbox, restauração, push e links universais em aparelho real.
 
 ## Verificação
 
@@ -41,5 +36,10 @@ Por orientação do responsável pelo projeto, nenhum build, teste, servidor, si
 - Railway: frontend e backend em `SUCCESS`; `app.conectcampo.digital` ativo na porta 8080, com DNS validado e HTTPS funcional.
 - API: health em `/api/v1/health` responde `200`; CORS do app responde ao preflight com a origem dedicada.
 - Preços iOS: não definidos e não alterados.
-- App Store Connect: login da conta Apple ainda necessário para criar o registro e os produtos.
-- StoreKit/APNs: implementação concluída no código; configuração externa e prova em aparelho real permanecem pendentes.
+- Apple Developer: App ID `digital.conectcampo.app` registrado com Associated Domains, In-App Purchase e Push Notifications.
+- App Store Connect: app `ConectCampo` criado com Apple ID `6812836092`, SKU `conectcampo-ios-2026` e idioma principal Português (Brasil).
+- Assinaturas: grupo `Planos ConectCampo` (`22390243`) criado com os produtos mensais `START`, `PRO` e `COOPERATIVE`, localizados em português e ordenados por nível de serviço.
+- App Store Server Notifications V2: produção e sandbox apontam para `https://api.conectcampo.digital/webhook/apple`.
+- APNs: chave `QA55AYKQNJ` criada para sandbox e produção, com credenciais configuradas exclusivamente no Railway; o arquivo `.p8` não é versionado.
+- Railway: `APPLE_IAP_APP_ID`, `APNS_KEY_ID` e `APNS_PRIVATE_KEY` configurados no backend, além dos IDs e certificados Apple já existentes.
+- StoreKit/APNs: implementação e configuração externa concluídas; prova em aparelho real permanece pendente.
