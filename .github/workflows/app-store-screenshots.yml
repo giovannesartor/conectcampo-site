@@ -15,9 +15,9 @@ jobs:
       APP_REVIEW_PASSWORD: ${{ secrets.APP_REVIEW_PASSWORD }}
       APP_BASE_URL: https://app.conectcampo.digital
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
