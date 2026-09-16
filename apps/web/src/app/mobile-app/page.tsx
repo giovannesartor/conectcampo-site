@@ -45,7 +45,7 @@ export default function MobileAppPage() {
 
   return (
     <main className="relative min-h-[100svh] overflow-hidden bg-[#f7faf8] text-gray-950 dark:bg-dark-bg dark:text-white">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[30rem] bg-[radial-gradient(circle_at_top_right,rgba(0,160,60,0.20),transparent_46%),linear-gradient(145deg,#001410,#003c28_58%,#006830)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(0,160,60,0.20),transparent_46%),linear-gradient(145deg,#001410,#003c28_58%,#006830)]" />
 
       <section className="relative mx-auto flex min-h-[100svh] w-full max-w-lg flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))]">
         <header className="flex items-center justify-between">
