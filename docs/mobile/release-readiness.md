@@ -19,23 +19,35 @@
 - Domínio `app.conectcampo.digital` publicado no Railway, com DNS e HTTPS ativos.
 - API autorizada a receber chamadas CORS do domínio do aplicativo.
 
-## Obrigatório antes do TestFlight
+## Xcode Cloud e TestFlight
 
-1. Entrar no Xcode com uma conta que também tenha acesso ao App Store Connect da organização; a conta Apple atualmente conectada ao Xcode não aparece na lista de usuários do App Store Connect e, por isso, a opção **Criar fluxo** permanece desativada.
-2. Conectar o repositório ao Xcode Cloud; o esquema `App` já está compartilhado e o script `ci_scripts/ci_post_clone.sh` prepara Capacitor e dependências no ambiente remoto.
-3. Gerar o archive remoto e enviar o primeiro build ao TestFlight. O App Store Connect extrairá o ícone do app desse build processado.
-4. Preencher e salvar na versão 1.0 a conta demonstrativa, a senha protegida e as notas para a equipe de revisão. Esses campos não estavam persistidos na conferência de 16/09/2026.
-5. Selecionar o build na versão 1.0, associar as três assinaturas à primeira submissão e validar compra sandbox, restauração, push e links universais em aparelho real.
+Concluído em 16/09/2026:
+
+1. Conta Apple da organização conectada ao Xcode e produto `App` habilitado no Xcode Cloud.
+2. Repositório `giovannesartor/conectcampo-site` conectado ao Xcode Cloud, com esquema `App` compartilhado.
+3. Script `mobile/ios/App/ci_scripts/ci_post_clone.sh` configurado junto do projeto para instalar Node.js 22, restaurar dependências e sincronizar o Capacitor no ambiente remoto.
+4. Build remoto 3 concluído com sucesso no commit `6c89262`.
+5. Build remoto 4 concluído com as ações `Build - iOS` e `Archive - iOS`, gerando o artefato `App 1.0 app-store` (build 4) preparado para o App Store Connect.
+6. Gatilho automático limitado a alterações em `mobile/`; mudanças apenas em site, API ou documentação não consomem minutos do Xcode Cloud nem geram binários desnecessários.
+
+Pendente para a distribuição e submissão:
+
+1. Aguardar o processamento do primeiro build pela Apple e confirmar o ícone extraído do asset catalog no App Store Connect.
+2. Criar ou selecionar um grupo interno do TestFlight e associar o build processado. O seletor do Xcode Cloud ainda não listava grupos internos.
+3. Preencher e salvar na versão 1.0 a conta demonstrativa, a senha protegida e as notas para a equipe de revisão.
+4. Selecionar o build na versão 1.0, associar as três assinaturas à primeira submissão e validar compra sandbox, restauração, push e links universais em aparelho real.
 
 ## Verificação
 
-Por orientação do responsável pelo projeto, nenhum build, teste, servidor, simulador ou execução pesada é feito no checkout do SSD. A implementação ocorre em cópia temporária. Builds e testes serão feitos apenas quando autorizados, em CI ou ambiente temporário.
+Por orientação do responsável pelo projeto, nenhum build, teste, servidor, simulador ou execução pesada é feito no checkout do SSD. O preparo foi realizado em cópia interna e a validação ocorreu exclusivamente no GitHub Actions, Xcode Cloud, Railway e endpoints publicados.
 
 ## Estado externo
 
 - Small Business Program: inscrição enviada em 16/09/2026; aprovação pendente.
-- Railway: frontend e backend em `SUCCESS` no commit `c0f2816`; `app.conectcampo.digital` ativo na porta 8080, com DNS validado e HTTPS funcional.
-- API: health em `/api/v1/health` responde `200`; CORS do app responde ao preflight com a origem dedicada.
+- GitHub Actions: lint, testes e build concluídos com sucesso no commit `6c89262` (execução `35159840987`).
+- Xcode Cloud: build 3 concluído; build 4 concluiu build e archive e gerou `App 1.0 app-store`, versão 1.0, build 4.
+- Railway: frontend e backend em `SUCCESS` no commit `6c89262`; `app.conectcampo.digital` ativo na porta 8080, com DNS validado e HTTPS funcional.
+- API: health em `/api/v1/health` responde `200`, banco conectado e QuantoVale alcançável; CORS do app responde ao preflight com a origem dedicada.
 - Estratégia iOS aprovada: app gratuito, disponibilidade somente no Brasil e assinaturas mensais em reais com acréscimo de 20% sobre o catálogo web. Pontos Apple preparados: R$ 359,00, R$ 959,00 e R$ 3.499,00.
 - Apple Developer: App ID `digital.conectcampo.app` registrado com Associated Domains, In-App Purchase e Push Notifications.
 - App Store Connect: app `ConectCampo` criado com Apple ID `6812836092`, SKU `conectcampo-ios-2026` e idioma principal Português (Brasil).
