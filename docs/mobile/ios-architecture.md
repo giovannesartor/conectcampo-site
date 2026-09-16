@@ -58,6 +58,8 @@ Produtos sugeridos:
 
 O plano `CORPORATE` permanece gratuito. Clientes que já assinam pelo site entram com a mesma conta e mantêm o acesso. O app deve oferecer **Restaurar compras** e **Gerenciar assinatura**.
 
+O cliente nativo envia a transação StoreKit 2 assinada ao backend antes de finalizá-la. O servidor valida a cadeia JWS com a biblioteca oficial da Apple, confere bundle, ambiente, produto e `appAccountToken`, persiste o `originalTransactionId` e só então libera o plano. Renovações e mudanças de estado chegam por App Store Server Notifications V2 em `https://api.conectcampo.digital/webhook/apple`; os eventos são idempotentes.
+
 Os valores dos planos iOS serão definidos mais perto da publicação. Em 16 de setembro de 2026, a inscrição da Buffalo no App Store Small Business Program foi enviada e está aguardando a aprovação da Apple. Até a aprovação, a comissão padrão aplicável a uma nova assinatura continua sendo 30% no primeiro ano e 15% depois de um ano contínuo do mesmo assinante. Após a aprovação, o programa reduz a comissão elegível para 15%. Esse registro não aprova aumento nem fixa preço comercial.
 
 Pagamentos de bens físicos, commodities, crédito e liquidação de operações não são assinatura digital do app e continuam nos fluxos financeiros próprios da plataforma, sujeitos à revisão jurídica e às regras do provedor. A compra do acesso ao software, por outro lado, usa StoreKit no iOS.
@@ -83,6 +85,14 @@ Pagamentos de bens físicos, commodities, crédito e liquidação de operações
 - StoreKit 2, produtos localizados, restauração e webhooks da App Store.
 - Vinculação segura da compra à conta ConectCampo.
 - Estados de cobrança, reembolso, expiração e período de carência.
+
+### Notificações
+
+- A permissão push é solicitada somente quando o usuário ativa a opção nos ajustes do app.
+- O token APNs fica vinculado à conta e pode ser desativado no aparelho ou no logout.
+- O backend usa autenticação APNs por chave `.p8`, mantida exclusivamente nos segredos do Railway.
+- Tokens inválidos ou desregistrados são desativados automaticamente apó a resposta da Apple.
+- O toque na notificação aceita apenas rotas internas sob `/dashboard`.
 
 ## Critérios de segurança
 

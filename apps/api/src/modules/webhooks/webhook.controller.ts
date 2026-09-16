@@ -7,6 +7,8 @@ import {
   UnauthorizedException,
   Logger,
   VERSION_NEUTRAL,
+  RawBodyRequest,
+  Body,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
@@ -16,8 +18,9 @@ import { MarketplaceOrdersService } from '../marketplace/marketplace-orders.serv
 import { AuthService } from '../auth/auth.service';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { RawBodyRequest } from '@nestjs/common';
 import { Request } from 'express';
+import { AppleSubscriptionsService } from '../subscriptions/apple-subscriptions.service';
+import { AppleServerNotificationDto } from '../subscriptions/dto/apple-transaction.dto';
 
 @ApiTags('webhooks')
 @Controller({ path: 'webhook', version: VERSION_NEUTRAL })
@@ -31,7 +34,18 @@ export class WebhookController {
     private readonly authService: AuthService,
     private readonly mailService: MailService,
     private readonly prisma: PrismaService,
+    private readonly appleSubscriptions: AppleSubscriptionsService,
   ) {}
+
+  // ─── Apple – POST /webhook/apple (App Store Server Notifications V2) ─────
+
+  @Public()
+  @Post('apple')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Webhook assinado da App Store (versão 2)' })
+  async appleWebhook(@Body() body: AppleServerNotificationDto) {
+    return this.appleSubscriptions.processServerNotification(body.signedPayload);
+  }
 
   // ─── Asaas – POST /webhook/asaas ─────────────────────────────────────────
 

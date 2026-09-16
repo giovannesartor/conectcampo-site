@@ -16,6 +16,7 @@ import { IsCNPJ } from '../../../common/validators/is-cnpj.validator';
 export enum PaymentGateway {
   VALSA = 'VALSA',
   ASAAS = 'ASAAS',
+  APPLE = 'APPLE',
 }
 
 export class RegisterDto {
@@ -47,7 +48,7 @@ export class RegisterDto {
   /**
    * Gateway de pagamento para planos pagos. Padrão: VALSA (recomendado).
    */
-  @ApiPropertyOptional({ example: 'VALSA', enum: ['VALSA', 'ASAAS'] })
+  @ApiPropertyOptional({ example: 'VALSA', enum: ['VALSA', 'ASAAS', 'APPLE'] })
   @IsOptional()
   @IsEnum(PaymentGateway, { message: 'Gateway inválido' })
   gateway?: PaymentGateway;

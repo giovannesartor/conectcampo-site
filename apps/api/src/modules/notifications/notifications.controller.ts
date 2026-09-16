@@ -3,6 +3,7 @@ import {
   Get,
   Patch,
   Delete,
+  Post,
   Param,
   Query,
   Body,
@@ -20,6 +21,8 @@ import { NotificationsService } from './notifications.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Public } from '../auth/decorators/public.decorator';
+import { PushNotificationsService } from './push-notifications.service';
+import { RegisterPushDeviceDto, UnregisterPushDeviceDto } from './dto/push-device.dto';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
@@ -29,7 +32,28 @@ export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,
     private readonly jwtService: JwtService,
+    private readonly pushNotifications: PushNotificationsService,
   ) {}
+
+  @Post('devices')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Registrar aparelho para notificações push' })
+  async registerDevice(
+    @CurrentUser('sub') userId: string,
+    @Body() body: RegisterPushDeviceDto,
+  ) {
+    return this.pushNotifications.register(userId, body);
+  }
+
+  @Post('devices/unregister')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Desativar notificações push neste aparelho' })
+  async unregisterDevice(
+    @CurrentUser('sub') userId: string,
+    @Body() body: UnregisterPushDeviceDto,
+  ) {
+    return this.pushNotifications.unregister(userId, body.token);
+  }
 
   /**
    * Stream em tempo real (SSE). EventSource não envia header Authorization,
@@ -88,10 +112,10 @@ export class NotificationsController {
   }
 
   @Patch('preferences')
-  @ApiOperation({ summary: 'Atualizar preferências de notificação (e-mail, in-app, tipos silenciados)' })
+  @ApiOperation({ summary: 'Atualizar preferências de notificação (e-mail, push, in-app e tipos silenciados)' })
   async updatePreferences(
     @CurrentUser('sub') userId: string,
-    @Body() body: { email?: boolean; inApp?: boolean; mutedTypes?: string[] },
+    @Body() body: { email?: boolean; inApp?: boolean; push?: boolean; mutedTypes?: string[] },
   ) {
     return this.notificationsService.updatePreferences(userId, body);
   }

@@ -3,6 +3,7 @@ import { Subject, Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { PushNotificationsService } from './push-notifications.service';
 
 interface NotificationEvent {
   userId: string;
@@ -20,6 +21,7 @@ export class NotificationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
+    private readonly push: PushNotificationsService,
   ) {}
 
   /** Stream de notificações de um usuário (para SSE). */
@@ -164,6 +166,7 @@ export class NotificationsService {
 
       const prefs = (user.notificationPreferences as Record<string, any>) ?? {};
       const emailEnabled = params.email ?? prefs.email !== false; // e-mail ligado por padrão
+      const pushEnabled = prefs.push !== false;
       const typeMuted = Array.isArray(prefs.mutedTypes) && prefs.mutedTypes.includes(params.type);
 
       if (emailEnabled && !typeMuted) {
@@ -171,8 +174,16 @@ export class NotificationsService {
           .sendNotification(user.email, params.title, params.message, params.link)
           .catch(() => null);
       }
+      if (pushEnabled && !typeMuted) {
+        void this.push.sendToUser(params.userId, {
+          title: params.title,
+          message: params.message,
+          link: params.link,
+          type: params.type,
+        }).catch(() => undefined);
+      }
     } catch (err) {
-      this.logger.warn(`Falha ao enviar e-mail de notificação: ${(err as Error).message}`);
+      this.logger.warn(`Falha ao enviar canal de notificação: ${(err as Error).message}`);
     }
   }
 
@@ -187,13 +198,14 @@ export class NotificationsService {
     return {
       email: prefs.email !== false,
       inApp: prefs.inApp !== false,
+      push: prefs.push !== false,
       mutedTypes: Array.isArray(prefs.mutedTypes) ? prefs.mutedTypes : [],
     };
   }
 
   async updatePreferences(
     userId: string,
-    prefs: { email?: boolean; inApp?: boolean; mutedTypes?: string[] },
+    prefs: { email?: boolean; inApp?: boolean; push?: boolean; mutedTypes?: string[] },
   ) {
     const current = await this.getPreferences(userId);
     const merged = { ...current, ...prefs };

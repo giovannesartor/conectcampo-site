@@ -13,6 +13,7 @@ import {
   isBiometricLockEnabled,
   setBiometricLockEnabled,
 } from '@/lib/native-biometric';
+import { disableNativePush, enableNativePush, isNativePushEnabled } from '@/lib/native-push';
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -23,6 +24,9 @@ export default function SettingsPage() {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [savingBiometric, setSavingBiometric] = useState(false);
+  const [nativePushAvailable, setNativePushAvailable] = useState(false);
+  const [nativePushEnabled, setNativePushEnabled] = useState(false);
+  const [savingNativePush, setSavingNativePush] = useState(false);
 
   // Deep-link: /dashboard/settings?tab=apikeys
   useEffect(() => {
@@ -35,6 +39,8 @@ export default function SettingsPage() {
     if (!user) return;
     const native = isNativeApp();
     setNativeSecurity(native);
+    setNativePushAvailable(native);
+    setNativePushEnabled(native && isNativePushEnabled(user.id));
     if (!native) return;
     setBiometricEnabled(isBiometricLockEnabled(user.id));
     void hasNativeBiometry().then(setBiometricAvailable);
@@ -131,6 +137,26 @@ export default function SettingsPage() {
       toast.error('Não foi possível confirmar sua identidade.');
     } finally {
       setSavingBiometric(false);
+    }
+  }
+
+  async function handleNativePushToggle() {
+    if (!user || savingNativePush) return;
+    setSavingNativePush(true);
+    try {
+      if (nativePushEnabled) {
+        await disableNativePush(user.id);
+        setNativePushEnabled(false);
+        toast.success('Notificações push desativadas neste aparelho.');
+      } else {
+        await enableNativePush(user.id);
+        setNativePushEnabled(true);
+        toast.success('Notificações importantes ativadas neste iPhone.');
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message ?? error?.message ?? 'Não foi possível alterar as notificações.');
+    } finally {
+      setSavingNativePush(false);
     }
   }
 
@@ -332,6 +358,28 @@ export default function SettingsPage() {
       {/* Notifications tab */}
       {tab === 'notifications' && (
         <div className="card max-w-lg space-y-1">
+          {nativePushAvailable && (
+            <div className="mb-3 flex items-center justify-between rounded-2xl border border-brand-200 bg-brand-50/70 p-4 dark:border-brand-800 dark:bg-brand-950/20">
+              <div className="pr-4">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">Alertas no iPhone</p>
+                <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                  Propostas, CPRs, documentos, vencimentos e avisos importantes mesmo com o aplicativo fechado.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { void handleNativePushToggle(); }}
+                disabled={savingNativePush}
+                aria-pressed={nativePushEnabled}
+                className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+                  nativePushEnabled ? 'bg-brand-600' : 'bg-gray-300 dark:bg-gray-700'
+                }`}
+              >
+                <span className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${nativePushEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                <span className="sr-only">{nativePushEnabled ? 'Desativar' : 'Ativar'} alertas no iPhone</span>
+              </button>
+            </div>
+          )}
           <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-dark-border">
             <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Preferências de notificação por email</p>
             {savingNotifications && (

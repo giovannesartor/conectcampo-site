@@ -2,11 +2,21 @@
 
 import { useAuth } from '@/lib/auth-context';
 import { useEffect, useState } from 'react';
-import { Package, Check, Star, Zap, Crown, ArrowRight, Apple, ShieldCheck } from 'lucide-react';
+import { Package, Check, Star, Zap, Crown, ArrowRight, Apple, ShieldCheck, RotateCcw, Settings } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { api } from '@/lib/api';
 import { isIOSNativeApp } from '@/lib/native-platform';
-import { loadAppleSubscriptionOffers, type AppleSubscriptionOffer } from '@/lib/native-subscriptions';
+import {
+  loadAppleSubscriptionContext,
+  loadAppleSubscriptionOffers,
+  openAppleSubscriptionManagement,
+  purchaseAppleSubscription,
+  restoreAppleSubscriptions,
+  type AppleSubscriptionContext,
+  type AppleSubscriptionOffer,
+} from '@/lib/native-subscriptions';
+import toast from 'react-hot-toast';
+import Link from 'next/link';
 
 const PLANS = [
   {
@@ -83,13 +93,25 @@ export default function SubscriptionPage() {
   const [loading, setLoading] = useState(true);
   const [isIOSApp, setIsIOSApp] = useState(false);
   const [appleOffers, setAppleOffers] = useState<AppleSubscriptionOffer[]>([]);
+  const [appleContext, setAppleContext] = useState<AppleSubscriptionContext | null>(null);
+  const [appleBusy, setAppleBusy] = useState<string | null>(null);
+  const [appleCatalogReady, setAppleCatalogReady] = useState(true);
 
   useEffect(() => {
     loadSubscription();
     const nativeIOS = isIOSNativeApp();
     setIsIOSApp(nativeIOS);
     if (nativeIOS) {
-      void loadAppleSubscriptionOffers().then(setAppleOffers).catch(() => setAppleOffers([]));
+      void Promise.all([loadAppleSubscriptionOffers(), loadAppleSubscriptionContext()])
+        .then(([offers, context]) => {
+          setAppleOffers(offers);
+          setAppleContext(context);
+          setAppleCatalogReady(offers.length > 0);
+        })
+        .catch(() => {
+          setAppleOffers([]);
+          setAppleCatalogReady(false);
+        });
     }
   }, []);
 
@@ -106,6 +128,41 @@ export default function SubscriptionPage() {
 
   const currentPlan = subscription?.plan || 'FREE';
 
+  async function handleApplePurchase(offer: AppleSubscriptionOffer) {
+    if (!appleContext || appleBusy) return;
+    setAppleBusy(offer.productId);
+    try {
+      await purchaseAppleSubscription(offer, appleContext);
+      await loadSubscription();
+      toast.success('Assinatura confirmada pela App Store e ativada no ConectCampo.');
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? error?.message;
+      if (!String(message ?? '').toLowerCase().includes('cancel')) {
+        toast.error(message || 'Não foi possível concluir a assinatura pela App Store.');
+      }
+    } finally {
+      setAppleBusy(null);
+    }
+  }
+
+  async function handleAppleRestore() {
+    if (!appleContext || appleBusy) return;
+    setAppleBusy('restore');
+    try {
+      const restored = await restoreAppleSubscriptions(appleContext);
+      if (restored.length === 0) {
+        toast('Nenhuma assinatura ativa foi encontrada para esta conta Apple.');
+      } else {
+        await loadSubscription();
+        toast.success('Compra restaurada e acesso sincronizado.');
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message ?? error?.message ?? 'Não foi possível restaurar as compras.');
+    } finally {
+      setAppleBusy(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -116,7 +173,8 @@ export default function SubscriptionPage() {
       </div>
 
       {isIOSApp && (
-        <div className="card flex items-start gap-3 border-brand-200 bg-brand-50/70 dark:border-brand-800 dark:bg-brand-950/20">
+        <div className="card border-brand-200 bg-brand-50/70 dark:border-brand-800 dark:bg-brand-950/20">
+          <div className="flex items-start gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-800 text-white">
             <Apple className="h-5 w-5" />
           </span>
@@ -125,6 +183,33 @@ export default function SubscriptionPage() {
             <p className="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-300">
               No iPhone, os preços e a cobrança dos planos digitais vêm diretamente da App Store da sua região. Nenhum valor adicional foi definido no aplicativo.
             </p>
+            {!appleContext?.canPurchase && appleContext?.reason && (
+              <p className="mt-2 text-sm font-medium text-amber-700 dark:text-amber-300">{appleContext.reason}</p>
+            )}
+            {!appleCatalogReady && (
+              <p className="mt-2 text-sm font-medium text-amber-700 dark:text-amber-300">
+                O catálogo da App Store ainda não está disponível neste aparelho. Tente novamente após a publicação dos produtos.
+              </p>
+            )}
+          </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2 border-t border-brand-200/70 pt-4 dark:border-brand-800/70">
+            <button
+              type="button"
+              onClick={() => { void handleAppleRestore(); }}
+              disabled={!!appleBusy || !appleContext}
+              className="btn-secondary inline-flex items-center gap-2 text-sm disabled:opacity-50"
+            >
+              <RotateCcw className={`h-4 w-4 ${appleBusy === 'restore' ? 'animate-spin' : ''}`} />
+              Restaurar compras
+            </button>
+            <button
+              type="button"
+              onClick={() => { void openAppleSubscriptionManagement(); }}
+              className="btn-ghost inline-flex items-center gap-2 text-sm"
+            >
+              <Settings className="h-4 w-4" /> Gerenciar na Apple
+            </button>
           </div>
         </div>
       )}
@@ -247,6 +332,12 @@ export default function SubscriptionPage() {
             const Icon = plan.icon;
             const isCurrent = currentPlan === plan.key;
             const appleOffer = appleOffers.find((offer) => offer.plan === plan.key);
+            const currentAppleSubscription = isCurrent && subscription?.gateway === 'APPLE' && subscription?.paymentStatus === 'ACTIVE';
+            const paidIOSPlan = isIOSApp && plan.price > 0;
+            const appleUnavailable = paidIOSPlan && (!appleOffer || !appleContext?.canPurchase);
+            const appleLoading = appleBusy === appleOffer?.productId;
+            const currentNonPurchasable = isCurrent && (!paidIOSPlan || currentAppleSubscription);
+            const planDisabled = currentNonPurchasable || appleUnavailable || !!appleBusy;
             return (
               <div
                 key={plan.key}
@@ -292,24 +383,43 @@ export default function SubscriptionPage() {
                 </ul>
 
                 <button
+                  type="button"
+                  onClick={() => {
+                    if (paidIOSPlan && appleOffer) void handleApplePurchase(appleOffer);
+                  }}
                   className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition ${
-                    isCurrent || (isIOSApp && plan.price > 0)
+                    planDisabled
                       ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 cursor-default'
                       : 'btn-primary'
                   }`}
-                  disabled={isCurrent || (isIOSApp && plan.price > 0)}
+                  disabled={planDisabled}
                 >
-                  {isCurrent
+                  {currentNonPurchasable
                     ? 'Plano Atual'
-                    : isIOSApp && plan.price > 0
-                    ? 'Disponível após configurar a App Store'
+                    : appleLoading
+                    ? 'Confirmando com a Apple...'
+                    : paidIOSPlan && !appleOffer
+                    ? 'Catálogo indisponível'
+                    : paidIOSPlan && !appleContext?.canPurchase
+                    ? 'Gerenciado no canal atual'
+                    : paidIOSPlan
+                    ? 'Assinar pela App Store'
                     : 'Assinar'}
-                  {!isCurrent && !(isIOSApp && plan.price > 0) && <ArrowRight className="h-4 w-4" />}
+                  {!currentNonPurchasable && !appleUnavailable && !appleLoading && <ArrowRight className="h-4 w-4" />}
                 </button>
               </div>
             );
           })}
         </div>
+      )}
+
+      {isIOSApp && (
+        <p className="mx-auto max-w-3xl text-center text-xs leading-5 text-gray-500 dark:text-gray-400">
+          A assinatura renova automaticamente pela Apple até ser cancelada nas configurações da App Store. Ao assinar, você concorda com os{' '}
+          <Link href="/legal/termos-de-uso" className="font-medium text-brand-700 underline dark:text-brand-300">Termos de Uso</Link>
+          {' '}e com a{' '}
+          <Link href="/legal/privacidade" className="font-medium text-brand-700 underline dark:text-brand-300">Política de Privacidade</Link>.
+        </p>
       )}
     </div>
   );

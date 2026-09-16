@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
+import { PushNotificationsService } from './push-notifications.service';
 
 @Global()
 @Module({
@@ -16,7 +17,7 @@ import { NotificationsController } from './notifications.controller';
     }),
   ],
   controllers: [NotificationsController],
-  providers: [NotificationsService],
-  exports: [NotificationsService],
+  providers: [NotificationsService, PushNotificationsService],
+  exports: [NotificationsService, PushNotificationsService],
 })
 export class NotificationsModule {}

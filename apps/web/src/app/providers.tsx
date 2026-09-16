@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast';
 import { NativeDeepLinkHandler } from '@/components/mobile/NativeDeepLinkHandler';
 import { NativeAppBridge } from '@/components/mobile/NativeAppBridge';
 import { NativeBiometricGate } from '@/components/mobile/NativeBiometricGate';
+import { NativePushBridge } from '@/components/mobile/NativePushBridge';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -15,6 +16,7 @@ export function Providers({ children }: { children: ReactNode }) {
         <NativeAppBridge />
         <NativeDeepLinkHandler />
         <NativeBiometricGate />
+        <NativePushBridge />
         {children}
         <Toaster
           position="top-right"

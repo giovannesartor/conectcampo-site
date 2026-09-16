@@ -84,6 +84,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function logout() {
+    if (user) {
+      try {
+        const { disableNativePush } = await import('@/lib/native-push');
+        await disableNativePush(user.id, true);
+      } catch {
+        // A limpeza remota do push não pode impedir a saída da conta.
+      }
+    }
     try {
       await api.post('/auth/logout');
     } catch {

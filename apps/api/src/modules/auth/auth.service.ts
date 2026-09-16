@@ -159,10 +159,10 @@ export class AuthService {
       };
     }
 
-    // ── Planos pagos — 7 dias grátis em ambos os gateways (Asaas e ValsaPay) ──
-    // Acesso liberado imediatamente. A cobrança fica disponível desde já e
-    // vence/é cobrada ao fim do trial (dia 7), no CPF/CNPJ informado, com o
-    // cliente escolhendo o meio de pagamento (PIX, cartão ou boleto).
+    // ── Planos pagos — 7 dias grátis no gateway correspondente ───────────────
+    // Acesso liberado imediatamente. No site, a cobrança fica disponível pelo
+    // gateway escolhido. No iOS, a assinatura é concluída exclusivamente pela
+    // App Store, sem criar cobrança externa.
     const cpfCnpj = dto.cpf ?? dto.cnpj;
     if (!cpfCnpj) {
       throw new BadRequestException('CPF ou CNPJ é obrigatório para criar assinatura');
@@ -172,7 +172,10 @@ export class AuthService {
     let invoiceUrl: string | null = null;
     let trialEndsAt: Date | null = null;
     try {
-      if (gateway === PaymentGateway.VALSA) {
+      if (gateway === PaymentGateway.APPLE) {
+        const result = await this.subscriptionsService.createAppleTrial(user.id, dto.plan);
+        trialEndsAt = result.trialEndsAt;
+      } else if (gateway === PaymentGateway.VALSA) {
         const result = await this.valsaService.createPendingSubscription({
           userId: user.id,
           plan: dto.plan,

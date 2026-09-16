@@ -223,6 +223,7 @@ model User {
   auditLogs        AuditLog[]
   refreshTokens    RefreshToken[]
   notifications    Notification[]
+  pushDevices      PushDevice[]
   passwordResetTokens    PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
   quantovaleConnection QuantovaleConnection?
@@ -651,9 +652,17 @@ model Subscription {
   invoiceUrl            String?          // URL de pagamento (Asaas ou Valsa)
   paymentStatus         PaymentStatus    @default(PENDING)
 
-  // Gateway de pagamento ("ASAAS" | "VALSA")
+  // Gateway de pagamento ("ASAAS" | "VALSA" | "APPLE")
   gateway               String?          @default("ASAAS")
   valsaPaymentId        String?          // ID do pagamento na Valsa
+
+  // Apple / StoreKit 2
+  appleOriginalTransactionId String?      @unique
+  appleLatestTransactionId   String?      @unique
+  appleProductId            String?
+  appleEnvironment          String?
+  appleAutoRenewStatus      Boolean?
+  appleRevokedAt            DateTime?
 
   isActive              Boolean          @default(false)
   trialEndsAt           DateTime?        // Fim do período de teste gratuito (7 dias)
@@ -673,6 +682,7 @@ model Subscription {
   @@index([isActive])
   @@index([currentPeriodEnd])
   @@index([trialEndsAt])
+  @@index([appleProductId])
   @@map("subscriptions")
 }
 
@@ -817,6 +827,25 @@ model Notification {
 
   @@index([userId, isRead])
   @@map("notifications")
+}
+
+model PushDevice {
+  id          String   @id @default(uuid())
+  userId      String
+  token       String   @unique
+  platform    String
+  environment String   @default("PRODUCTION")
+  appVersion  String?
+  enabled     Boolean  @default(true)
+  lastSeenAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, enabled])
+  @@index([environment, enabled])
+  @@map("push_devices")
 }
 
 // ──────────────────────────────────────────────
@@ -1090,7 +1119,7 @@ model ApiKey {
 
 model WebhookEvent {
   id          String   @id @default(uuid())
-  provider    String   // ASAAS | VALSA | ZAPSIGN
+  provider    String   // ASAAS | VALSA | ZAPSIGN | APPLE
   externalId  String   // id do evento no provedor (para idempotência)
   type        String?
   createdAt   DateTime @default(now())

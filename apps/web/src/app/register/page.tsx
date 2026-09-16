@@ -150,10 +150,6 @@ function RegisterForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!planConfig || !selectedPlan) return;
-    if (isNativeIOS && !planConfig.free) {
-      setError('As assinaturas pelo iPhone serão liberadas após a aprovação dos planos na App Store. Nenhuma cobrança externa será aberta pelo aplicativo.');
-      return;
-    }
     setError('');
     setLoading(true);
 
@@ -168,7 +164,7 @@ function RegisterForm() {
         plan: selectedPlan,
         phone: form.phone.replace(/\D/g, ''),
       };
-      if (!planConfig.free) payload.gateway = gateway;
+      if (!planConfig.free) payload.gateway = isNativeIOS ? 'APPLE' : gateway;
       if (planConfig.docType === 'cpf') payload.cpf = cleanDoc;
       else payload.cnpj = cleanDoc;
 
@@ -196,7 +192,7 @@ function RegisterForm() {
           secure: window.location.protocol === 'https:',
         });
         if (setUserFromData) setUserFromData(data.user);
-        router.push('/dashboard');
+        router.push(isNativeIOS && !planConfig.free ? '/dashboard/subscription?from=registration' : '/dashboard');
       }
     } catch (err: any) {
       const msg =
@@ -495,7 +491,7 @@ function RegisterForm() {
                   <div>
                     <p className="font-bold">Assinatura segura pela App Store</p>
                     <p className="mt-1 leading-5 text-brand-700 dark:text-brand-300">
-                      Este plano será ativado pelo sistema de compras da Apple. Estamos concluindo o cadastro dos produtos; nenhum pagamento externo será aberto pelo aplicativo.
+                      Sua conta será criada agora. Em seguida, você poderá confirmar este plano com o preço localizado e a proteção de pagamento da App Store.
                     </p>
                   </div>
                 </div>
@@ -592,7 +588,7 @@ function RegisterForm() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={loading || !lgpd || (isNativeIOS && !planConfig?.free)}
+              disabled={loading || !lgpd}
               className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {loading ? (
@@ -601,7 +597,7 @@ function RegisterForm() {
                   Processando...
                 </>
               ) : isNativeIOS && !planConfig?.free ? (
-                'Em breve na App Store'
+                <>Criar conta e continuar <ArrowRight className="h-4 w-4" /></>
               ) : planConfig?.free ? (
                 'Criar conta gratuita'
               ) : (

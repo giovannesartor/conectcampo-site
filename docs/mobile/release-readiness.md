@@ -11,7 +11,11 @@
 - Estado offline, status bar, splash nativo, conexão e haptics.
 - Navegação inferior móvel por contexto, mantendo o menu completo.
 - Catálogo StoreKit preparado para receber preços localizados, sem valor fixo no código.
-- Checkout externo bloqueado no app iOS; o fluxo web por ValsaPay/Asaas permanece inalterado.
+- Cadastro pago no iOS direcionado exclusivamente ao StoreKit; o fluxo web por ValsaPay/Asaas permanece inalterado.
+- Compra e restauração StoreKit 2 com validação JWS no backend antes da confirmação da transação.
+- Vínculo antifraude por `appAccountToken`, identificação do produto e bloqueio de transações associadas a outra conta.
+- App Store Server Notifications V2 para renovação, falha de cobrança, carência, expiração, reembolso e revogação.
+- Push opt-in no iPhone, registro de dispositivo, preferências, links profundos e entrega APNs pelo backend.
 - Domínio `app.conectcampo.digital` publicado no Railway, com DNS e HTTPS ativos.
 - API autorizada a receber chamadas CORS do domínio do aplicativo.
 
@@ -20,11 +24,12 @@
 1. Criar o identificador do app e habilitar Associated Domains no Apple Developer.
 2. Criar o app e o grupo de assinaturas no App Store Connect.
 3. Cadastrar os produtos START, PRO e COOPERATIVE; preços continuam pendentes de decisão.
-4. Implementar e revisar a validação StoreKit 2 no backend, com vínculo entre transação e usuário.
-5. Implementar compra, restauração, expiração, reembolso e notificações App Store Server.
-6. Concluir o cadastro pago iOS pelo StoreKit; enquanto isso, o app bloqueia planos pagos sem abrir gateway externo.
-7. Configurar push/APNs e a política de notificações.
+4. Definir os preços e eventual oferta introdutória somente quando a estratégia comercial for aprovada.
+5. Cadastrar a URL de produção de App Store Server Notifications V2: `https://api.conectcampo.digital/webhook/apple`.
+6. Criar a chave APNs e configurar os segredos no Railway, sem versionar a chave `.p8`.
+7. Configurar no Railway o ID numérico do app e os certificados raiz Apple usados pela validação JWS.
 8. Preparar conta demonstrativa sem dados de clientes e textos de revisão da Apple.
+9. Gerar o archive em ambiente temporário/CI, enviar ao TestFlight e validar compra sandbox, restauração, push e links universais em aparelho real.
 
 ## Verificação
 
@@ -36,3 +41,5 @@ Por orientação do responsável pelo projeto, nenhum build, teste, servidor, si
 - Railway: frontend e backend em `SUCCESS`; `app.conectcampo.digital` ativo na porta 8080, com DNS validado e HTTPS funcional.
 - API: health em `/api/v1/health` responde `200`; CORS do app responde ao preflight com a origem dedicada.
 - Preços iOS: não definidos e não alterados.
+- App Store Connect: login da conta Apple ainda necessário para criar o registro e os produtos.
+- StoreKit/APNs: implementação concluída no código; configuração externa e prova em aparelho real permanecem pendentes.

@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AsaasService } from './asaas.service';
 import { SubscriptionPlan, PaymentStatus } from '@prisma/client';
+import { TRIAL_DAYS } from '../../common/pricing/pricing';
 
 @Injectable()
 export class SubscriptionsService {
@@ -45,6 +46,13 @@ export class SubscriptionsService {
     const current = await this.getSubscription(userId);
     if (!current) return { message: 'Nenhuma assinatura encontrada' };
 
+    if (current.gateway === 'APPLE') {
+      return {
+        message: 'Assinaturas da App Store devem ser gerenciadas nas configurações de assinaturas da Apple.',
+        managedBy: 'APPLE',
+      };
+    }
+
     // Cancelar no Asaas (se houver ID de assinatura)
     if (current.asaasSubscriptionId) {
       try {
@@ -61,6 +69,21 @@ export class SubscriptionsService {
         cancelledAt: new Date(),
         isActive: false,
         paymentStatus: PaymentStatus.CANCELLED,
+      },
+    });
+  }
+
+  async createAppleTrial(userId: string, plan: SubscriptionPlan) {
+    const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
+    return this.prisma.subscription.create({
+      data: {
+        userId,
+        plan,
+        gateway: 'APPLE',
+        paymentStatus: PaymentStatus.TRIALING,
+        isActive: true,
+        trialEndsAt,
+        currentPeriodEnd: trialEndsAt,
       },
     });
   }
