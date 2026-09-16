@@ -53,7 +53,8 @@ export class AppleSubscriptionsService {
     const hasExternalPaidPlan = !!current &&
       current.gateway !== 'APPLE' &&
       current.plan !== SubscriptionPlan.CORPORATE &&
-      [PaymentStatus.ACTIVE, PaymentStatus.TRIALING].includes(current.paymentStatus);
+      (current.paymentStatus === PaymentStatus.ACTIVE ||
+        current.paymentStatus === PaymentStatus.TRIALING);
 
     return {
       appAccountToken: userId,
