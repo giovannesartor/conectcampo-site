@@ -12,18 +12,19 @@
 - Navegação inferior móvel por contexto, mantendo o menu completo.
 - Catálogo StoreKit preparado para receber preços localizados, sem valor fixo no código.
 - Checkout externo bloqueado no app iOS; o fluxo web por ValsaPay/Asaas permanece inalterado.
+- Domínio `app.conectcampo.digital` publicado no Railway, com DNS e HTTPS ativos.
+- API autorizada a receber chamadas CORS do domínio do aplicativo.
 
 ## Obrigatório antes do TestFlight
 
-1. Ativar `app.conectcampo.digital` no Railway e publicar o registro DNS indicado.
-2. Criar o identificador do app e habilitar Associated Domains no Apple Developer.
-3. Criar o app e o grupo de assinaturas no App Store Connect.
-4. Cadastrar os produtos START, PRO e COOPERATIVE; preços continuam pendentes de decisão.
-5. Implementar e revisar a validação StoreKit 2 no backend, com vínculo entre transação e usuário.
-6. Implementar compra, restauração, expiração, reembolso e notificações App Store Server.
-7. Concluir o cadastro pago iOS pelo StoreKit; enquanto isso, o app bloqueia planos pagos sem abrir gateway externo.
-8. Configurar push/APNs e a política de notificações.
-9. Preparar conta demonstrativa sem dados de clientes e textos de revisão da Apple.
+1. Criar o identificador do app e habilitar Associated Domains no Apple Developer.
+2. Criar o app e o grupo de assinaturas no App Store Connect.
+3. Cadastrar os produtos START, PRO e COOPERATIVE; preços continuam pendentes de decisão.
+4. Implementar e revisar a validação StoreKit 2 no backend, com vínculo entre transação e usuário.
+5. Implementar compra, restauração, expiração, reembolso e notificações App Store Server.
+6. Concluir o cadastro pago iOS pelo StoreKit; enquanto isso, o app bloqueia planos pagos sem abrir gateway externo.
+7. Configurar push/APNs e a política de notificações.
+8. Preparar conta demonstrativa sem dados de clientes e textos de revisão da Apple.
 
 ## Verificação
 
@@ -32,5 +33,6 @@ Por orientação do responsável pelo projeto, nenhum build, teste, servidor, si
 ## Estado externo
 
 - Small Business Program: inscrição enviada em 16/09/2026; aprovação pendente.
-- Railway: serviços atuais estão em `SUCCESS`; a criação do novo domínio está bloqueada porque a sessão do CLI permite leitura, mas exige novo login para mutações.
+- Railway: frontend e backend em `SUCCESS`; `app.conectcampo.digital` ativo na porta 8080, com DNS validado e HTTPS funcional.
+- API: health em `/api/v1/health` responde `200`; CORS do app responde ao preflight com a origem dedicada.
 - Preços iOS: não definidos e não alterados.
