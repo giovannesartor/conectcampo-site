@@ -5,6 +5,11 @@ import { AsaasService } from '../subscriptions/asaas.service';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { CarbonProjectStatus, CarbonCreditStatus, CarbonProjectType, CarbonStandard } from './carbon-enums';
+import axios from 'axios';
+
+jest.mock('axios');
+
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('CarbonCreditsService', () => {
   let service: CarbonCreditsService;
@@ -136,9 +141,26 @@ describe('CarbonCreditsService', () => {
 
   describe('getMarketPrices', () => {
     it('should return market price data', async () => {
+      mockedAxios.get
+        .mockResolvedValueOnce({ data: { rates: { BRL: 5 } } })
+        .mockResolvedValue({
+          data: {
+            items: [
+              {
+                price: '10',
+                hasSupply: true,
+                registry: 'VCS',
+                country: 'Brazil',
+              },
+            ],
+          },
+        });
+
       const result = await service.getMarketPrices();
 
       expect(result).toBeDefined();
+      expect(result.source).toBe('Carbonmark — mercado voluntário');
+      expect(result.usdBrl).toBe(5);
       expect(Array.isArray(result.prices)).toBe(true);
       // Deve ter pelo menos um standard com preço
       expect(result.prices.length).toBeGreaterThan(0);
