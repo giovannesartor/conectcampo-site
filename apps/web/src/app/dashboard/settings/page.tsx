@@ -2,9 +2,10 @@
 
 import { useAuth } from '@/lib/auth-context';
 import { useState, useEffect } from 'react';
-import { User, Lock, Bell, Save, Eye, EyeOff, KeyRound, ScanFace, ShieldCheck } from 'lucide-react';
+import { User, Lock, Bell, Save, Eye, EyeOff, KeyRound, ScanFace, ShieldCheck, Trash2, AlertTriangle, X } from 'lucide-react';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
+import Cookies from 'js-cookie';
 import { ApiKeysPanel } from '@/components/dashboard/ApiKeysPanel';
 import { isNativeApp } from '@/lib/native-platform';
 import {
@@ -17,7 +18,7 @@ import { disableNativePush, enableNativePush, isNativePushEnabled } from '@/lib/
 
 export default function SettingsPage() {
   const { user } = useAuth();
-  const [tab, setTab] = useState<'profile' | 'password' | 'security' | 'notifications' | 'apikeys'>('profile');
+  const [tab, setTab] = useState<'profile' | 'password' | 'security' | 'notifications' | 'apikeys' | 'account'>('profile');
   const canUseApiKeys = !!user;
   const [saving, setSaving] = useState(false);
   const [nativeSecurity, setNativeSecurity] = useState(false);
@@ -27,12 +28,16 @@ export default function SettingsPage() {
   const [nativePushAvailable, setNativePushAvailable] = useState(false);
   const [nativePushEnabled, setNativePushEnabled] = useState(false);
   const [savingNativePush, setSavingNativePush] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   // Deep-link: /dashboard/settings?tab=apikeys
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get('tab');
     if (t === 'apikeys' && canUseApiKeys) setTab('apikeys');
-    else if (t === 'profile' || t === 'password' || t === 'security' || t === 'notifications') setTab(t);
+    else if (t === 'profile' || t === 'password' || t === 'security' || t === 'notifications' || t === 'account') setTab(t);
   }, [canUseApiKeys]);
 
   useEffect(() => {
@@ -160,13 +165,34 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleDeleteAccount(e: React.FormEvent) {
+    e.preventDefault();
+    if (deleteConfirmation !== 'EXCLUIR' || !deletePassword || deletingAccount) return;
+    setDeletingAccount(true);
+    try {
+      await api.delete('/auth/account', {
+        data: {
+          currentPassword: deletePassword,
+          confirmation: deleteConfirmation,
+        },
+      });
+      Cookies.remove('accessToken');
+      Cookies.remove('refreshToken');
+      window.location.replace('/?conta=excluida');
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message ?? 'Não foi possível excluir sua conta. Verifique a senha atual.');
+      setDeletingAccount(false);
+    }
+  }
+
   const tabs = [
     { key: 'profile', label: 'Perfil', icon: User },
     { key: 'password', label: 'Senha', icon: Lock },
     ...(nativeSecurity ? [{ key: 'security', label: 'Segurança', icon: ShieldCheck }] : []),
     { key: 'notifications', label: 'Notificações', icon: Bell },
     ...(canUseApiKeys ? [{ key: 'apikeys', label: 'API Keys', icon: KeyRound }] : []),
-  ] as { key: 'profile' | 'password' | 'security' | 'notifications' | 'apikeys'; label: string; icon: typeof User }[];
+    { key: 'account', label: 'Conta', icon: Trash2 },
+  ] as { key: 'profile' | 'password' | 'security' | 'notifications' | 'apikeys' | 'account'; label: string; icon: typeof User }[];
 
   const NOTIFICATION_ITEMS = [
     { label: 'Receber e-mails', desc: 'Interruptor geral — desligue para não receber nenhum e-mail', key: 'email' as const },
@@ -413,6 +439,71 @@ export default function SettingsPage() {
 
       {/* API Keys tab */}
       {tab === 'apikeys' && canUseApiKeys && <ApiKeysPanel />}
+
+      {tab === 'account' && (
+        <div className="card max-w-2xl border-red-200 dark:border-red-900/60">
+          <div className="flex items-start gap-4">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-300">
+              <AlertTriangle className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-semibold text-gray-950 dark:text-white">Excluir conta e dados pessoais</h2>
+              <p className="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                A conta será bloqueada imediatamente, as sessões e notificações serão revogadas e seus dados de identificação serão anonimizados. Registros financeiros, contratuais e de auditoria que precisem ser preservados por obrigação legal serão mantidos pelo prazo aplicável.
+              </p>
+              <p className="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                Se houver uma assinatura feita pela App Store, cancele-a também em Ajustes &gt; seu nome &gt; Assinaturas. A exclusão da conta não cancela uma cobrança administrada pela Apple.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowDeleteAccount(true)}
+                className="mt-5 inline-flex items-center gap-2 rounded-xl border border-red-300 px-4 py-2.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/30"
+              >
+                <Trash2 className="h-4 w-4" /> Excluir minha conta
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteAccount && (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-gray-950/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
+          <form onSubmit={handleDeleteAccount} className="w-full max-w-md rounded-3xl border border-red-200 bg-white p-6 shadow-2xl dark:border-red-900/70 dark:bg-gray-950">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-red-600">Ação permanente</p>
+                <h2 id="delete-account-title" className="mt-1 text-xl font-bold text-gray-950 dark:text-white">Confirmar exclusão da conta</h2>
+              </div>
+              <button type="button" onClick={() => setShowDeleteAccount(false)} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Fechar">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-300">
+              Esta ação encerra o acesso ao ConectCampo. Para confirmar sua identidade, informe a senha atual e digite <strong>EXCLUIR</strong> no campo abaixo.
+            </p>
+            <div className="mt-5 space-y-4">
+              <div>
+                <label className="label">Senha atual</label>
+                <input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} className="input" autoComplete="current-password" required />
+              </div>
+              <div>
+                <label className="label">Digite EXCLUIR</label>
+                <input value={deleteConfirmation} onChange={(e) => setDeleteConfirmation(e.target.value.toUpperCase())} className="input" autoComplete="off" required />
+              </div>
+            </div>
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button type="button" onClick={() => setShowDeleteAccount(false)} className="btn-secondary">Manter minha conta</button>
+              <button
+                type="submit"
+                disabled={deletingAccount || !deletePassword || deleteConfirmation !== 'EXCLUIR'}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Trash2 className="h-4 w-4" /> {deletingAccount ? 'Excluindo...' : 'Excluir definitivamente'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

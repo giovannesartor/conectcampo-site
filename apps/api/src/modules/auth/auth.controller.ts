@@ -11,6 +11,7 @@ import {
   Ip,
   Headers,
   ParseUUIDPipe,
+  Delete,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -22,6 +23,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 import { Public } from './decorators/public.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
@@ -86,6 +88,24 @@ export class AuthController {
     @Headers('user-agent') userAgent: string,
   ) {
     return this.authService.logout(req.user.sub, { ip, userAgent });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('account')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Excluir e anonimizar a conta do usuário logado' })
+  async deleteAccount(
+    @Request() req: any,
+    @Body() body: DeleteAccountDto,
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent: string,
+  ) {
+    return this.authService.deleteAccount(
+      req.user.sub,
+      body.currentPassword,
+      { ip, userAgent },
+    );
   }
 
   @Public()

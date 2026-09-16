@@ -18,7 +18,7 @@ import { RegisterDto, PaymentGateway } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { UserRole, SubscriptionPlan } from '@prisma/client';
+import { UserRole, SubscriptionPlan, PaymentStatus } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { TRIAL_DAYS } from '../../common/pricing/pricing';
 
@@ -555,6 +555,76 @@ export class AuthService {
 
     this.logger.log(`Password changed for user: ${user.email}`);
     return { message: 'Senha alterada com sucesso.' };
+  }
+
+  async deleteAccount(
+    userId: string,
+    currentPassword: string,
+    meta: AuthAuditMeta = {},
+  ) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, isActive: true, deletedAt: null },
+    });
+    if (!user) throw new BadRequestException('Conta não encontrada');
+
+    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isValid) throw new UnauthorizedException('Senha atual incorreta');
+
+    await this.auditService.log({
+      userId,
+      action: 'ACCOUNT_DELETION_REQUESTED',
+      entity: 'user',
+      entityId: userId,
+      newValue: { status: 'anonymized' },
+      ipAddress: meta.ip,
+      userAgent: meta.userAgent,
+    });
+
+    const deletedAt = new Date();
+    const anonymizedPassword = await bcrypt.hash(uuidv4(), 12);
+    const anonymizedEmail = `${userId}@deleted.conectcampo.invalid`;
+
+    await this.prisma.$transaction([
+      this.prisma.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: deletedAt },
+      }),
+      this.prisma.passwordResetToken.deleteMany({ where: { userId } }),
+      this.prisma.emailVerificationToken.deleteMany({ where: { userId } }),
+      this.prisma.pushDevice.updateMany({
+        where: { userId },
+        data: { enabled: false },
+      }),
+      this.prisma.subscription.updateMany({
+        where: { userId, isActive: true },
+        data: { isActive: false, paymentStatus: PaymentStatus.CANCELLED },
+      }),
+      this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          email: anonymizedEmail,
+          passwordHash: anonymizedPassword,
+          name: 'Conta excluída',
+          phone: null,
+          cpf: null,
+          cnpj: null,
+          avatarUrl: null,
+          pixKey: null,
+          pixKeyType: null,
+          sellerVerified: false,
+          notificationPreferences: {},
+          emailVerified: false,
+          isActive: false,
+          deletedAt,
+        },
+      }),
+    ]);
+
+    this.logger.log(`Account anonymized: ${userId}`);
+    return {
+      message: 'Conta excluída e dados de identificação anonimizados.',
+      deletedAt,
+    };
   }
 
   // ─── Private token helpers ────────────────────────────────────────────────────
