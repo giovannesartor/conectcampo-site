@@ -27,10 +27,24 @@ jobs:
         run: |
           npm ci --no-audit --no-fund
           npx cap sync ios
+      - name: Resolve Swift packages on the cloud runner
+        run: >-
+          xcodebuild -resolvePackageDependencies
+          -project mobile/ios/App/App.xcodeproj -scheme App
+          -clonedSourcePackagesDirPath "$RUNNER_TEMP/conectcampo-packages"
+      - name: Export resolved Swift dependency lockfile
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-package-resolved
+          path: mobile/ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          if-no-files-found: error
+          retention-days: 7
       - name: Compile unsigned iOS app and embedded widgets
         run: >-
           xcodebuild -project mobile/ios/App/App.xcodeproj
           -scheme App -configuration Release
           -destination 'generic/platform=iOS'
           -derivedDataPath "$RUNNER_TEMP/conectcampo-derived-data"
+          -clonedSourcePackagesDirPath "$RUNNER_TEMP/conectcampo-packages"
           CODE_SIGNING_ALLOWED=NO build
