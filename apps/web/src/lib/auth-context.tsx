@@ -44,6 +44,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    const check = async () => {
+      if (document.visibilityState !== 'visible' || localStorage.getItem('conectcampo.auth.provider') !== 'APPLE') return;
+      try {
+        const { appleCredentialRevoked } = await import('@/lib/native-apple-auth');
+        if (await appleCredentialRevoked() && !cancelled) {
+          await logout();
+          window.location.assign('/login');
+        }
+      } catch { /* Network errors do not establish revocation. */ }
+    };
+    void check();
+    document.addEventListener('visibilitychange', check);
+    return () => { cancelled = true; document.removeEventListener('visibilitychange', check); };
+  }, [user?.id]);
+
   // H: warn user 5 min before session expires
   useEffect(() => {
     const token = Cookies.get('accessToken');
@@ -74,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(email: string, password: string) {
     const { data } = await api.post('/auth/login', { email, password });
+    localStorage.setItem('conectcampo.auth.provider', 'EMAIL');
     Cookies.set('accessToken', data.accessToken, { expires: 1, sameSite: 'strict', secure: window.location.protocol === 'https:' });
     Cookies.set('refreshToken', data.refreshToken, { expires: 7, sameSite: 'strict', secure: window.location.protocol === 'https:' });
     setUser(data.user);
@@ -99,6 +118,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     Cookies.remove('accessToken');
     Cookies.remove('refreshToken');
+    localStorage.removeItem('conectcampo.auth.provider');
+    sessionStorage.removeItem('conectcampo.apple.pendingRegistration');
     setUser(null);
   }
 

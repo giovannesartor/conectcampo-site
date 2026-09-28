@@ -15,6 +15,7 @@ import {
   setBiometricLockEnabled,
 } from '@/lib/native-biometric';
 import { disableNativePush, enableNativePush, isNativePushEnabled } from '@/lib/native-push';
+import { authorizeApple, supportsAppleSignIn } from '@/lib/native-apple-auth';
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -32,6 +33,30 @@ export default function SettingsPage() {
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [appleConnection, setAppleConnection] = useState<{ linked: boolean; passwordEnabled: boolean; available: boolean } | null>(null);
+  const [linkPassword, setLinkPassword] = useState('');
+  const [linkingApple, setLinkingApple] = useState(false);
+  const [nativeApple, setNativeApple] = useState(false);
+  const appleDelete = nativeApple && !!appleConnection?.linked && !!appleConnection.available;
+
+  useEffect(() => {
+    setNativeApple(supportsAppleSignIn());
+    if (user) void api.get('/auth/apple/connection').then(({ data }) => setAppleConnection(data)).catch(() => undefined);
+  }, [user]);
+
+  async function linkApple() {
+    if (!linkPassword || linkingApple) return;
+    setLinkingApple(true);
+    try {
+      const credential = await authorizeApple('LINK');
+      await api.post('/auth/apple/link', { ...credential, currentPassword: linkPassword });
+      setLinkPassword('');
+      setAppleConnection(prev => prev ? { ...prev, linked: true } : prev);
+      toast.success('Apple vinculada. Você pode usar Apple ou sua senha para entrar.');
+    } catch (error: any) {
+      if (error?.code !== 'SIGN_IN_CANCELLED') toast.error(error?.response?.data?.message ?? error?.message ?? 'Não foi possível vincular a Apple.');
+    } finally { setLinkingApple(false); }
+  }
 
   // Deep-link: /dashboard/settings?tab=apikeys
   useEffect(() => {
@@ -167,10 +192,13 @@ export default function SettingsPage() {
 
   async function handleDeleteAccount(e: React.FormEvent) {
     e.preventDefault();
-    if (deleteConfirmation !== 'EXCLUIR' || !deletePassword || deletingAccount) return;
+    if (deleteConfirmation !== 'EXCLUIR' || (!appleDelete && !deletePassword) || deletingAccount) return;
     setDeletingAccount(true);
     try {
-      await api.delete('/auth/account', {
+      if (appleDelete) {
+        const credential = await authorizeApple('DELETE');
+        await api.post('/auth/apple/delete-account', { ...credential, confirmation: deleteConfirmation });
+      } else await api.delete('/auth/account', {
         data: {
           currentPassword: deletePassword,
           confirmation: deleteConfirmation,
@@ -441,6 +469,19 @@ export default function SettingsPage() {
       {tab === 'apikeys' && canUseApiKeys && <ApiKeysPanel />}
 
       {tab === 'account' && (
+        <div className="max-w-2xl space-y-5">
+        <section className="card">
+          <h2 className="font-semibold">Acesso com Apple</h2>
+          <p className="mt-2 text-sm leading-6 text-gray-500">{appleConnection?.linked ? 'Sua conta está vinculada à Apple. Seus documentos, operações e assinatura continuam na mesma conta.' : 'Vincule sua Apple à conta atual para entrar com segurança, sem criar outro cadastro.'}</p>
+          {!appleConnection ? <p className="mt-3 text-sm text-gray-500">Não foi possível consultar o vínculo. Reabra esta página para tentar novamente.</p> : !appleConnection.linked && nativeApple && appleConnection.available && appleConnection.passwordEnabled ? (
+            <form className="mt-4 space-y-3" onSubmit={(event) => { event.preventDefault(); void linkApple(); }}>
+              <label className="label" htmlFor="apple-link-password">Confirme a senha atual da ConectCampo</label>
+              <input id="apple-link-password" className="input" type="password" autoComplete="current-password" value={linkPassword} onChange={(event) => setLinkPassword(event.target.value)} required />
+              <button className="btn-secondary" type="submit" disabled={linkingApple || !linkPassword}>{linkingApple ? 'Confirmando…' : 'Vincular com Apple'}</button>
+            </form>
+          ) : !appleConnection.linked && <p className="mt-3 text-sm text-gray-500">Disponível no aplicativo iOS atualizado, após a ativação do serviço.</p>}
+          {appleConnection && !appleConnection.passwordEnabled && <p className="mt-3 text-sm leading-6 text-gray-500">Sua conta usa Apple, sem senha própria. Para acessar pela web ou excluir a conta fora do app, <a className="font-semibold text-brand-700 underline dark:text-brand-300" href="/forgot-password">defina uma senha por e-mail</a>.</p>}
+        </section>
         <div className="card max-w-2xl border-red-200 dark:border-red-900/60">
           <div className="flex items-start gap-4">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-300">
@@ -464,6 +505,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+        </div>
       )}
 
       {showDeleteAccount && (
@@ -479,13 +521,13 @@ export default function SettingsPage() {
               </button>
             </div>
             <p className="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-300">
-              Esta ação encerra o acesso ao ConectCampo. Para confirmar sua identidade, informe a senha atual e digite <strong>EXCLUIR</strong> no campo abaixo.
+              Esta ação encerra o acesso ao ConectCampo. {appleDelete ? 'Você confirmará sua identidade com Apple.' : 'Para confirmar sua identidade, informe a senha atual.'} Digite <strong>EXCLUIR</strong> no campo abaixo.
             </p>
             <div className="mt-5 space-y-4">
-              <div>
+              {!appleDelete && <div>
                 <label className="label">Senha atual</label>
                 <input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} className="input" autoComplete="current-password" required />
-              </div>
+              </div>}
               <div>
                 <label className="label">Digite EXCLUIR</label>
                 <input value={deleteConfirmation} onChange={(e) => setDeleteConfirmation(e.target.value.toUpperCase())} className="input" autoComplete="off" required />
@@ -495,7 +537,7 @@ export default function SettingsPage() {
               <button type="button" onClick={() => setShowDeleteAccount(false)} className="btn-secondary">Manter minha conta</button>
               <button
                 type="submit"
-                disabled={deletingAccount || !deletePassword || deleteConfirmation !== 'EXCLUIR'}
+                disabled={deletingAccount || (!appleDelete && !deletePassword) || deleteConfirmation !== 'EXCLUIR'}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Trash2 className="h-4 w-4" /> {deletingAccount ? 'Excluindo...' : 'Excluir definitivamente'}

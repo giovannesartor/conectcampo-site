@@ -7,6 +7,7 @@ import {
   Matches,
   ValidateIf,
   IsNotEmpty,
+  MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole, SubscriptionPlan } from '@prisma/client';
@@ -25,12 +26,19 @@ export class RegisterDto {
   email: string;
 
   @ApiProperty({ example: 'Senha@123' })
+  @ValidateIf((o) => !o.appleRegistrationToken)
   @IsString()
   @MinLength(8, { message: 'Senha deve ter no mínimo 8 caracteres' })
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]+$/, {
     message: 'Senha deve conter ao menos 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial (@$!%*?&#)',
   })
   password: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(43)
+  @MaxLength(43)
+  appleRegistrationToken?: string;
 
   @ApiProperty({ example: 'João Silva' })
   @IsString()

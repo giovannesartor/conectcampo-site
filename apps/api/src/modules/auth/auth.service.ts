@@ -21,6 +21,10 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UserRole, SubscriptionPlan, PaymentStatus } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { TRIAL_DAYS } from '../../common/pricing/pricing';
+import { randomBytes } from 'crypto';
+import { AppleIdentityService } from './apple-identity.service';
+import { AppleAuthDto, AppleLinkDto, AppleDeleteDto } from './dto/apple-auth.dto';
+import { AuthFlowService } from './auth-flow.service';
 
 export interface AuthAuditMeta {
   ip?: string;
@@ -40,6 +44,8 @@ export class AuthService {
     private readonly valsaService: ValsaService,
     private readonly subscriptionsService: SubscriptionsService,
     private readonly auditService: AuditService,
+    private readonly apple: AppleIdentityService,
+    private readonly flows: AuthFlowService,
   ) {}
 
   // Admin emails resolved from environment
@@ -65,6 +71,10 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto, meta: AuthAuditMeta = {}) {
+    const appleRegistration = dto.appleRegistrationToken ? await this.apple.registration(dto.appleRegistrationToken) : null;
+    if (appleRegistration && (dto.email.toLowerCase() !== appleRegistration.email || (dto.plan !== SubscriptionPlan.CORPORATE && dto.gateway !== PaymentGateway.APPLE))) {
+      throw new BadRequestException('Os dados precisam corresponder ao cadastro Apple no aplicativo.');
+    }
     const planRole = this.roleForPlan(dto.plan);
     if (dto.role !== planRole) {
       throw new BadRequestException('Perfil incompatível com o plano selecionado');
@@ -91,10 +101,10 @@ export class AuthService {
       }
     }
 
-    const passwordHash = await bcrypt.hash(dto.password, 12);
+    const passwordHash = await bcrypt.hash(appleRegistration ? randomBytes(48).toString('base64url') : dto.password, 12);
     // O perfil público é sempre derivado do plano no servidor. O único caminho
     // de elevação para ADMIN é a allowlist ADMIN_EMAILS do ambiente.
-    const role = this.resolveRole(dto.email, planRole);
+    const role = appleRegistration ? planRole : this.resolveRole(dto.email, planRole);
     const isFree = dto.plan === SubscriptionPlan.CORPORATE;
 
     // Todos os planos pagos ganham 7 dias grátis com acesso imediato; o plano
@@ -102,10 +112,18 @@ export class AuthService {
     // desde o cadastro em ambos os casos.
     let user;
     try {
-      user = await this.prisma.user.create({
+      user = await this.prisma.$transaction(async (tx) => {
+        if (appleRegistration) {
+          const consumed = await tx.appleRegistration.deleteMany({ where: { tokenHash: appleRegistration.tokenHash, expiresAt: { gt: new Date() } } });
+          if (consumed.count !== 1) throw new BadRequestException('Confirmação Apple já utilizada ou expirada.');
+        }
+        return tx.user.create({
         data: {
-          email: dto.email,
+          email: appleRegistration?.email ?? dto.email,
           passwordHash,
+          passwordEnabled: !appleRegistration,
+          emailVerified: !!appleRegistration,
+          ...(appleRegistration ? { appleIdentity: { create: { subject: appleRegistration.subject, refreshToken: appleRegistration.refreshToken } } } : {}),
           name: dto.name,
           role,
           phone: dto.phone,
@@ -115,6 +133,7 @@ export class AuthService {
           consentLgpd: true,
           consentLgpdAt: new Date(),
         },
+        });
       });
     } catch (err: any) {
       // Falha de unicidade (corrida entre a checagem acima e o insert)
@@ -144,7 +163,7 @@ export class AuthService {
       await this.subscriptionsService.getOrCreateFreeSubscription(user.id);
       const verificationToken = await this.createEmailVerificationToken(user.id);
       this.mailService.sendWelcome(user.email, user.name).catch(() => null);
-      this.mailService
+      if (!appleRegistration) this.mailService
         .sendEmailVerification(user.email, user.name, verificationToken)
         .catch(() => null);
 
@@ -208,7 +227,7 @@ export class AuthService {
 
     const verificationToken = await this.createEmailVerificationToken(user.id);
     this.mailService.sendWelcome(user.email, user.name).catch(() => null);
-    this.mailService
+    if (!appleRegistration) this.mailService
       .sendEmailVerification(user.email, user.name, verificationToken)
       .catch(() => null);
 
@@ -239,7 +258,7 @@ export class AuthService {
         where: { email: dto.email },
       });
 
-      if (!user || !user.isActive || user.deletedAt) {
+      if (!user || !user.isActive || user.deletedAt || !user.passwordEnabled) {
         throw new UnauthorizedException('Credenciais inválidas');
       }
 
@@ -300,7 +319,7 @@ export class AuthService {
       include: { user: true },
     });
 
-    if (!stored) {
+    if (!stored || !stored.user.isActive || stored.user.deletedAt) {
       throw new UnauthorizedException('Refresh token inválido ou expirado');
     }
 
@@ -409,7 +428,7 @@ export class AuthService {
     await this.prisma.$transaction([
       this.prisma.user.update({
         where: { id: record.userId },
-        data: { passwordHash },
+        data: { passwordHash, passwordEnabled: true },
       }),
       this.prisma.passwordResetToken.update({
         where: { id: record.id },
@@ -561,13 +580,14 @@ export class AuthService {
     userId: string,
     currentPassword: string,
     meta: AuthAuditMeta = {},
+    appleVerified = false,
   ) {
     const user = await this.prisma.user.findFirst({
       where: { id: userId, isActive: true, deletedAt: null },
     });
     if (!user) throw new BadRequestException('Conta não encontrada');
 
-    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    const isValid = appleVerified || (user.passwordEnabled && await bcrypt.compare(currentPassword, user.passwordHash));
     if (!isValid) throw new UnauthorizedException('Senha atual incorreta');
 
     await this.auditService.log({
@@ -583,8 +603,13 @@ export class AuthService {
     const deletedAt = new Date();
     const anonymizedPassword = await bcrypt.hash(uuidv4(), 12);
     const anonymizedEmail = `${userId}@deleted.conectcampo.invalid`;
+    const identity = await this.prisma.appleIdentity.findUnique({ where: { userId } });
 
     await this.prisma.$transaction([
+      ...(identity ? [
+        this.prisma.appleRevocation.create({ data: { refreshToken: identity.refreshToken } }),
+        this.prisma.appleIdentity.deleteMany({ where: { userId } }),
+      ] : []),
       this.prisma.refreshToken.updateMany({
         where: { userId, revokedAt: null },
         data: { revokedAt: deletedAt },
@@ -604,6 +629,7 @@ export class AuthService {
         data: {
           email: anonymizedEmail,
           passwordHash: anonymizedPassword,
+          passwordEnabled: false,
           name: 'Conta excluída',
           phone: null,
           cpf: null,
@@ -619,6 +645,7 @@ export class AuthService {
         },
       }),
     ]);
+    if (identity) void this.apple.cleanupAndRevoke().catch(() => undefined);
 
     this.logger.log(`Account anonymized: ${userId}`);
     return {
@@ -628,6 +655,57 @@ export class AuthService {
   }
 
   // ─── Private token helpers ────────────────────────────────────────────────────
+
+  async appleAuthenticate(dto: AppleAuthDto, meta: AuthAuditMeta = {}) {
+    try {
+      const credential = await this.apple.authenticate(dto, 'AUTH');
+      const identity = await this.prisma.appleIdentity.findUnique({ where: { subject: credential.subject }, include: { user: true } });
+      if (identity) {
+        const user = identity.user;
+        if (!user.isActive || user.deletedAt) throw new UnauthorizedException('Conta indisponível.');
+        await this.prisma.$transaction([
+          this.prisma.appleIdentity.update({ where: { id: identity.id }, data: { refreshToken: credential.refreshToken } }),
+          this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
+        ]);
+        void this.flows.record('APPLE', 'LOGIN', 'SUCCESS');
+        void this.auditService.log({ userId: user.id, action: 'LOGIN', entity: 'auth', entityId: user.id, newValue: { provider: 'APPLE' }, ipAddress: meta.ip, userAgent: meta.userAgent }).catch(() => undefined);
+        return { user: { id: user.id, email: user.email, name: user.name, role: user.role }, ...await this.generateTokens(user.id, user.email, user.role) };
+      }
+      if (!credential.email) throw new BadRequestException('Autorize o compartilhamento do e-mail para criar sua conta.');
+      const existing = await this.prisma.user.findUnique({ where: { email: credential.email } });
+      if (existing) throw new ConflictException('Este e-mail já tem uma conta. Entre com sua senha e vincule a Apple em Configurações > Conta.');
+      const registrationToken = randomBytes(32).toString('base64url');
+      await this.prisma.appleRegistration.create({ data: { tokenHash: this.apple.hash(registrationToken), ...credential, email: credential.email, expiresAt: new Date(Date.now() + 15 * 60_000) } });
+      return { registrationRequired: true, registrationToken, email: credential.email, name: credential.name ?? '' };
+    } catch (error) {
+      void this.flows.record('APPLE', 'LOGIN', 'FAILURE', 'APPLE_AUTH_REJECTED');
+      throw error;
+    }
+  }
+
+  async appleLink(userId: string, dto: AppleLinkDto) {
+    try {
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (!user?.isActive || user.deletedAt || !user.passwordEnabled || !await bcrypt.compare(dto.currentPassword, user.passwordHash)) throw new UnauthorizedException('Confirme sua senha atual para vincular a Apple.');
+      const credential = await this.apple.authenticate(dto, 'LINK', userId);
+      // Unique subject and userId constraints prevent cross-account takeover and replacement.
+      await this.prisma.appleIdentity.create({ data: { userId, subject: credential.subject, refreshToken: credential.refreshToken } });
+      void this.flows.record('APPLE', 'LINK', 'SUCCESS');
+      return { message: 'Apple vinculada. Seu login por e-mail continua disponível.' };
+    } catch (error) {
+      void this.flows.record('APPLE', 'LINK', 'FAILURE', 'APPLE_LINK_REJECTED');
+      if ((error as { code?: string })?.code === 'P2002') throw new ConflictException('Esta conta Apple ou este perfil já possui um vínculo.');
+      throw error;
+    }
+  }
+
+  async deleteWithApple(userId: string, dto: AppleDeleteDto, meta: AuthAuditMeta = {}) {
+    const credential = await this.apple.authenticate(dto, 'DELETE', userId);
+    const identity = await this.prisma.appleIdentity.findUnique({ where: { userId } });
+    if (!identity || identity.subject !== credential.subject) throw new UnauthorizedException('Use a conta Apple vinculada a este perfil.');
+    await this.prisma.appleIdentity.update({ where: { userId }, data: { refreshToken: credential.refreshToken } });
+    return this.deleteAccount(userId, '', meta, true);
+  }
 
   async createEmailVerificationToken(userId: string): Promise<string> {
     const token = uuidv4();

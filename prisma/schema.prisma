@@ -202,6 +202,7 @@ model User {
   id             String    @id @default(uuid())
   email          String    @unique
   passwordHash   String
+  passwordEnabled Boolean @default(true)
   name           String
   role           UserRole
   phone          String?
@@ -228,6 +229,7 @@ model User {
   sellerVerified Boolean   @default(false)
 
   // Relations
+  appleIdentity    AppleIdentity?
   company          Company?          @relation("CompanyOwner")
   companyMembers   CompanyMember[]
   producerProfile  ProducerProfile?
@@ -261,6 +263,47 @@ model User {
   @@index([email])
   @@index([role])
   @@map("users")
+}
+
+// Native Apple authentication. Provider secrets are encrypted, never exposed by /users/me.
+model AppleIdentity {
+  id           String @id @default(uuid())
+  userId       String @unique
+  subject      String @unique
+  refreshToken String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AppleChallenge {
+  id        String @id @default(uuid())
+  nonce     String
+  purpose   String
+  userId    String?
+  expiresAt DateTime
+  usedAt    DateTime?
+  @@index([expiresAt])
+}
+
+model AppleRegistration {
+  tokenHash    String @id
+  subject      String
+  email        String
+  name         String?
+  refreshToken String
+  expiresAt    DateTime
+  @@index([expiresAt])
+}
+
+// Durable revocation outbox survives anonymization and transient Apple outages.
+model AppleRevocation {
+  id           String @id @default(uuid())
+  refreshToken String
+  attempts     Int @default(0)
+  nextAttemptAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  @@index([nextAttemptAt])
 }
 
 model RefreshToken {

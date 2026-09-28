@@ -44,10 +44,10 @@ export class AuthController {
   ) {
     try {
       const result = await this.authService.register(dto, { ip, userAgent });
-      void this.flows.record('EMAIL', 'REGISTER', 'SUCCESS');
+      void this.flows.record(dto.appleRegistrationToken ? 'APPLE' : 'EMAIL', 'REGISTER', 'SUCCESS');
       return result;
     } catch (error) {
-      void this.flows.record('EMAIL', 'REGISTER', 'FAILURE', 'REGISTRATION_REJECTED');
+      void this.flows.record(dto.appleRegistrationToken ? 'APPLE' : 'EMAIL', 'REGISTER', 'FAILURE', 'REGISTRATION_REJECTED');
       throw error;
     }
   }

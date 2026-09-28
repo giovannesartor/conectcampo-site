@@ -8,6 +8,7 @@ import { api } from '@/lib/api';
 import { ErrorState } from '@/components/dashboard/PageKit';
 
 interface Flows {
+  apple?: { linkedAccounts: number; pendingRevocations: number };
   since: string;
   firstEventAt: string | null;
   providers: { id: string; name: string; available: boolean; detail: string }[];
@@ -52,6 +53,10 @@ export default function AccessFlowsPage() {
               <div className="flex justify-between gap-2"><dt>Falhas de login</dt><dd className="font-bold tabular-nums">{count(provider.id, 'LOGIN', 'FAILURE')}</dd></div>
               <div className="flex justify-between gap-2"><dt>Novos cadastros</dt><dd className="font-bold tabular-nums">{count(provider.id, 'REGISTER', 'SUCCESS')}</dd></div>
               <div className="flex justify-between gap-2"><dt>Cadastros recusados</dt><dd className="font-bold tabular-nums">{count(provider.id, 'REGISTER', 'FAILURE')}</dd></div>
+              {provider.id === 'APPLE' && <>
+                <div className="flex justify-between gap-2"><dt>Contas vinculadas</dt><dd className="font-bold tabular-nums">{data.apple?.linkedAccounts ?? 0}</dd></div>
+                <div className="flex justify-between gap-2"><dt>Revogações pendentes</dt><dd className="font-bold tabular-nums">{data.apple?.pendingRevocations ?? 0}</dd></div>
+              </>}
             </dl>
           </section>)}
         </div>

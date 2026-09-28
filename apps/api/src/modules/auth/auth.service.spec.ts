@@ -1,5 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
+import { AppleIdentityService } from './apple-identity.service';
+import { AuthFlowService } from './auth-flow.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -50,7 +52,7 @@ describe('AuthService', () => {
       create: jest.fn(),
       update: jest.fn(),
     },
-    $transaction: jest.fn((operations: unknown[]) => Promise.all(operations)),
+    $transaction: jest.fn((operations: unknown[] | ((tx: any) => unknown)): any => typeof operations === 'function' ? operations(mockPrisma) : Promise.all(operations)),
   };
 
   const mockAsaasService = {
@@ -86,6 +88,8 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        { provide: AppleIdentityService, useValue: { available: false } },
+        { provide: AuthFlowService, useValue: { record: jest.fn().mockResolvedValue(undefined) } },
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
@@ -170,6 +174,7 @@ describe('AuthService', () => {
         isActive: true,
         deletedAt: null,
         passwordHash: 'hashed',
+        passwordEnabled: true,
       };
 
       prisma.user.findUnique.mockResolvedValue(user);
@@ -190,6 +195,7 @@ describe('AuthService', () => {
         isActive: true,
         deletedAt: null,
         passwordHash: 'hashed',
+        passwordEnabled: true,
       });
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
@@ -219,7 +225,7 @@ describe('AuthService', () => {
         token: 'rt-value',
         revokedAt: null,
         expiresAt: new Date(Date.now() + 86400000),
-        user: { id: 'user-1', email: 'test@example.com', role: 'PRODUCER' },
+        user: { id: 'user-1', email: 'test@example.com', role: 'PRODUCER', isActive: true, deletedAt: null },
       };
 
       prisma.refreshToken.findUnique.mockResolvedValue(stored);

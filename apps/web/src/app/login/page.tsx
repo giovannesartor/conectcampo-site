@@ -7,6 +7,7 @@ import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { AppleSignInButton } from '@/components/AppleSignInButton';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -139,6 +140,7 @@ export default function LoginPage() {
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
+          <AppleSignInButton />
 
           <div className="mt-6 text-center">
             <Link

@@ -5,6 +5,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { AuthFlowModule } from './auth-flow.module';
+import { AppleIdentityModule } from './apple-identity.module';
+import { AppleAuthController } from './apple-auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UsersModule } from '../users/users.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
@@ -12,6 +14,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 @Module({
   imports: [
     AuthFlowModule,
+    AppleIdentityModule,
     UsersModule,
     SubscriptionsModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -26,7 +29,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
       inject: [ConfigService],
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, AppleAuthController],
   providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })

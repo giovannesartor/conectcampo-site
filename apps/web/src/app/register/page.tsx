@@ -10,6 +10,8 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import Cookies from 'js-cookie';
 import { api } from '@/lib/api';
 import { isIOSNativeApp } from '@/lib/native-platform';
+import { AppleSignInButton } from '@/components/AppleSignInButton';
+import { APPLE_REGISTRATION_KEY } from '@/lib/native-apple-auth';
 
 // ─── Plan config ──────────────────────────────────────────────────────────────
 
@@ -117,9 +119,17 @@ function RegisterForm() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isNativeIOS, setIsNativeIOS] = useState(false);
+  const [appleRegistration, setAppleRegistration] = useState<{ token: string; email: string; expiresAt: number } | null>(null);
 
   useEffect(() => {
     setIsNativeIOS(isIOSNativeApp());
+    try {
+      const pending = JSON.parse(sessionStorage.getItem(APPLE_REGISTRATION_KEY) || 'null');
+      if (isIOSNativeApp() && pending?.token && pending?.email && pending.expiresAt > Date.now()) {
+        setAppleRegistration(pending);
+        setForm(prev => ({ ...prev, email: pending.email, name: pending.name || prev.name }));
+      } else sessionStorage.removeItem(APPLE_REGISTRATION_KEY);
+    } catch { sessionStorage.removeItem(APPLE_REGISTRATION_KEY); }
   }, []);
 
   // Keep URL in sync when plan is selected
@@ -156,6 +166,7 @@ function RegisterForm() {
     const cleanDoc = form.document.replace(/\D/g, '');
 
     try {
+      if (appleRegistration && appleRegistration.expiresAt <= Date.now()) throw new Error('Confirmação Apple expirada. Entre com Apple novamente.');
       const payload: Record<string, string> = {
         name: form.name,
         email: form.email,
@@ -164,11 +175,16 @@ function RegisterForm() {
         plan: selectedPlan,
         phone: form.phone.replace(/\D/g, ''),
       };
+      if (appleRegistration) {
+        delete payload.password;
+        payload.appleRegistrationToken = appleRegistration.token;
+      }
       if (!planConfig.free) payload.gateway = isNativeIOS ? 'APPLE' : gateway;
       if (planConfig.docType === 'cpf') payload.cpf = cleanDoc;
       else payload.cnpj = cleanDoc;
 
       const { data } = await api.post('/auth/register', payload);
+      sessionStorage.removeItem(APPLE_REGISTRATION_KEY);
 
       // Fluxo legado (pagamento imediato) — mantido como fallback.
       if (data.requiresPayment && data.invoiceUrl) {
@@ -181,6 +197,7 @@ function RegisterForm() {
 
       // Plano grátis ou trial de 7 dias — acesso imediato ao dashboard.
       if (data.accessToken) {
+        localStorage.setItem('conectcampo.auth.provider', appleRegistration ? 'APPLE' : 'EMAIL');
         Cookies.set('accessToken', data.accessToken, {
           expires: 1,
           sameSite: 'strict',
@@ -199,7 +216,7 @@ function RegisterForm() {
         err.response?.data?.message ??
         (Array.isArray(err.response?.data?.message)
           ? err.response.data.message.join(', ')
-          : 'Erro ao criar conta. Verifique os dados e tente novamente.');
+          : err.message ?? 'Erro ao criar conta. Verifique os dados e tente novamente.');
       setError(Array.isArray(msg) ? msg.join(', ') : msg);
     } finally {
       setLoading(false);
@@ -223,6 +240,7 @@ function RegisterForm() {
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Selecione o plano que melhor se encaixa no seu perfil
           </p>
+          {appleRegistration ? <p className="mt-4 text-sm text-brand-700">Apple confirmada. Complete seu perfil para finalizar o cadastro.</p> : <AppleSignInButton />}
         </div>
 
         <div className="grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -370,6 +388,7 @@ function RegisterForm() {
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            {appleRegistration && <p role="status" className="rounded-xl bg-brand-50 p-3 text-sm text-brand-800">Seu e-mail foi confirmado pela Apple. Não é necessário criar outra senha.</p>}
             {error && (
               <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 text-sm text-red-600 dark:text-red-400">
                 {error}
@@ -397,6 +416,7 @@ function RegisterForm() {
               <input
                 id="email"
                 type="email"
+                readOnly={!!appleRegistration}
                 value={form.email}
                 onChange={(e) => updateField('email', e.target.value)}
                 className="input"
@@ -453,7 +473,7 @@ function RegisterForm() {
             )}
 
             {/* Password */}
-            <div>
+            {!appleRegistration && <div>
               <label htmlFor="password" className="label">Senha</label>
               <div className="relative">
                 <input
@@ -480,7 +500,7 @@ function RegisterForm() {
               <p className="mt-1 text-xs text-gray-400">
                 Use ao menos 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial
               </p>
-            </div>
+            </div>}
 
             {isNativeIOS && !planConfig?.free && (
               <div className="rounded-2xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800 dark:border-brand-800 dark:bg-brand-950/20 dark:text-brand-200">
@@ -617,6 +637,7 @@ function RegisterForm() {
               </p>
             )}
           </form>
+          {!appleRegistration && <AppleSignInButton />}
 
           <div className="mt-6 text-center">
             <Link

@@ -30,7 +30,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Public auth failures must stay on the form, not refresh/reload the page.
-    const publicAuth = /^\/auth\/(login|register|refresh|forgot-password|reset-password|social)/.test(originalRequest?.url ?? '');
+    const publicAuth = /^\/auth\/(login|register|refresh|forgot-password|reset-password|social|apple\/(authenticate|challenge|config))/.test(originalRequest?.url ?? '');
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !publicAuth) {
       originalRequest._retry = true;
 
