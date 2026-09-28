@@ -32,6 +32,7 @@ jobs:
         run: node .github/scripts/capture-app-store-screenshots.mjs
 
       - name: Upload App Store assets
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: conectcampo-app-store-screenshots

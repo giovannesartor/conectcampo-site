@@ -300,7 +300,7 @@ html {
 @media (max-width: 639px) {
   .dashboard-surface { padding-left: 1rem; padding-right: 1rem; }
   .dashboard-surface .grid { column-gap: 0.75rem; }
-  .dashboard-surface input, .dashboard-surface select, .dashboard-surface textarea {
+  input:not([type='checkbox']):not([type='radio']), select, textarea {
     font-size: 16px; /* Prevent automatic iOS focus zoom. */
   }
 }

@@ -12,7 +12,7 @@ export function DashboardWelcome({ name, children }: { name?: string; children: 
         <p className="mb-3 flex items-center gap-2 text-xs font-semibold text-brand-700 dark:text-brand-300">
           <Sprout className="h-4 w-4" aria-hidden="true" /> ConectCampo · Gestão rural
         </p>
-        <h1 className="text-2xl font-extrabold tracking-tight text-gray-950 dark:text-white">
+        <h1 className="break-words text-2xl font-extrabold tracking-tight text-gray-950 dark:text-white">
           {isDemo ? 'Seu campo, em dia.' : `Olá, ${firstName}.`}
         </h1>
         <p className="mt-2 max-w-md text-sm leading-6 text-gray-600 dark:text-gray-400">
