@@ -71,7 +71,8 @@ export class AppleIdentityService {
   async verifyIdentityToken(token: string, nonce: string): Promise<AppleClaims> {
     const header = this.jwt.decode(token, { complete: true }) as { header?: { kid?: string; alg?: string } } | null;
     if (!header?.header?.kid || header.header.alg !== 'RS256') throw new UnauthorizedException('Credencial Apple inválida.');
-    if (Date.now() > this.keysUntil || !this.keys.some(k => k.kid === header.header.kid)) {
+    const kid = header.header.kid;
+    if (Date.now() > this.keysUntil || !this.keys.some(k => k.kid === kid)) {
       try {
         const response = await axios.get(`${APPLE}/auth/keys`, { timeout: 10_000, maxRedirects: 0 });
         if (!Array.isArray(response.data?.keys)) throw new Error('Invalid keys');
@@ -79,7 +80,7 @@ export class AppleIdentityService {
         this.keysUntil = Date.now() + 3600_000;
       } catch { throw new ServiceUnavailableException('Validação Apple indisponível. Tente novamente.'); }
     }
-    const jwk = this.keys.find(k => k.kid === header.header.kid && k.kty === 'RSA' && k.alg === 'RS256' && k.use === 'sig');
+    const jwk = this.keys.find(k => k.kid === kid && k.kty === 'RSA' && k.alg === 'RS256' && k.use === 'sig');
     if (!jwk) throw new UnauthorizedException('Credencial Apple inválida.');
     try {
       const publicKey = createPublicKey({ key: jwk, format: 'jwk' }).export({ type: 'spki', format: 'pem' }).toString();
