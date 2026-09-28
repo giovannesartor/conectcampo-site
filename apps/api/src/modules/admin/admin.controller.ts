@@ -21,6 +21,8 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '@prisma/client';
 import { AdminService } from './admin.service';
+import { AuthFlowService } from '../auth/auth-flow.service';
+import { MailService } from '../mail/mail.service';
 import { ChangeUserRoleDto } from './dto/change-user-role.dto';
 
 @ApiTags('admin')
@@ -29,7 +31,21 @@ import { ChangeUserRoleDto } from './dto/change-user-role.dto';
 @Roles(UserRole.ADMIN)
 @ApiBearerAuth()
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminService: AdminService, private readonly flows: AuthFlowService, private readonly mail: MailService) {}
+
+  @Get('auth-flows')
+  @ApiOperation({ summary: 'Fluxos de autenticação e envio de e-mails, sem credenciais' })
+  async authFlows() {
+    const [metrics, mail] = await Promise.all([this.flows.summary(), this.mail.deliveryStatus()]);
+    return {
+      ...metrics, mail,
+      providers: [
+        { id: 'EMAIL', name: 'E-mail e senha', available: true, detail: 'Cadastro, login e recuperação de senha.' },
+        { id: 'GOOGLE', name: 'Google / Gmail', available: false, detail: 'OAuth ainda não ativado. Ter endereço Gmail não significa login pelo Google.' },
+        { id: 'APPLE', name: 'Apple', available: false, detail: 'Sign in with Apple ainda não ativado. Assinaturas Apple são uma integração separada.' },
+      ],
+    };
+  }
 
   // ─── Overview / KPIs ────────────────────────────────────────────────
   @Get('stats')

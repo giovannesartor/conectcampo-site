@@ -16,6 +16,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
+import { AuthFlowService } from './auth-flow.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -30,7 +31,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService, private readonly flows: AuthFlowService) {}
 
   @Public()
   @Post('register')
@@ -41,7 +42,14 @@ export class AuthController {
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string,
   ) {
-    return this.authService.register(dto, { ip, userAgent });
+    try {
+      const result = await this.authService.register(dto, { ip, userAgent });
+      void this.flows.record('EMAIL', 'REGISTER', 'SUCCESS');
+      return result;
+    } catch (error) {
+      void this.flows.record('EMAIL', 'REGISTER', 'FAILURE', 'REGISTRATION_REJECTED');
+      throw error;
+    }
   }
 
   @Public()
@@ -54,7 +62,14 @@ export class AuthController {
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string,
   ) {
-    return this.authService.login(dto, { ip, userAgent });
+    try {
+      const result = await this.authService.login(dto, { ip, userAgent });
+      void this.flows.record('EMAIL', 'LOGIN', 'SUCCESS');
+      return result;
+    } catch (error) {
+      void this.flows.record('EMAIL', 'LOGIN', 'FAILURE', 'LOGIN_REJECTED');
+      throw error;
+    }
   }
 
   @Public()

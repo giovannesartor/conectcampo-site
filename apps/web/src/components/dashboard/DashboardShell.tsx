@@ -181,6 +181,7 @@ function buildRoleNav(role: string, plan: string): NavSection[] {
           { label: 'Disputas',           href: '/dashboard/admin/disputes',    icon: <ShieldAlert className="h-5 w-5" /> },
           { label: 'Receita',            href: '/dashboard/admin/revenue',     icon: <DollarSign className="h-5 w-5" /> },
           { label: 'Auditoria',          href: '/dashboard/admin/audit',       icon: <Activity className="h-5 w-5" /> },
+          { label: 'Acessos e e-mails',   href: '/dashboard/admin/access',      icon: <Shield className="h-5 w-5" /> },
         ],
       },
       INSTRUMENTOS_SECTION,

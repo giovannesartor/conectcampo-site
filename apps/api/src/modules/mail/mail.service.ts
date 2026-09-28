@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import * as nodemailer from 'nodemailer';
+import { AuthFlowService } from '../auth/auth-flow.service';
 
 @Injectable()
 export class MailService {
@@ -12,6 +13,7 @@ export class MailService {
   constructor(
     private readonly config: ConfigService,
     @InjectQueue('email') private readonly emailQueue: Queue,
+    private readonly flows: AuthFlowService,
   ) {
     this.transporter = nodemailer.createTransport({
       host: this.config.get<string>('SMTP_HOST', 'smtp.gmail.com'),
@@ -43,6 +45,27 @@ export class MailService {
 
   /** Envio real (chamado pelo processor da fila ou pelo fallback). */
   async deliver(to: string, subject: string, html: string): Promise<void> {
+    try {
+      await this.deliverMessage(to, subject, html);
+      void this.flows.record('MAIL', 'SEND', 'ACCEPTED');
+    } catch (error) {
+      void this.flows.record('MAIL', 'SEND', 'FAILURE', 'PROVIDER_REJECTED');
+      throw error;
+    }
+  }
+
+  async deliveryStatus() {
+    const provider = this.config.get<string>('RESEND_API_KEY') ? 'Resend' : 'SMTP';
+    const configured = provider === 'Resend' || !!(this.config.get<string>('SMTP_USER') && this.config.get<string>('SMTP_PASS'));
+    try {
+      const counts = await this.emailQueue.getJobCounts();
+      return { provider, configured, queueAvailable: true, counts };
+    } catch {
+      return { provider, configured, queueAvailable: false, counts: null };
+    }
+  }
+
+  private async deliverMessage(to: string, subject: string, html: string): Promise<void> {
     // Preferência: Resend (HTTP API) quando configurado; senão SMTP (nodemailer).
     if (this.config.get<string>('RESEND_API_KEY')) {
       return this.deliverViaResend(to, subject, html);
