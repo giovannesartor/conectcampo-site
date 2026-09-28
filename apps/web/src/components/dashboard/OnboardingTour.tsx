@@ -175,7 +175,7 @@ export function OnboardingTour() {
               {step.title}
             </h3>
           </div>
-          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
+          <button type="button" aria-label="Fechar apresentação" onClick={handleClose} className="flex min-h-11 min-w-11 items-center justify-center text-gray-400 hover:text-gray-600">
             <X className="h-4 w-4" />
           </button>
         </div>

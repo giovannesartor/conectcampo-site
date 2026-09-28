@@ -63,6 +63,7 @@ for (const [filename, route] of screens) {
   await page.goto(`${baseUrl}${route}`, { waitUntil: 'domcontentloaded' });
   await page.locator('main').waitFor({ state: 'visible' }).catch(() => {});
   await page.waitForTimeout(2_000);
+  await page.evaluate(() => window.scrollTo(0, 0));
   assert.ok(page.url().includes('/dashboard'), `Unexpected redirect from ${route}`);
   const size = await page.evaluate(() => ({ viewport: innerWidth, content: document.documentElement.scrollWidth }));
   assert.ok(size.content <= size.viewport + 1, `Horizontal overflow on ${route}: ${JSON.stringify(size)}`);
@@ -82,6 +83,9 @@ const tabletPage = await tablet.newPage();
 await tabletPage.goto(`${baseUrl}/dashboard`, { waitUntil: 'domcontentloaded' });
 await tabletPage.getByRole('heading', { name: 'Seu campo, em dia.' }).waitFor();
 await tabletPage.waitForTimeout(2_000);
+const closeTour = tabletPage.getByRole('button', { name: 'Fechar apresentação', exact: true });
+if (await closeTour.isVisible()) await closeTour.click();
+await tabletPage.evaluate(() => window.scrollTo(0, 0));
 await tabletPage.screenshot({ path: path.join(outputDir, 'ipad-dashboard.png'), fullPage: false, animations: 'disabled' });
 
 await page.goto(`${baseUrl}/dashboard`, { waitUntil: 'domcontentloaded' });

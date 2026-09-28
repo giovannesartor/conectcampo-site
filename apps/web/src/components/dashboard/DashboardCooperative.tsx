@@ -160,7 +160,7 @@ export function DashboardCooperative() {
       </DashboardWelcome>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <KPICard title="Operações Ativas" value={stats.activeOps} subtitle="em andamento" icon={<Activity className="h-6 w-6" />} color="green" />
         <KPICard title="Aguardando Análise" value={stats.pendingOps} subtitle="submetidas ou em revisão" icon={<FileText className="h-6 w-6" />} color="amber" />
         <KPICard title="Operações Aprovadas" value={stats.approvedOps} subtitle="concluídas" icon={<CreditCard className="h-6 w-6" />} color="blue" />
