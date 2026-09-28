@@ -7,6 +7,8 @@ import { AuthController } from './auth.controller';
 import { AuthFlowModule } from './auth-flow.module';
 import { AppleIdentityModule } from './apple-identity.module';
 import { AppleAuthController } from './apple-auth.controller';
+import { GoogleAuthController } from './google-auth.controller';
+import { GoogleIdentityModule } from './google-identity.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UsersModule } from '../users/users.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
@@ -15,6 +17,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
   imports: [
     AuthFlowModule,
     AppleIdentityModule,
+    GoogleIdentityModule,
     UsersModule,
     SubscriptionsModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -29,7 +32,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
       inject: [ConfigService],
     }),
   ],
-  controllers: [AuthController, AppleAuthController],
+  controllers: [AuthController, AppleAuthController, GoogleAuthController],
   providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })

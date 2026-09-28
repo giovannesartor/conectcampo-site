@@ -83,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await api.get('/users/me');
       setUser(data);
     } catch {
+      try { const { clearNativeWidgets } = await import('@/lib/native-widgets'); await clearNativeWidgets(); } catch { /* Older native builds have no widget bridge. */ }
       Cookies.remove('accessToken');
       Cookies.remove('refreshToken');
     } finally {
@@ -103,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function logout() {
+    try { const { clearNativeWidgets } = await import('@/lib/native-widgets'); await clearNativeWidgets(); } catch { /* Logout remains available on older builds. */ }
     if (user) {
       try {
         const { disableNativePush } = await import('@/lib/native-push');
@@ -120,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     Cookies.remove('refreshToken');
     localStorage.removeItem('conectcampo.auth.provider');
     sessionStorage.removeItem('conectcampo.apple.pendingRegistration');
+    sessionStorage.removeItem('conectcampo.google.pendingRegistration');
     setUser(null);
   }
 

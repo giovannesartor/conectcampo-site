@@ -1,6 +1,7 @@
 import UIKit
 import Capacitor
 import AuthenticationServices
+import GoogleSignIn
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
@@ -16,7 +17,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        SceneDelegateProxy.shared.scene(scene, openURLContexts: URLContexts)
+        let unhandled = URLContexts.filter { !GIDSignIn.sharedInstance.handle($0.url) }
+        if !unhandled.isEmpty {
+            SceneDelegateProxy.shared.scene(scene, openURLContexts: Set(unhandled))
+        }
     }
 
     func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
@@ -27,6 +31,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 class ConectCampoBridgeViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(ConectCampoAppleSignInPlugin())
+        bridge?.registerPluginInstance(ConectCampoGoogleSignInPlugin())
+        if #available(iOS 16.0, *) {
+            bridge?.registerPluginInstance(RuralWidgetsPlugin())
+        }
     }
 }
 

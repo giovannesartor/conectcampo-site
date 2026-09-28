@@ -40,6 +40,7 @@ import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 import { SalesContractsModule } from './modules/sales-contracts/sales-contracts.module';
 import { ClimateScoreModule } from './modules/climate-score/climate-score.module';
 import { SmartDocsModule } from './modules/smart-docs/smart-docs.module';
+import { WidgetsModule } from './modules/widgets/widgets.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { ApiThrottlerGuard } from './common/guards/api-throttler.guard';
@@ -105,6 +106,7 @@ import { ApiThrottlerGuard } from './common/guards/api-throttler.guard';
     SalesContractsModule,
     ClimateScoreModule,
     SmartDocsModule,
+    WidgetsModule,
   ],
   providers: [
     {

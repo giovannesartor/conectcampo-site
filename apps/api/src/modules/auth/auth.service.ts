@@ -25,6 +25,8 @@ import { randomBytes } from 'crypto';
 import { AppleIdentityService } from './apple-identity.service';
 import { AppleAuthDto, AppleLinkDto, AppleDeleteDto } from './dto/apple-auth.dto';
 import { AuthFlowService } from './auth-flow.service';
+import { GoogleIdentityService } from './google-identity.service';
+import { GoogleAuthDto, GoogleLinkDto } from './dto/google-auth.dto';
 
 export interface AuthAuditMeta {
   ip?: string;
@@ -46,6 +48,7 @@ export class AuthService {
     private readonly auditService: AuditService,
     private readonly apple: AppleIdentityService,
     private readonly flows: AuthFlowService,
+    private readonly google: GoogleIdentityService,
   ) {}
 
   // Admin emails resolved from environment
@@ -71,7 +74,11 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto, meta: AuthAuditMeta = {}) {
+    if (dto.appleRegistrationToken && dto.googleRegistrationToken) throw new BadRequestException('Escolha apenas um provedor de acesso.');
     const appleRegistration = dto.appleRegistrationToken ? await this.apple.registration(dto.appleRegistrationToken) : null;
+    const googleRegistration = dto.googleRegistrationToken ? await this.google.registration(dto.googleRegistrationToken) : null;
+    if (googleRegistration && dto.email.toLowerCase() !== googleRegistration.email) throw new BadRequestException('Use o e-mail confirmado no Google.');
+    const socialRegistration = appleRegistration ?? googleRegistration;
     if (appleRegistration && (dto.email.toLowerCase() !== appleRegistration.email || (dto.plan !== SubscriptionPlan.CORPORATE && dto.gateway !== PaymentGateway.APPLE))) {
       throw new BadRequestException('Os dados precisam corresponder ao cadastro Apple no aplicativo.');
     }
@@ -101,10 +108,10 @@ export class AuthService {
       }
     }
 
-    const passwordHash = await bcrypt.hash(appleRegistration ? randomBytes(48).toString('base64url') : dto.password, 12);
+    const passwordHash = await bcrypt.hash(socialRegistration ? randomBytes(48).toString('base64url') : dto.password, 12);
     // O perfil público é sempre derivado do plano no servidor. O único caminho
     // de elevação para ADMIN é a allowlist ADMIN_EMAILS do ambiente.
-    const role = appleRegistration ? planRole : this.resolveRole(dto.email, planRole);
+    const role = socialRegistration ? planRole : this.resolveRole(dto.email, planRole);
     const isFree = dto.plan === SubscriptionPlan.CORPORATE;
 
     // Todos os planos pagos ganham 7 dias grátis com acesso imediato; o plano
@@ -117,13 +124,18 @@ export class AuthService {
           const consumed = await tx.appleRegistration.deleteMany({ where: { tokenHash: appleRegistration.tokenHash, expiresAt: { gt: new Date() } } });
           if (consumed.count !== 1) throw new BadRequestException('Confirmação Apple já utilizada ou expirada.');
         }
+        if (googleRegistration) {
+          const consumed = await tx.googleRegistration.deleteMany({ where: { tokenHash: googleRegistration.tokenHash, expiresAt: { gt: new Date() } } });
+          if (consumed.count !== 1) throw new BadRequestException('Confirmação Google já utilizada ou expirada.');
+        }
         return tx.user.create({
         data: {
-          email: appleRegistration?.email ?? dto.email,
+          email: socialRegistration?.email ?? dto.email,
           passwordHash,
-          passwordEnabled: !appleRegistration,
-          emailVerified: !!appleRegistration,
+          passwordEnabled: !socialRegistration,
+          emailVerified: !!appleRegistration || !!googleRegistration?.emailVerified,
           ...(appleRegistration ? { appleIdentity: { create: { subject: appleRegistration.subject, refreshToken: appleRegistration.refreshToken } } } : {}),
+          ...(googleRegistration ? { googleIdentity: { create: { subject: googleRegistration.subject } } } : {}),
           name: dto.name,
           role,
           phone: dto.phone,
@@ -163,7 +175,7 @@ export class AuthService {
       await this.subscriptionsService.getOrCreateFreeSubscription(user.id);
       const verificationToken = await this.createEmailVerificationToken(user.id);
       this.mailService.sendWelcome(user.email, user.name).catch(() => null);
-      if (!appleRegistration) this.mailService
+      if (!user.emailVerified) this.mailService
         .sendEmailVerification(user.email, user.name, verificationToken)
         .catch(() => null);
 
@@ -227,7 +239,7 @@ export class AuthService {
 
     const verificationToken = await this.createEmailVerificationToken(user.id);
     this.mailService.sendWelcome(user.email, user.name).catch(() => null);
-    if (!appleRegistration) this.mailService
+    if (!user.emailVerified) this.mailService
       .sendEmailVerification(user.email, user.name, verificationToken)
       .catch(() => null);
 
@@ -615,6 +627,7 @@ export class AuthService {
         data: { revokedAt: deletedAt },
       }),
       this.prisma.passwordResetToken.deleteMany({ where: { userId } }),
+      this.prisma.googleIdentity.deleteMany({ where: { userId } }),
       this.prisma.emailVerificationToken.deleteMany({ where: { userId } }),
       this.prisma.pushDevice.updateMany({
         where: { userId },
@@ -655,6 +668,45 @@ export class AuthService {
   }
 
   // ─── Private token helpers ────────────────────────────────────────────────────
+
+  async googleAuthenticate(dto: GoogleAuthDto, meta: AuthAuditMeta = {}) {
+    try {
+      const credential = await this.google.authenticate(dto, 'AUTH');
+      const identity = await this.prisma.googleIdentity.findUnique({ where: { subject: credential.subject }, include: { user: true } });
+      if (identity) {
+        const user = identity.user;
+        if (!user.isActive || user.deletedAt) throw new UnauthorizedException('Conta indisponível.');
+        await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+        void this.flows.record('GOOGLE', 'LOGIN', 'SUCCESS');
+        void this.auditService.log({ userId: user.id, action: 'LOGIN', entity: 'auth', entityId: user.id, newValue: { provider: 'GOOGLE' }, ipAddress: meta.ip, userAgent: meta.userAgent }).catch(() => undefined);
+        return { user: { id: user.id, email: user.email, name: user.name, role: user.role }, ...await this.generateTokens(user.id, user.email, user.role) };
+      }
+      if (!credential.email) throw new BadRequestException('Confirme seu e-mail no Google antes de criar a conta.');
+      const existing = await this.prisma.user.findUnique({ where: { email: credential.email } });
+      if (existing) throw new ConflictException('Este e-mail já tem uma conta. Entre com sua senha (ou Apple) e vincule Google em Configurações > Conta. Se necessário, defina uma senha pela recuperação por e-mail.');
+      const registrationToken = randomBytes(32).toString('base64url');
+      await this.prisma.googleRegistration.create({ data: { tokenHash: this.google.hash(registrationToken), subject: credential.subject, email: credential.email, emailVerified: credential.emailVerified, expiresAt: new Date(Date.now() + 15 * 60_000) } });
+      return { registrationRequired: true, registrationToken, email: credential.email, name: credential.name };
+    } catch (error) {
+      void this.flows.record('GOOGLE', 'LOGIN', 'FAILURE', 'GOOGLE_AUTH_REJECTED');
+      throw error;
+    }
+  }
+
+  async googleLink(userId: string, dto: GoogleLinkDto) {
+    try {
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (!user?.isActive || user.deletedAt || !user.passwordEnabled || !await bcrypt.compare(dto.currentPassword, user.passwordHash)) throw new UnauthorizedException('Confirme sua senha atual para vincular o Google.');
+      const credential = await this.google.authenticate(dto, 'LINK', userId);
+      await this.prisma.googleIdentity.create({ data: { userId, subject: credential.subject } });
+      void this.flows.record('GOOGLE', 'LINK', 'SUCCESS');
+      return { message: 'Google vinculado. Seus outros métodos de acesso continuam disponíveis.' };
+    } catch (error) {
+      void this.flows.record('GOOGLE', 'LINK', 'FAILURE', 'GOOGLE_LINK_REJECTED');
+      if ((error as { code?: string })?.code === 'P2002') throw new ConflictException('Esta conta Google ou este perfil já possui um vínculo.');
+      throw error;
+    }
+  }
 
   async appleAuthenticate(dto: AppleAuthDto, meta: AuthAuditMeta = {}) {
     try {

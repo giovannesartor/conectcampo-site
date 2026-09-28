@@ -2,7 +2,7 @@
 
 import { useId, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Calculator, CalendarDays, CloudSun } from 'lucide-react';
+import { ArrowRight, Calculator, CalendarDays, CloudSun, LayoutGrid } from 'lucide-react';
 import { MarketWidget } from './MarketWidget';
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -48,6 +48,7 @@ export function RuralWidgets() {
         <Link href="/dashboard/weather" className="card card-hover flex items-center gap-3 !p-4"><CloudSun className="h-5 w-5 shrink-0 text-brand-600" /><span className="text-sm font-semibold">Clima e alertas</span><ArrowRight className="ml-auto h-4 w-4 shrink-0 text-gray-400" /></Link>
         <Link href="/dashboard/calendar" className="card card-hover flex items-center gap-3 !p-4"><CalendarDays className="h-5 w-5 shrink-0 text-brand-600" /><span className="text-sm font-semibold">Minha agenda</span><ArrowRight className="ml-auto h-4 w-4 shrink-0 text-gray-400" /></Link>
       </div>
+      <Link href="/dashboard/widgets" className="flex min-h-11 items-center gap-2 rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm font-semibold text-brand-800 dark:border-brand-900 dark:bg-brand-950/30 dark:text-brand-200"><LayoutGrid className="h-4 w-4 shrink-0" />Leve seu campo para a tela de início do iPhone<ArrowRight className="ml-auto h-4 w-4 shrink-0" /></Link>
     </section>
   );
 }

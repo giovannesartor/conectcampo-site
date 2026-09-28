@@ -2,6 +2,9 @@ const SENSITIVE_KEYS = new Set([
   'accesstoken',
   'apikey',
   'authorization',
+  'authorizationcode',
+  'credential',
+  'nonce',
   'clientsecret',
   'cookie',
   'idtoken',
@@ -33,7 +36,7 @@ export function redactUrl(value: string): string {
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {
     return value.replace(
-      /([?&](?:access_?token|refresh_?token|id_?token|token|api_?key|client_?secret|password|secret|code)=)[^&\s]*/gi,
+      /([?&](?:access_?token|refresh_?token|id_?token|token|api_?key|client_?secret|password|secret|credential|nonce|authorization_?code|code)=)[^&\s]*/gi,
       `$1${REDACTED}`,
     );
   }
@@ -42,12 +45,12 @@ export function redactUrl(value: string): string {
 export function redactString(value: string): string {
   return value
     .replace(
-      /([?&](?:access_?token|refresh_?token|id_?token|token|api_?key|client_?secret|password|secret|code)=)[^&\s]*/gi,
+      /([?&](?:access_?token|refresh_?token|id_?token|token|api_?key|client_?secret|password|secret|credential|nonce|authorization_?code|code)=)[^&\s]*/gi,
       `$1${REDACTED}`,
     )
     .replace(/(Bearer\s+)[A-Za-z0-9._~+\/-]+/gi, `$1${REDACTED}`)
     .replace(
-      /((?:"|')?(?:access_?token|refresh_?token|id_?token|token|api_?key|client_?secret|password|secret|authorization)(?:"|')?\s*[:=]\s*)(?:"[^"\r\n]*"|'[^'\r\n]*'|[^,}\s]+)/gi,
+      /((?:"|')?(?:access_?token|refresh_?token|id_?token|token|api_?key|client_?secret|password|secret|authorization_?code|authorization|credential|nonce)(?:"|')?\s*[:=]\s*)(?:"[^"\r\n]*"|'[^'\r\n]*'|[^,}\s]+)/gi,
       `$1"${REDACTED}"`,
     );
 }

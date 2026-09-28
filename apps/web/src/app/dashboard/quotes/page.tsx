@@ -9,6 +9,7 @@ import { Modal } from '@/components/dashboard/Modal';
 import toast from 'react-hot-toast';
 import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
 import { MarketWidget } from '@/components/dashboard/MarketWidget';
+import { DeralMarketCard } from '@/components/dashboard/DeralMarketCard';
 
 interface Quote {
   symbol: string;
@@ -94,6 +95,7 @@ export default function QuotesPage() {
         </button>
       </div>
 
+      <DeralMarketCard />
       <MarketWidget />
 
       {loading && quotes.length === 0 ? (

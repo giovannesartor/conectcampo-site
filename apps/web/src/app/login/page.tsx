@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth-context';
 import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AppleSignInButton } from '@/components/AppleSignInButton';
+import { GoogleSignInButton } from '@/components/GoogleSignInButton';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -141,6 +142,7 @@ export default function LoginPage() {
             </button>
           </form>
           <AppleSignInButton />
+          <GoogleSignInButton />
 
           <div className="mt-6 text-center">
             <Link

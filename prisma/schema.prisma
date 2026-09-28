@@ -230,6 +230,7 @@ model User {
 
   // Relations
   appleIdentity    AppleIdentity?
+  googleIdentity   GoogleIdentity?
   company          Company?          @relation("CompanyOwner")
   companyMembers   CompanyMember[]
   producerProfile  ProducerProfile?
@@ -266,6 +267,33 @@ model User {
 }
 
 // Native Apple authentication. Provider secrets are encrypted, never exposed by /users/me.
+model GoogleIdentity {
+  id        String @id @default(uuid())
+  userId    String @unique
+  subject   String @unique
+  createdAt DateTime @default(now())
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GoogleChallenge {
+  id        String @id @default(uuid())
+  nonce     String
+  purpose   String
+  userId    String?
+  expiresAt DateTime
+  usedAt    DateTime?
+  @@index([expiresAt])
+}
+
+model GoogleRegistration {
+  tokenHash String @id
+  subject   String
+  email     String
+  emailVerified Boolean
+  expiresAt DateTime
+  @@index([expiresAt])
+}
+
 model AppleIdentity {
   id           String @id @default(uuid())
   userId       String @unique

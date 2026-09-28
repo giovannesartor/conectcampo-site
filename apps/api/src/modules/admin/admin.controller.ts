@@ -23,6 +23,7 @@ import { UserRole } from '@prisma/client';
 import { AdminService } from './admin.service';
 import { AuthFlowService } from '../auth/auth-flow.service';
 import { AppleIdentityService } from '../auth/apple-identity.service';
+import { GoogleIdentityService } from '../auth/google-identity.service';
 import { MailService } from '../mail/mail.service';
 import { ChangeUserRoleDto } from './dto/change-user-role.dto';
 
@@ -32,17 +33,17 @@ import { ChangeUserRoleDto } from './dto/change-user-role.dto';
 @Roles(UserRole.ADMIN)
 @ApiBearerAuth()
 export class AdminController {
-  constructor(private readonly adminService: AdminService, private readonly flows: AuthFlowService, private readonly mail: MailService, private readonly apple: AppleIdentityService) {}
+  constructor(private readonly adminService: AdminService, private readonly flows: AuthFlowService, private readonly mail: MailService, private readonly apple: AppleIdentityService, private readonly google: GoogleIdentityService) {}
 
   @Get('auth-flows')
   @ApiOperation({ summary: 'Fluxos de autenticação e envio de e-mails, sem credenciais' })
   async authFlows() {
-    const [metrics, mail, apple] = await Promise.all([this.flows.summary(), this.mail.deliveryStatus(), this.apple.status()]);
+    const [metrics, mail, apple, google] = await Promise.all([this.flows.summary(), this.mail.deliveryStatus(), this.apple.status(), this.google.status()]);
     return {
-      ...metrics, mail, apple,
+      ...metrics, mail, apple, google,
       providers: [
         { id: 'EMAIL', name: 'E-mail e senha', available: true, detail: 'Cadastro, login e recuperação de senha.' },
-        { id: 'GOOGLE', name: 'Google / Gmail', available: false, detail: 'OAuth ainda não ativado. Ter endereço Gmail não significa login pelo Google.' },
+        { id: 'GOOGLE', name: 'Google / Gmail', available: google.available, detail: google.available ? `Login, cadastro e vínculo pela web${google.nativeConfigured ? ' e pelo aplicativo iOS atualizado' : ''}. ${google.linkedAccounts} conta(s) vinculada(s). Endereço Gmail não implica vínculo automático.` : 'Integração preparada, aguardando ativação e ID de cliente no servidor.' },
         { id: 'APPLE', name: 'Apple', available: apple.available, detail: apple.available ? 'Login, cadastro e vínculo no aplicativo iOS com o novo módulo Apple. Versões antigas e navegador usam e-mail e senha.' : 'Integração preparada; ativação depende das credenciais exclusivas no servidor. Assinaturas Apple são independentes.' },
       ],
     };

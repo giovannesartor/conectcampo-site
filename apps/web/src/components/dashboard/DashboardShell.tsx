@@ -45,6 +45,7 @@ import {
   ShieldAlert,
   FileScan,
   Search,
+  LayoutGrid,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { Logo } from '@/components/Logo';
@@ -133,6 +134,7 @@ const MERCADO_SECTION: NavSection = {
 const CONTA_SECTION: NavSection = {
   title: 'Conta',
   items: [
+    { label: 'Widgets do iPhone', href: '/dashboard/widgets', icon: <LayoutGrid className="h-5 w-5" /> },
     { label: 'Configurações', href: '/dashboard/settings', icon: <Settings className="h-5 w-5" /> },
   ],
 };
@@ -140,6 +142,7 @@ const CONTA_SECTION: NavSection = {
 const CONTA_SECTION_COM_ASSINATURA: NavSection = {
   title: 'Conta',
   items: [
+    { label: 'Widgets do iPhone', href: '/dashboard/widgets', icon: <LayoutGrid className="h-5 w-5" /> },
     { label: 'Assinatura',    href: '/dashboard/subscription', icon: <Package className="h-5 w-5" /> },
     { label: 'Configurações', href: '/dashboard/settings',     icon: <Settings className="h-5 w-5" /> },
   ],

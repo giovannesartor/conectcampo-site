@@ -25,6 +25,7 @@ export function AppleSignInButton() {
       const credential = await authorizeApple();
       const { data } = await api.post('/auth/apple/authenticate', credential);
       if (data.registrationRequired) {
+        sessionStorage.removeItem('conectcampo.google.pendingRegistration');
         sessionStorage.setItem(APPLE_REGISTRATION_KEY, JSON.stringify({ token: data.registrationToken, email: data.email, name: data.name, expiresAt: Date.now() + 15 * 60_000 }));
         window.location.assign('/register?apple=1');
         return;

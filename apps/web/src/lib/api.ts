@@ -30,7 +30,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Public auth failures must stay on the form, not refresh/reload the page.
-    const publicAuth = /^\/auth\/(login|register|refresh|forgot-password|reset-password|social|apple\/(authenticate|challenge|config))/.test(originalRequest?.url ?? '');
+    const publicAuth = /^\/auth\/(login|register|refresh|forgot-password|reset-password|social|(?:apple|google)\/(authenticate|challenge|config))/.test(originalRequest?.url ?? '');
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !publicAuth) {
       originalRequest._retry = true;
 
@@ -59,6 +59,7 @@ api.interceptors.response.use(
         Cookies.remove('accessToken');
         Cookies.remove('refreshToken');
         if (typeof window !== 'undefined') {
+          try { const { clearNativeWidgets } = await import('@/lib/native-widgets'); await clearNativeWidgets(); } catch { /* Compatible with older native builds. */ }
           window.location.href = '/login';
         }
         return Promise.reject(error);

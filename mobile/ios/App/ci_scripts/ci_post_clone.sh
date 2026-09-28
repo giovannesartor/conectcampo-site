@@ -22,4 +22,8 @@ npm --version
 npm ci --no-audit --no-fund
 npx cap sync ios
 
+# Resolve the pinned Google SDK and its transitive packages on Apple's runner.
+# This also refreshes Package.resolved before Xcode Cloud's archive action.
+xcodebuild -resolvePackageDependencies -project ios/App/App.xcodeproj -scheme App
+
 echo "ConectCampo iOS dependencies ready"

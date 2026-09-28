@@ -12,6 +12,8 @@ import { api } from '@/lib/api';
 import { isIOSNativeApp } from '@/lib/native-platform';
 import { AppleSignInButton } from '@/components/AppleSignInButton';
 import { APPLE_REGISTRATION_KEY } from '@/lib/native-apple-auth';
+import { GOOGLE_REGISTRATION_KEY } from '@/lib/google-auth';
+import { GoogleSignInButton } from '@/components/GoogleSignInButton';
 
 // ─── Plan config ──────────────────────────────────────────────────────────────
 
@@ -120,6 +122,8 @@ function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [isNativeIOS, setIsNativeIOS] = useState(false);
   const [appleRegistration, setAppleRegistration] = useState<{ token: string; email: string; expiresAt: number } | null>(null);
+  const [googleRegistration, setGoogleRegistration] = useState<{ token: string; email: string; expiresAt: number } | null>(null);
+  const socialRegistration = appleRegistration ?? googleRegistration;
 
   useEffect(() => {
     setIsNativeIOS(isIOSNativeApp());
@@ -130,6 +134,15 @@ function RegisterForm() {
         setForm(prev => ({ ...prev, email: pending.email, name: pending.name || prev.name }));
       } else sessionStorage.removeItem(APPLE_REGISTRATION_KEY);
     } catch { sessionStorage.removeItem(APPLE_REGISTRATION_KEY); }
+    try {
+      const pending = JSON.parse(sessionStorage.getItem(GOOGLE_REGISTRATION_KEY) || 'null');
+      if (pending?.token && pending?.email && pending.expiresAt > Date.now()) {
+        setAppleRegistration(null);
+        sessionStorage.removeItem(APPLE_REGISTRATION_KEY);
+        setGoogleRegistration(pending);
+        setForm(prev => ({ ...prev, email: pending.email, name: pending.name || prev.name }));
+      } else sessionStorage.removeItem(GOOGLE_REGISTRATION_KEY);
+    } catch { sessionStorage.removeItem(GOOGLE_REGISTRATION_KEY); }
   }, []);
 
   // Keep URL in sync when plan is selected
@@ -167,6 +180,7 @@ function RegisterForm() {
 
     try {
       if (appleRegistration && appleRegistration.expiresAt <= Date.now()) throw new Error('Confirmação Apple expirada. Entre com Apple novamente.');
+      if (googleRegistration && googleRegistration.expiresAt <= Date.now()) throw new Error('Confirmação Google expirada. Entre com Google novamente.');
       const payload: Record<string, string> = {
         name: form.name,
         email: form.email,
@@ -179,12 +193,17 @@ function RegisterForm() {
         delete payload.password;
         payload.appleRegistrationToken = appleRegistration.token;
       }
+      if (googleRegistration) {
+        delete payload.password;
+        payload.googleRegistrationToken = googleRegistration.token;
+      }
       if (!planConfig.free) payload.gateway = isNativeIOS ? 'APPLE' : gateway;
       if (planConfig.docType === 'cpf') payload.cpf = cleanDoc;
       else payload.cnpj = cleanDoc;
 
       const { data } = await api.post('/auth/register', payload);
       sessionStorage.removeItem(APPLE_REGISTRATION_KEY);
+      sessionStorage.removeItem(GOOGLE_REGISTRATION_KEY);
 
       // Fluxo legado (pagamento imediato) — mantido como fallback.
       if (data.requiresPayment && data.invoiceUrl) {
@@ -197,7 +216,7 @@ function RegisterForm() {
 
       // Plano grátis ou trial de 7 dias — acesso imediato ao dashboard.
       if (data.accessToken) {
-        localStorage.setItem('conectcampo.auth.provider', appleRegistration ? 'APPLE' : 'EMAIL');
+        localStorage.setItem('conectcampo.auth.provider', appleRegistration ? 'APPLE' : googleRegistration ? 'GOOGLE' : 'EMAIL');
         Cookies.set('accessToken', data.accessToken, {
           expires: 1,
           sameSite: 'strict',
@@ -240,7 +259,7 @@ function RegisterForm() {
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Selecione o plano que melhor se encaixa no seu perfil
           </p>
-          {appleRegistration ? <p className="mt-4 text-sm text-brand-700">Apple confirmada. Complete seu perfil para finalizar o cadastro.</p> : <AppleSignInButton />}
+          {socialRegistration ? <p className="mt-4 text-sm text-brand-700">{appleRegistration ? 'Apple confirmada' : 'Google confirmado'}. Complete seu perfil para finalizar o cadastro.</p> : <><AppleSignInButton /><GoogleSignInButton /></>}
         </div>
 
         <div className="grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -389,6 +408,7 @@ function RegisterForm() {
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             {appleRegistration && <p role="status" className="rounded-xl bg-brand-50 p-3 text-sm text-brand-800">Seu e-mail foi confirmado pela Apple. Não é necessário criar outra senha.</p>}
+            {googleRegistration && <p role="status" className="rounded-xl bg-brand-50 p-3 text-sm text-brand-800">Seu acesso Google foi confirmado. Complete os dados abaixo; não é necessário criar outra senha.</p>}
             {error && (
               <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 text-sm text-red-600 dark:text-red-400">
                 {error}
@@ -416,7 +436,7 @@ function RegisterForm() {
               <input
                 id="email"
                 type="email"
-                readOnly={!!appleRegistration}
+                readOnly={!!socialRegistration}
                 value={form.email}
                 onChange={(e) => updateField('email', e.target.value)}
                 className="input"
@@ -473,7 +493,7 @@ function RegisterForm() {
             )}
 
             {/* Password */}
-            {!appleRegistration && <div>
+            {!socialRegistration && <div>
               <label htmlFor="password" className="label">Senha</label>
               <div className="relative">
                 <input
@@ -637,7 +657,7 @@ function RegisterForm() {
               </p>
             )}
           </form>
-          {!appleRegistration && <AppleSignInButton />}
+          {!socialRegistration && <><AppleSignInButton /><GoogleSignInButton /></>}
 
           <div className="mt-6 text-center">
             <Link

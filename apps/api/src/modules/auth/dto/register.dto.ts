@@ -26,7 +26,7 @@ export class RegisterDto {
   email: string;
 
   @ApiProperty({ example: 'Senha@123' })
-  @ValidateIf((o) => !o.appleRegistrationToken)
+  @ValidateIf((o) => !o.appleRegistrationToken && !o.googleRegistrationToken)
   @IsString()
   @MinLength(8, { message: 'Senha deve ter no mínimo 8 caracteres' })
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]+$/, {
@@ -39,6 +39,12 @@ export class RegisterDto {
   @MinLength(43)
   @MaxLength(43)
   appleRegistrationToken?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(43)
+  @MaxLength(43)
+  googleRegistrationToken?: string;
 
   @ApiProperty({ example: 'João Silva' })
   @IsString()

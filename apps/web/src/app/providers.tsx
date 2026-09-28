@@ -8,6 +8,7 @@ import { NativeDeepLinkHandler } from '@/components/mobile/NativeDeepLinkHandler
 import { NativeAppBridge } from '@/components/mobile/NativeAppBridge';
 import { NativeBiometricGate } from '@/components/mobile/NativeBiometricGate';
 import { NativePushBridge } from '@/components/mobile/NativePushBridge';
+import { NativeWidgetSync } from '@/components/mobile/NativeWidgetSync';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -17,6 +18,7 @@ export function Providers({ children }: { children: ReactNode }) {
         <NativeDeepLinkHandler />
         <NativeBiometricGate />
         <NativePushBridge />
+        <NativeWidgetSync />
         {children}
         <Toaster
           position="top-right"

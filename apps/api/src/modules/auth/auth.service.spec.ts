@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { AppleIdentityService } from './apple-identity.service';
+import { GoogleIdentityService } from './google-identity.service';
 import { AuthFlowService } from './auth-flow.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
@@ -89,6 +90,7 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         { provide: AppleIdentityService, useValue: { available: false } },
+        { provide: GoogleIdentityService, useValue: { available: false } },
         { provide: AuthFlowService, useValue: { record: jest.fn().mockResolvedValue(undefined) } },
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JwtService, useValue: mockJwtService },

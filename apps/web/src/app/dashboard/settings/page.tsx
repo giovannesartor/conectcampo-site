@@ -16,6 +16,7 @@ import {
 } from '@/lib/native-biometric';
 import { disableNativePush, enableNativePush, isNativePushEnabled } from '@/lib/native-push';
 import { authorizeApple, supportsAppleSignIn } from '@/lib/native-apple-auth';
+import { GoogleConnectionCard } from '@/components/GoogleConnectionCard';
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -470,6 +471,7 @@ export default function SettingsPage() {
 
       {tab === 'account' && (
         <div className="max-w-2xl space-y-5">
+        <GoogleConnectionCard />
         <section className="card">
           <h2 className="font-semibold">Acesso com Apple</h2>
           <p className="mt-2 text-sm leading-6 text-gray-500">{appleConnection?.linked ? 'Sua conta está vinculada à Apple. Seus documentos, operações e assinatura continuam na mesma conta.' : 'Vincule sua Apple à conta atual para entrar com segurança, sem criar outro cadastro.'}</p>
@@ -480,7 +482,7 @@ export default function SettingsPage() {
               <button className="btn-secondary" type="submit" disabled={linkingApple || !linkPassword}>{linkingApple ? 'Confirmando…' : 'Vincular com Apple'}</button>
             </form>
           ) : !appleConnection.linked && <p className="mt-3 text-sm text-gray-500">Disponível no aplicativo iOS atualizado, após a ativação do serviço.</p>}
-          {appleConnection && !appleConnection.passwordEnabled && <p className="mt-3 text-sm leading-6 text-gray-500">Sua conta usa Apple, sem senha própria. Para acessar pela web ou excluir a conta fora do app, <a className="font-semibold text-brand-700 underline dark:text-brand-300" href="/forgot-password">defina uma senha por e-mail</a>.</p>}
+          {appleConnection?.linked && !appleConnection.passwordEnabled && <p className="mt-3 text-sm leading-6 text-gray-500">Sua conta usa Apple, sem senha própria. Para acessar pela web ou excluir a conta fora do app, <a className="font-semibold text-brand-700 underline dark:text-brand-300" href="/forgot-password">defina uma senha por e-mail</a>.</p>}
         </section>
         <div className="card max-w-2xl border-red-200 dark:border-red-900/60">
           <div className="flex items-start gap-4">

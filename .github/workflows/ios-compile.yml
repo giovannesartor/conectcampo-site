@@ -1,0 +1,36 @@
+name: iOS cloud compilation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-compile-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile:
+    name: Compile app and widgets (no tests)
+    runs-on: macos-15
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - name: Prepare Capacitor on cloud runner
+        working-directory: mobile
+        run: |
+          npm ci --no-audit --no-fund
+          npx cap sync ios
+      - name: Compile unsigned iOS app and embedded widgets
+        run: >-
+          xcodebuild -project mobile/ios/App/App.xcodeproj
+          -scheme App -configuration Release
+          -destination 'generic/platform=iOS'
+          -derivedDataPath "$RUNNER_TEMP/conectcampo-derived-data"
+          CODE_SIGNING_ALLOWED=NO build
