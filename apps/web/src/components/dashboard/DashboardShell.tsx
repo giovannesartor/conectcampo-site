@@ -536,7 +536,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       <aside
         id="dashboard-navigation"
         className={`fixed inset-y-0 left-0 z-50 border-r border-gray-200/80 bg-white/95 shadow-[4px_0_24px_-22px_rgba(0,40,24,0.45)] backdrop-blur-xl transition-all duration-300 dark:border-dark-border dark:bg-dark-card/95 lg:sticky lg:top-0 lg:z-0 lg:h-screen ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          mobileOpen ? 'visible translate-x-0' : 'invisible -translate-x-full lg:visible lg:translate-x-0'
         } ${collapsed ? 'w-[76px]' : 'w-[272px]'}`}
       >
         {sidebar}

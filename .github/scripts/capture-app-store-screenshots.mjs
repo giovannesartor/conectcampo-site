@@ -73,10 +73,25 @@ for (const [filename, route] of screens) {
   });
 }
 
-await page.setViewportSize({ width: 1024, height: 1366 });
+const tablet = await browser.newContext({
+  viewport: { width: 1024, height: 1366 }, deviceScaleFactor: 2,
+  isMobile: true, hasTouch: true, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo',
+  colorScheme: 'light', storageState: await context.storageState(),
+});
+const tabletPage = await tablet.newPage();
+await tabletPage.goto(`${baseUrl}/dashboard`, { waitUntil: 'domcontentloaded' });
+await tabletPage.getByRole('heading', { name: 'Seu campo, em dia.' }).waitFor();
+await tabletPage.waitForTimeout(2_000);
+await tabletPage.screenshot({ path: path.join(outputDir, 'ipad-dashboard.png'), fullPage: false, animations: 'disabled' });
+
 await page.goto(`${baseUrl}/dashboard`, { waitUntil: 'domcontentloaded' });
 await page.getByRole('heading', { name: 'Seu campo, em dia.' }).waitFor();
-await page.waitForTimeout(2_000);
-await page.screenshot({ path: path.join(outputDir, 'ipad-dashboard.png'), fullPage: false, animations: 'disabled', scale: 'css' });
+await page.getByRole('button', { name: 'Carregar cotações', exact: true }).click();
+const market = page.frameLocator('iframe[title="Cotações de Soja — Notícias Agrícolas"]');
+await market.getByText('Soja - Mercado Físico', { exact: true }).waitFor({ timeout: 30000 });
+await page.getByRole('heading', { name: 'Seu dia no campo' }).scrollIntoViewIfNeeded();
+await page.screenshot({ path: path.join(outputDir, '08-widgets.png'), fullPage: false, animations: 'disabled' });
+await page.getByRole('button', { name: 'Milho', exact: true }).click();
+await page.frameLocator('iframe[title="Cotações de Milho — Notícias Agrícolas"]').getByText('Milho - Mercado Físico', { exact: true }).waitFor({ timeout: 30000 });
 
 await browser.close();
