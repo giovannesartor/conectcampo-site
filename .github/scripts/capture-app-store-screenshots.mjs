@@ -88,10 +88,10 @@ await page.goto(`${baseUrl}/dashboard`, { waitUntil: 'domcontentloaded' });
 await page.getByRole('heading', { name: 'Seu campo, em dia.' }).waitFor();
 await page.getByRole('button', { name: 'Carregar cotações', exact: true }).click();
 const market = page.frameLocator('iframe[title="Cotações de Soja — Notícias Agrícolas"]');
-await market.getByText('Soja - Mercado Físico', { exact: true }).waitFor({ timeout: 30000 });
+await market.getByRole('columnheader', { name: /Soja - Mercado Físico/ }).waitFor({ timeout: 30000 });
 await page.getByRole('heading', { name: 'Seu dia no campo' }).scrollIntoViewIfNeeded();
 await page.screenshot({ path: path.join(outputDir, '08-widgets.png'), fullPage: false, animations: 'disabled' });
 await page.getByRole('button', { name: 'Milho', exact: true }).click();
-await page.frameLocator('iframe[title="Cotações de Milho — Notícias Agrícolas"]').getByText('Milho - Mercado Físico', { exact: true }).waitFor({ timeout: 30000 });
+await page.frameLocator('iframe[title="Cotações de Milho — Notícias Agrícolas"]').getByRole('columnheader', { name: /Milho - Mercado Físico/ }).waitFor({ timeout: 30000 });
 
 await browser.close();
