@@ -4,7 +4,7 @@ import { useId, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Calculator, CalendarDays, CloudSun } from 'lucide-react';
 import { MarketWidget } from './MarketWidget';
-import { formatCurrency } from '@/lib/format';
+const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
 
 // BR decimal entry, without silently interpreting "128,50" as 12,850.
@@ -39,7 +39,7 @@ export function RuralWidgets() {
           </div>
           <div aria-live="polite" className="mt-4 rounded-xl bg-brand-50 p-3 dark:bg-brand-950/30">
             <p className="text-xs text-brand-700 dark:text-brand-300">Valor bruto estimado</p>
-            <p className="mt-1 break-words text-xl font-bold text-brand-800 dark:text-brand-200">{total !== null ? formatCurrency(total) : 'Informe os dois valores'}</p>
+            <p className="mt-1 break-words text-xl font-bold text-brand-800 dark:text-brand-200" style={{ overflowWrap: 'anywhere' }}>{total !== null ? currency.format(total) : 'Informe os dois valores'}</p>
           </div>
           <p className="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">Sem frete, descontos ou tributos. Use vírgula ou ponto para os decimais, sem separador de milhar. Nada é salvo ou contratado.</p>
         </div>
