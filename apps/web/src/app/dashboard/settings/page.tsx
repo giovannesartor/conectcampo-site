@@ -207,6 +207,10 @@ export default function SettingsPage() {
       });
       Cookies.remove('accessToken');
       Cookies.remove('refreshToken');
+      localStorage.removeItem('conectcampo.auth.provider');
+      sessionStorage.removeItem('conectcampo.apple.pendingRegistration');
+      sessionStorage.removeItem('conectcampo.google.pendingRegistration');
+      try { const { clearNativeWidgets } = await import('@/lib/native-widgets'); await clearNativeWidgets(); } catch { /* Account deletion must still complete on older native builds. */ }
       window.location.replace('/?conta=excluida');
     } catch (error: any) {
       toast.error(error?.response?.data?.message ?? 'Não foi possível excluir sua conta. Verifique a senha atual.');

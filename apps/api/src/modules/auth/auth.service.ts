@@ -87,9 +87,9 @@ export class AuthService {
       throw new BadRequestException('Perfil incompatível com o plano selecionado');
     }
 
-    const existing = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
+    const existing = socialRegistration
+      ? await this.prisma.user.findFirst({ where: { email: { equals: socialRegistration.email, mode: 'insensitive' } } })
+      : await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (existing) {
       throw new ConflictException('Email já cadastrado');
     }
@@ -682,7 +682,7 @@ export class AuthService {
         return { user: { id: user.id, email: user.email, name: user.name, role: user.role }, ...await this.generateTokens(user.id, user.email, user.role) };
       }
       if (!credential.email) throw new BadRequestException('Confirme seu e-mail no Google antes de criar a conta.');
-      const existing = await this.prisma.user.findUnique({ where: { email: credential.email } });
+      const existing = await this.prisma.user.findFirst({ where: { email: { equals: credential.email, mode: 'insensitive' } } });
       if (existing) throw new ConflictException('Este e-mail já tem uma conta. Entre com sua senha (ou Apple) e vincule Google em Configurações > Conta. Se necessário, defina uma senha pela recuperação por e-mail.');
       const registrationToken = randomBytes(32).toString('base64url');
       await this.prisma.googleRegistration.create({ data: { tokenHash: this.google.hash(registrationToken), subject: credential.subject, email: credential.email, emailVerified: credential.emailVerified, expiresAt: new Date(Date.now() + 15 * 60_000) } });
