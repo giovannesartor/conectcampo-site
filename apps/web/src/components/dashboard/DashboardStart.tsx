@@ -243,13 +243,13 @@ export function DashboardStart() {
           ) : (
             <div className="space-y-2">
               {operations.map((op) => (
-                <div key={op.id} onClick={() => router.push(`/dashboard/operations/${op.id}`)} className="flex items-center justify-between p-3.5 rounded-xl border border-gray-100 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors">
-                  <div className="flex items-center gap-3">
+                <Link key={op.id} href={`/dashboard/operations/${op.id}`} className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-3.5 rounded-xl border border-gray-100 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600">
+                  <div className="flex min-w-0 items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-brand-50 dark:bg-brand-950/30 flex items-center justify-center">
                       <FileText className="h-4 w-4 text-brand-600 dark:text-brand-400" />
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{op.purpose ?? op.type}</p>
+                    <div className="min-w-0">
+                      <p className="break-words text-sm font-medium text-gray-900 dark:text-white">{op.purpose ?? op.type}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">{formatCurrency(operationAmount(op))} · {op.termMonths}m · {formatRelative(op.createdAt)}</p>
                     </div>
                   </div>
@@ -261,7 +261,7 @@ export function DashboardStart() {
                     )}
                     <StatusBadge status={op.status} />
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}
