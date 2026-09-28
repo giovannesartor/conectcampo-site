@@ -55,7 +55,7 @@ export function AgroOverview() {
         {
           label: 'Valor da produção',
           value: prod?.totalValue ? formatCurrency(prod.totalValue) : '—',
-          sub: prod ? 'a preço de mercado' : 'dados indisponíveis',
+          sub: prod ? 'com referências estimadas, não cotações' : 'dados indisponíveis',
           href: '/dashboard/quotes',
           icon: <DollarSign className="h-5 w-5" />,
         },
@@ -81,7 +81,7 @@ export function AgroOverview() {
             <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-brand-500 transition" />
           </div>
           <div className="mt-3">
-            <p className="text-xl font-extrabold tracking-tight text-gray-950 dark:text-white leading-tight">{c.value}</p>
+            <p className="break-words text-xl font-extrabold tracking-tight text-gray-950 dark:text-white leading-tight" style={{ overflowWrap: 'anywhere' }}>{c.value}</p>
             <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.06em] text-gray-500 dark:text-gray-400">{c.label}</p>
             {c.sub && <p className={`text-[11px] mt-0.5 ${c.alert ? 'text-amber-600' : 'text-gray-400'}`}>{c.sub}</p>}
           </div>

@@ -8,19 +8,22 @@ import { formatCurrency } from '@/lib/format';
 import { Modal } from '@/components/dashboard/Modal';
 import toast from 'react-hot-toast';
 import { useConfirmDialog } from '@/components/dashboard/ConfirmDialog';
+import { MarketWidget } from '@/components/dashboard/MarketWidget';
 
 interface Quote {
   symbol: string;
   name: string;
   unit: string;
   price: number;
-  changePct: number;
+  changePct: number | null;
+  estimated?: boolean;
+  observedAt?: string | null;
   history: number[];
   source: string;
 }
 
 function Sparkline({ data, up }: { data: number[]; up: boolean }) {
-  if (!data.length) return null;
+  if (data.length < 2) return null;
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
@@ -75,14 +78,14 @@ export default function QuotesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <DollarSign className="h-6 w-6 text-emerald-600" />
             Cotações & Preços
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Dólar em tempo real · commodities agrícolas em valores de referência
+            Mercado agrícola por praça e referência diária de câmbio
           </p>
         </div>
         <button onClick={load} className="btn-secondary text-sm flex items-center gap-2">
@@ -90,6 +93,8 @@ export default function QuotesPage() {
           Atualizar
         </button>
       </div>
+
+      <MarketWidget />
 
       {loading && quotes.length === 0 ? (
         <div className="flex items-center justify-center min-h-[40vh]">
@@ -100,8 +105,8 @@ export default function QuotesPage() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quotes.map((q) => {
-              const up = q.changePct >= 0;
+            {quotes.filter((q) => q.estimated === false && q.observedAt).map((q) => {
+              const up = (q.changePct ?? 0) >= 0;
               return (
                 <div key={q.symbol} className="card">
                   <div className="flex items-start justify-between">
@@ -109,7 +114,7 @@ export default function QuotesPage() {
                       <p className="font-semibold text-gray-900 dark:text-white">{q.name}</p>
                       <p className="text-xs text-gray-400 dark:text-gray-500">{q.unit}</p>
                     </div>
-                    <span
+                    {q.changePct !== null && <span
                       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
                         up
                           ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400'
@@ -119,11 +124,12 @@ export default function QuotesPage() {
                       {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                       {up ? '+' : ''}
                       {q.changePct}%
-                    </span>
+                    </span>}
                   </div>
                   <p className="mt-3 text-2xl font-bold text-gray-900 dark:text-white">
                     {q.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
+                  <p className="mt-2 text-xs text-gray-500">{q.source} · {new Date(q.observedAt!).toLocaleString('pt-BR')}</p>
                   <div className="mt-2 flex items-end justify-between">
                     <Sparkline data={q.history} up={up} />
                     <button onClick={() => setAlertFor(q)} className="text-gray-400 hover:text-brand-600" title="Criar alerta de preço">
@@ -136,7 +142,7 @@ export default function QuotesPage() {
           </div>
           {updatedAt && (
             <p className="text-xs text-gray-400 dark:text-gray-500 text-right">
-              Atualizado em {new Date(updatedAt).toLocaleString('pt-BR')} · valores de referência
+              Consulta em {new Date(updatedAt).toLocaleString('pt-BR')} · verifique o fechamento de cada fonte
             </p>
           )}
 
@@ -154,7 +160,7 @@ export default function QuotesPage() {
                   </div>
                 ))}
               </div>
-              <p className="mt-2 text-xs text-gray-400">Baseado na produtividade estimada dos talhões × preço de mercado.</p>
+              <p className="mt-2 text-xs text-gray-500">Simulação baseada na produtividade dos talhões e referências estimadas sem data de mercado. Não representa uma avaliação ou cotação atual da produção.</p>
             </div>
           )}
 
@@ -164,6 +170,7 @@ export default function QuotesPage() {
                 <Bell className="h-5 w-5 text-amber-500" /> Meus alertas de preço
               </h2>
               <div className="mt-3 space-y-2">
+                <p className="text-xs text-gray-500">Alertas agrícolas ficam suspensos enquanto não houver uma fonte integrada de preços observados. O widget externo não aciona alertas automáticos.</p>
                 {alerts.map((a) => (
                   <div key={a.id} className="flex items-center justify-between text-sm">
                     <span className={a.active ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 line-through'}>

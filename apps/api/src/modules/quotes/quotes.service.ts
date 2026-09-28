@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -9,7 +9,9 @@ export interface Quote {
   name: string;
   unit: string;
   price: number;
-  changePct: number;
+  changePct: number | null;
+  estimated?: boolean;
+  observedAt?: string | null;
   history: number[];
   source: string;
 }
@@ -43,59 +45,36 @@ export class QuotesService {
     private readonly notifications: NotificationsService,
   ) {}
 
-  private daySeed(symbol: string, offset = 0): () => number {
-    const day = Math.floor(Date.now() / 86400000) - offset;
-    let seed = day;
-    for (const ch of symbol) seed = (seed * 31 + ch.charCodeAt(0)) % 1000000;
-    return () => {
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-      return (seed % 1000) / 1000;
-    };
-  }
-
-  private priceFor(symbol: string, dayOffset = 0): number {
-    const base = BASE_PRICE[symbol] ?? 100;
-    const rand = this.daySeed(symbol, dayOffset);
-    // Variação diária de ±3%
-    const variation = (rand() - 0.5) * 0.06;
-    return Number((base * (1 + variation)).toFixed(2));
-  }
-
-  private async fetchUsdBrl(): Promise<number | null> {
+  private async fetchUsdBrl(): Promise<{ price: number; observedAt: string } | null> {
     try {
-      const json = await fetchJson<{ rates?: { BRL?: number } }>('https://open.er-api.com/v6/latest/USD', {
-        timeoutMs: 6000,
-        retries: 2,
+      const json = await fetchJson<{ rates?: { BRL?: number }; time_last_update_unix?: number }>('https://open.er-api.com/v6/latest/USD', {
+        timeoutMs: 6000, retries: 2,
       });
       const rate = json?.rates?.BRL;
-      if (typeof rate === 'number' && rate > 0) return rate;
-    } catch {
-      /* usa referência */
-    }
+      const timestamp = json?.time_last_update_unix;
+      if (typeof rate === 'number' && Number.isFinite(rate) && rate > 0 && typeof timestamp === 'number' && Number.isFinite(timestamp)) {
+        const observedAt = new Date(timestamp * 1000);
+        const age = Date.now() - observedAt.getTime();
+        if (age >= -300000 && age < 48 * 60 * 60 * 1000) return { price: rate, observedAt: observedAt.toISOString() };
+      }
+    } catch { /* Never present an estimated fallback as a live observation. */ }
     return null;
   }
 
   async getQuotes(): Promise<{ quotes: Quote[]; updatedAt: string }> {
-    // Cache (as cotações são estáveis por dia). Trocável por Redis se necessário.
-    const day = Math.floor(Date.now() / 86400000);
+    const day = Math.floor(Date.now() / 3600000);
     if (this.cache && this.cache.day === day) return this.cache.data;
-
-    const usdBrl = await this.fetchUsdBrl();
-
-    const quotes: Quote[] = BASE_QUOTES.map((q) => {
-      let price = this.priceFor(q.symbol, 0);
-      const prev = this.priceFor(q.symbol, 1);
-      const history: number[] = [];
-      for (let d = 13; d >= 0; d--) history.push(this.priceFor(q.symbol, d));
-
-      // Dólar em tempo real (quando disponível)
-      if (q.symbol === 'DOLAR' && usdBrl) {
-        price = Number(usdBrl.toFixed(2));
-        history[history.length - 1] = price;
-      }
-      const changePct = Number((((price - prev) / prev) * 100).toFixed(2));
-      return { ...q, price, changePct, history };
-    });
+    const usd = await this.fetchUsdBrl();
+    const quotes: Quote[] = BASE_QUOTES.map((q) => ({
+      ...q,
+      price: q.symbol === 'DOLAR' && usd ? usd.price : BASE_PRICE[q.symbol],
+      // No invented price movements or artificial historical chart.
+      changePct: null,
+      history: [],
+      estimated: !(q.symbol === 'DOLAR' && usd),
+      observedAt: q.symbol === 'DOLAR' && usd ? usd.observedAt : null,
+      source: q.symbol === 'DOLAR' && usd ? 'ExchangeRate-API (referência diária)' : 'Estimativa sem data de mercado; não usar para negociar',
+    }));
     const data = { quotes, updatedAt: new Date().toISOString() };
     this.cache = { day, data };
     return data;
@@ -151,6 +130,13 @@ export class QuotesService {
   // ─── Alertas de preço ─────────────────────────────────────────────────────────
 
   async createAlert(userId: string, dto: { symbol: string; direction: string; target: number }) {
+    if (typeof dto.symbol !== 'string' || !['ABOVE', 'BELOW'].includes(dto.direction) || !Number.isFinite(dto.target) || dto.target <= 0) {
+      throw new BadRequestException('Informe produto, direção e preço-alvo válidos.');
+    }
+    const quote = await this.getQuote(dto.symbol);
+    if (!quote || quote.estimated || !quote.observedAt) {
+      throw new BadRequestException('Alertas exigem uma fonte de preços observados. Estimativas não geram alertas.');
+    }
     return this.prisma.priceAlert.create({
       data: {
         userId,
@@ -182,7 +168,7 @@ export class QuotesService {
 
     for (const alert of alerts) {
       const quote = quotes.find((q) => q.symbol === alert.symbol);
-      if (!quote) continue;
+      if (!quote || quote.estimated || !quote.observedAt) continue;
       const target = Number(alert.target);
       const hit = alert.direction === 'ABOVE' ? quote.price >= target : quote.price <= target;
       if (!hit) continue;

@@ -11,6 +11,8 @@ import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import { formatCurrency, formatRelative } from '@/lib/format';
 import { KPICard } from './KPICard';
+import { DashboardWelcome } from './DashboardWelcome';
+import { RuralWidgets } from './RuralWidgets';
 import { StatusBadge } from './StatusBadge';
 import { ErrorState } from './PageKit';
 import {
@@ -45,11 +47,6 @@ const operationAmount = (operation: Operation) => Number(operation.amount ?? ope
 
 type Tab = 'operacoes' | 'cooperados';
 
-function greeting(name?: string) {
-  const h = new Date().getHours();
-  const part = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
-  return name ? `${part}, ${name.split(' ')[0]}!` : `${part}!`;
-}
 
 export function DashboardCooperative() {
   const { user } = useAuth();
@@ -149,23 +146,7 @@ export function DashboardCooperative() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="dashboard-heading">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 dark:bg-green-950/40">
-            <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">{greeting(user?.name)}</h1>
-              <span className="inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-950/40 px-2 py-0.5 text-xs font-semibold text-green-700 dark:text-green-300">
-                <Users className="h-3 w-3" /> Cooperativa
-              </span>
-            </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Operações da cooperativa</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
+      <DashboardWelcome name={user?.name}>
           <button onClick={() => load(true)} disabled={refreshing} className="btn-ghost flex items-center gap-1.5 text-sm" title="Atualizar">
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
@@ -175,8 +156,8 @@ export function DashboardCooperative() {
           <Link href="/dashboard/operations/new" className="btn-primary text-sm flex items-center gap-2">
             <Plus className="h-4 w-4" /> Nova Operação
           </Link>
-        </div>
-      </div>
+
+      </DashboardWelcome>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -185,6 +166,8 @@ export function DashboardCooperative() {
         <KPICard title="Operações Aprovadas" value={stats.approvedOps} subtitle="concluídas" icon={<CreditCard className="h-6 w-6" />} color="blue" />
         <KPICard title="Volume Total" value={formatCurrency(stats.totalVolume)} subtitle={`${stats.totalOps} operações`} icon={<TrendingUp className="h-6 w-6" />} color="purple" />
       </div>
+
+      <RuralWidgets />
 
       {/* Tabs */}
       <div className="card">

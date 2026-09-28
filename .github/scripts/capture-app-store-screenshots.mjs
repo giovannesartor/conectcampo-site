@@ -1,6 +1,7 @@
 import { chromium } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import assert from 'node:assert/strict';
 
 const baseUrl = process.env.APP_BASE_URL || 'https://app.conectcampo.digital';
 const email = process.env.APP_REVIEW_EMAIL;
@@ -32,6 +33,21 @@ await page.locator('#email').fill(email);
 await page.locator('#password').fill(password);
 await page.getByRole('button', { name: 'Entrar', exact: true }).click();
 await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
+await page.getByRole('heading', { name: 'Seu campo, em dia.' }).waitFor();
+
+// Runs on GitHub only; no local server, build, simulator or test is required.
+for (const width of [320, 375, 393, 428, 768, 1024, 1440]) {
+  await page.setViewportSize({ width, height: 926 });
+  const size = await page.evaluate(() => ({ viewport: innerWidth, content: document.documentElement.scrollWidth }));
+  assert.ok(size.content <= size.viewport + 1, `Dashboard overflow at ${width}: ${JSON.stringify(size)}`);
+}
+await page.setViewportSize({ width: 393, height: 852 });
+await page.getByLabel('Sacas', { exact: true }).fill('100');
+await page.getByLabel('R$ por saca', { exact: true }).fill('128,50');
+await page.getByText(/12.850,00/).waitFor();
+await page.getByLabel('Sacas', { exact: true }).fill('');
+await page.getByLabel('R$ por saca', { exact: true }).fill('');
+await page.setViewportSize({ width: 428, height: 926 });
 
 const screens = [
   ['01-dashboard.png', '/dashboard'],
@@ -47,11 +63,20 @@ for (const [filename, route] of screens) {
   await page.goto(`${baseUrl}${route}`, { waitUntil: 'domcontentloaded' });
   await page.locator('main').waitFor({ state: 'visible' }).catch(() => {});
   await page.waitForTimeout(2_000);
+  assert.ok(page.url().includes('/dashboard'), `Unexpected redirect from ${route}`);
+  const size = await page.evaluate(() => ({ viewport: innerWidth, content: document.documentElement.scrollWidth }));
+  assert.ok(size.content <= size.viewport + 1, `Horizontal overflow on ${route}: ${JSON.stringify(size)}`);
   await page.screenshot({
     path: path.join(outputDir, filename),
     fullPage: false,
     animations: 'disabled',
   });
 }
+
+await page.setViewportSize({ width: 1024, height: 1366 });
+await page.goto(`${baseUrl}/dashboard`, { waitUntil: 'domcontentloaded' });
+await page.getByRole('heading', { name: 'Seu campo, em dia.' }).waitFor();
+await page.waitForTimeout(2_000);
+await page.screenshot({ path: path.join(outputDir, 'ipad-dashboard.png'), fullPage: false, animations: 'disabled', scale: 'css' });
 
 await browser.close();

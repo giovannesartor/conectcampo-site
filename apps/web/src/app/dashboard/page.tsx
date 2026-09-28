@@ -44,15 +44,16 @@ function AdminPreviewBar() {
     : 'Financeira';
 
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 px-4 py-2.5 shadow-sm">
+    <div className="flex min-w-0 flex-wrap items-center gap-2 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 px-3 py-3 shadow-sm">
       <Eye className="h-4 w-4 text-amber-600 flex-shrink-0" />
-      <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 mr-1">Preview Admin</span>
-      <div className="flex items-center gap-1.5 flex-wrap">
+      <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 mr-1">Visualizar como</span>
+      <div className="flex w-full min-w-0 items-center gap-1.5 flex-wrap sm:w-auto">
         {PREVIEW_OPTIONS.map((opt) => (
           <button
             key={opt.label}
             onClick={() => setPreview(opt.role, opt.plan)}
-            className={`rounded-full px-3 py-0.5 text-xs font-semibold transition-all ${
+            aria-pressed={activeLabel === opt.label}
+            className={`min-h-10 rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
               activeLabel === opt.label
                 ? opt.color + ' shadow'
                 : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'

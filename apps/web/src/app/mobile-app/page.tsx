@@ -48,19 +48,19 @@ export default function MobileAppPage() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(0,160,60,0.20),transparent_46%),linear-gradient(145deg,#001410,#003c28_58%,#006830)]" />
 
       <section className="relative mx-auto flex min-h-[100svh] w-full max-w-lg flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))]">
-        <header className="flex items-center justify-between">
+        <header className="flex flex-wrap items-center justify-between gap-3">
           <Logo size="sm" href="" className="rounded-2xl bg-white/95 px-3 py-2 shadow-lg shadow-black/10" />
           <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur">
             <ShieldCheck className="h-3.5 w-3.5" /> Ambiente seguro
           </span>
         </header>
 
-        <div className="flex flex-1 flex-col justify-center py-12 text-white">
+        <div className="flex flex-1 flex-col justify-center py-8 text-white sm:py-12">
           <span className="mb-5 w-fit rounded-full border border-brand-300/30 bg-brand-300/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-brand-200">
-            O agro conectado
+            Gestão rural, onde você estiver
           </span>
           <h1 className="max-w-md text-4xl font-black leading-[1.03] tracking-[-0.045em] sm:text-5xl">
-            Sua operação inteira, na palma da mão.
+            Seu campo conectado. Sua rotina mais simples.
           </h1>
           <p className="mt-5 max-w-md text-base leading-7 text-brand-100/90">
             Crédito, CPR, documentos, produção e mercado em uma plataforma feita para decisões mais rápidas e seguras.
@@ -79,14 +79,14 @@ export default function MobileAppPage() {
         </div>
 
         <div className="rounded-[1.75rem] border border-gray-200/80 bg-white p-4 shadow-2xl shadow-brand-950/15 dark:border-dark-border dark:bg-dark-card">
-          <Link href="/login" className="btn-primary flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl text-base">
+          <Link href="/login" className="btn-primary flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl text-base">
             Entrar na minha conta <ArrowRight className="h-5 w-5" />
           </Link>
-          <Link href="/register" className="mt-2.5 flex min-h-13 w-full items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 text-sm font-bold text-brand-800 transition-colors hover:bg-brand-50 dark:border-dark-border dark:bg-dark-bg dark:text-brand-300 dark:hover:bg-brand-950/30">
+          <Link href="/register" className="mt-2.5 flex min-h-[52px] w-full items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 text-sm font-bold text-brand-800 transition-colors hover:bg-brand-50 dark:border-dark-border dark:bg-dark-bg dark:text-brand-300 dark:hover:bg-brand-950/30">
             Criar minha conta
           </Link>
           <p className="mt-3 text-center text-[11px] leading-4 text-gray-500 dark:text-gray-400">
-            Ao continuar, você concorda com os Termos de Uso e a Política de Privacidade.
+            Conheça nossos <Link href="/legal/termos-de-uso" className="underline">Termos de Uso</Link> e a <Link href="/legal/privacidade" className="underline">Política de Privacidade</Link>.
           </p>
         </div>
       </section>

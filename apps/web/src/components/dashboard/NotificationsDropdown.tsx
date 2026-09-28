@@ -110,8 +110,9 @@ export function NotificationsDropdown() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="btn-ghost relative p-2"
+        className="btn-ghost relative h-11 w-11 p-0"
         aria-label="Notificações"
+        aria-expanded={open}
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
@@ -122,7 +123,7 @@ export function NotificationsDropdown() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card shadow-xl z-50">
+        <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96 rounded-xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card shadow-xl z-50">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-dark-border">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">

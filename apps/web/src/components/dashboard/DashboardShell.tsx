@@ -496,6 +496,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       </nav>
 
       {/* User info */}
+      <div className="flex items-center justify-between border-t border-gray-200 px-5 py-2 dark:border-dark-border sm:hidden">
+        <span className="text-sm text-gray-500">Aparência</span><ThemeToggle />
+      </div>
       <div className="border-t border-gray-200/80 px-3 py-3 dark:border-dark-border">
         {!collapsed ? (
           <div className="flex items-center gap-3 rounded-xl bg-gray-50 px-2.5 py-2 dark:bg-gray-900/55">
@@ -524,7 +527,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   return (
     <ConfirmDialogProvider>
-    <div className="flex min-h-screen bg-[#f7faf8] dark:bg-dark-bg">
+    <div className="dashboard-shell flex min-h-screen w-full min-w-0 bg-[#f7faf8] dark:bg-dark-bg">
       {mobileOpen && (
         <button type="button" className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Fechar menu" />
       )}
@@ -541,12 +544,12 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
         <header className="sticky top-0 z-30 border-b border-gray-200/80 bg-white/[0.88] backdrop-blur-xl dark:border-dark-border dark:bg-dark-card/[0.88]">
-          <div className="flex min-h-[72px] items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-3">
+          <div className="flex min-h-16 items-center justify-between gap-2 px-3 py-2 sm:min-h-[72px] sm:px-6 lg:px-8">
+            <div className="flex min-w-0 items-center gap-1 sm:gap-3">
               <button
                 type="button"
-                onClick={() => setMobileOpen(true)}
-                className="lg:hidden btn-ghost p-1.5"
+                onClick={() => { setCollapsed(false); setMobileOpen(true); }}
+                className="lg:hidden btn-ghost h-11 w-11 shrink-0 p-0"
                 aria-label="Abrir menu"
                 aria-controls="dashboard-navigation"
                 aria-expanded={mobileOpen}
@@ -577,11 +580,11 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-0 sm:gap-2">
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new Event('conectcampo:open-command-palette'))}
-                className="btn-ghost p-2 md:hidden"
+                className="btn-ghost h-11 w-11 p-0 md:hidden"
                 aria-label="Buscar na plataforma"
               >
                 <Search className="h-5 w-5" />
@@ -596,11 +599,11 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 <span className="flex-1">Buscar na plataforma</span>
                 <kbd className="rounded-md border border-gray-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-gray-400 shadow-sm dark:border-gray-700 dark:bg-gray-800">⌘K</kbd>
               </button>
-              <ThemeToggle />
+              <div className="hidden sm:block"><ThemeToggle /></div>
               <div data-tour="notifications">
                 <NotificationsDropdown />
               </div>
-              <button type="button" onClick={() => router.push('/dashboard/settings')} className="btn-ghost p-2" aria-label="Abrir configurações">
+              <button type="button" onClick={() => router.push('/dashboard/settings')} className="btn-ghost hidden p-2 sm:inline-flex" aria-label="Abrir configurações">
                 <Settings className="h-5 w-5" />
               </button>
             </div>
@@ -609,7 +612,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
         <main id="main-content" className="dashboard-surface relative flex-1 overflow-hidden bg-[#f7faf8] p-4 pb-[calc(7rem+env(safe-area-inset-bottom))] dark:bg-[#07110c] sm:p-6 sm:pb-[calc(7rem+env(safe-area-inset-bottom))] lg:p-8">
           <div className="pointer-events-none absolute inset-0 contour-pattern opacity-[0.018] dark:opacity-[0.035]" />
-          <div className="relative mx-auto min-h-full w-full max-w-[1600px]">{children}</div>
+          <div className="relative mx-auto min-h-full w-full min-w-0 max-w-[1600px]">{children}</div>
         </main>
       </div>
 
@@ -642,6 +645,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             type="button"
             onClick={() => {
               void nativeSelectionHaptic();
+              setCollapsed(false);
               setMobileOpen(true);
             }}
             aria-controls="dashboard-navigation"

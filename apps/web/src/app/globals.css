@@ -284,6 +284,27 @@ html {
   border-spacing: 0;
 }
 
+/* Flex/grid children must shrink to the phone, not to their longest label. */
+.dashboard-surface :where(.grid, .card, .dashboard-heading) {
+  min-width: 0;
+}
+.dashboard-surface .grid > *, .dashboard-heading > * {
+  min-width: 0;
+}
+.dashboard-heading {
+  flex-wrap: wrap;
+}
+.dashboard-heading > div:last-child {
+  flex-wrap: wrap;
+}
+@media (max-width: 639px) {
+  .dashboard-surface { padding-left: 1rem; padding-right: 1rem; }
+  .dashboard-surface .grid { column-gap: 0.75rem; }
+  .dashboard-surface input, .dashboard-surface select, .dashboard-surface textarea {
+    font-size: 16px; /* Prevent automatic iOS focus zoom. */
+  }
+}
+
 .dashboard-surface :where(h1, h2, h3) {
   letter-spacing: -0.018em;
   text-wrap: balance;

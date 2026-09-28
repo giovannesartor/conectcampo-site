@@ -12,6 +12,8 @@ import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import { formatCurrency, formatRelative } from '@/lib/format';
 import { KPICard } from './KPICard';
+import { DashboardWelcome } from './DashboardWelcome';
+import { RuralWidgets } from './RuralWidgets';
 import { StatusBadge } from './StatusBadge';
 import { ErrorState } from './PageKit';
 import {
@@ -44,11 +46,6 @@ interface Operation {
 
 const operationAmount = (operation: Operation) => Number(operation.amount ?? operation.requestedAmount ?? 0);
 
-function greeting(name?: string) {
-  const h = new Date().getHours();
-  const part = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
-  return name ? `${part}, ${name.split(' ')[0]}!` : `${part}!`;
-}
 
 export function DashboardPro() {
   const { user } = useAuth();
@@ -118,7 +115,7 @@ export function DashboardPro() {
 
   useEffect(() => { load(); }, [load]);
 
-  const scoreLabel = stats.score === null ? 'Calculando...'
+  const scoreLabel = stats.score === null ? (loading ? 'Consultando...' : 'Ainda não calculado')
     : stats.score >= 80 ? 'Excelente'
     : stats.score >= 60 ? 'Bom'
     : stats.score >= 40 ? 'Regular'
@@ -138,23 +135,7 @@ export function DashboardPro() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="dashboard-heading">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-950/40">
-            <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">{greeting(user?.name)}</h1>
-              <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-950/40 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:text-blue-300">
-                <Sparkles className="h-3 w-3" /> PRO
-              </span>
-            </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Análise avançada e operações ilimitadas</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
+      <DashboardWelcome name={user?.name}>
           <button onClick={() => load(true)} disabled={refreshing} className="btn-ghost flex items-center gap-1.5 text-sm" title="Atualizar">
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
@@ -164,8 +145,8 @@ export function DashboardPro() {
           <Link href="/dashboard/operations/new" className="btn-primary text-sm flex items-center gap-2">
             <Plus className="h-4 w-4" /> Nova Operação
           </Link>
-        </div>
-      </div>
+
+      </DashboardWelcome>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -174,6 +155,8 @@ export function DashboardPro() {
         <KPICard title="Propostas Recebidas" value={stats.proposals} subtitle={stats.newProposals > 0 ? `${stats.newProposals} aguardando resposta` : 'de parceiros'} icon={<CreditCard className="h-6 w-6" />} color="purple" />
         <KPICard title="Volume Solicitado" value={formatCurrency(stats.totalVolume)} subtitle={`${stats.totalOps} operações`} icon={<TrendingUp className="h-6 w-6" />} color="amber" />
       </div>
+
+      <RuralWidgets />
 
       {/* Analytics mini-row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

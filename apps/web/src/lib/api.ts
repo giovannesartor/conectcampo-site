@@ -12,6 +12,8 @@ export const api = axios.create({
   },
 });
 
+let refreshRequest: Promise<{ accessToken: string; refreshToken: string }> | null = null;
+
 // Interceptor: adicionar token
 api.interceptors.request.use((config) => {
   const token = Cookies.get('accessToken');
@@ -27,7 +29,9 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Public auth failures must stay on the form, not refresh/reload the page.
+    const publicAuth = /^\/auth\/(login|register|refresh|forgot-password|reset-password|social)/.test(originalRequest?.url ?? '');
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !publicAuth) {
       originalRequest._retry = true;
 
       try {
@@ -36,12 +40,18 @@ api.interceptors.response.use(
           throw new Error('No refresh token');
         }
 
-        const { data } = await axios.post(`${API_URL}/auth/refresh`, {
-          refreshToken,
-        });
+        // Token rotation is single-flight: simultaneous dashboard requests must
+        // not replay the same refresh token and revoke a valid session.
+        if (!refreshRequest) {
+          refreshRequest = axios.post(`${API_URL}/auth/refresh`, { refreshToken })
+            .then(({ data }) => data)
+            .finally(() => { refreshRequest = null; });
+        }
+        const data = await refreshRequest;
 
-        Cookies.set('accessToken', data.accessToken, { expires: 1 });
-        Cookies.set('refreshToken', data.refreshToken, { expires: 7 });
+        const options = { sameSite: 'strict' as const, secure: typeof window !== 'undefined' && window.location.protocol === 'https:' };
+        Cookies.set('accessToken', data.accessToken, { ...options, expires: 1 });
+        Cookies.set('refreshToken', data.refreshToken, { ...options, expires: 7 });
 
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(originalRequest);
