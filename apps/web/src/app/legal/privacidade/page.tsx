@@ -6,7 +6,7 @@ export default function PrivacidadePage() {
       <section className="bg-gray-50 dark:bg-dark-card px-6 py-16 lg:px-8">
         <div className="mx-auto max-w-3xl">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Política de Privacidade</h1>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Última atualização: setembro de 2026</p>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Última atualização: 28 de setembro de 2026</p>
         </div>
       </section>
 
@@ -30,6 +30,7 @@ export default function PrivacidadePage() {
             <li><strong>Dados de acesso:</strong> endereço IP, tipo de dispositivo, navegador, cookies de sessão;</li>
             <li><strong>Documentos:</strong> contratos, certidões, matrículas e comprovantes enviados à plataforma.</li>
             <li><strong>Dados do aplicativo:</strong> identificador de conta, token do dispositivo para notificações, versão do app, eventos de desempenho e falhas técnicas;</li>
+            <li><strong>Acesso com Google ou Apple:</strong> identificador fornecido pelo provedor, nome e e-mail autorizados, inclusive o endereço privado disponibilizado pela Apple quando escolhido. Usamos esses dados para autenticar, cadastrar ou vincular sua conta, não para acessar suas mensagens, contatos ou arquivos;</li>
             <li><strong>Compras no iOS:</strong> produto, situação da assinatura e identificadores de transação fornecidos pela Apple. A ConectCampo não recebe os dados do cartão cadastrado na App Store.</li>
           </ul>
 
@@ -39,6 +40,9 @@ export default function PrivacidadePage() {
             <li><strong>Face ID, Touch ID ou código do aparelho:</strong> a confirmação ocorre no próprio iPhone. A ConectCampo não recebe nem armazena os dados biométricos;</li>
             <li><strong>Notificações:</strong> são opcionais e usam um token técnico vinculado à conta para entregar alertas de propostas, documentos, CPRs e vencimentos;</li>
             <li><strong>Localização rural:</strong> dados de propriedades e talhões podem ser informados pelo usuário para recursos agrícolas, climáticos e de satélite. O app não coleta localização contínua em segundo plano.</li>
+            <li><strong>Widget de clima:</strong> é opcional. Ao escolher uma propriedade em Widgets do iPhone, suas coordenadas cadastradas são usadas para consultar a previsão no Apple Weather (WeatherKit), inclusive durante as atualizações do widget. Não é necessário rastrear o GPS do aparelho. A ConectCampo não inclui seu nome, documentos ou identificador de conta nessa consulta;</li>
+            <li><strong>Widget de agenda:</strong> depende da sua ativação e mostra apenas datas e quantidades de lembretes. Não recebe títulos de eventos, valores financeiros, documentos ou senhas. Informações exibidas em widgets podem ser vistas por quem tem acesso à tela do aparelho;</li>
+            <li><strong>Armazenamento dos widgets:</strong> o app e sua extensão compartilham no próprio iPhone somente as preferências e o resumo necessário, incluindo as coordenadas da propriedade escolhida. Credenciais de acesso não são compartilhadas com a extensão. Você pode desativar esses recursos na página Widgets do iPhone; o resumo também é limpo ao sair ou excluir a conta. O iOS controla quando a tela do widget é atualizada.</li>
           </ul>
 
           <h2>4. Como utilizamos seus dados</h2>
@@ -59,6 +63,16 @@ export default function PrivacidadePage() {
             sob contratos e deveres de confidencialidade; (iii) Apple, para processar assinaturas realizadas no iOS; (iv) autoridades
             competentes quando exigido por lei (Banco Central, Receita Federal, etc.).
             <strong> Nunca vendemos seus dados a terceiros.</strong>
+          </p>
+          <p>
+            Quando você escolhe entrar com Google ou Apple, o respectivo provedor participa da autenticação.
+            No iOS, o SDK Google pode tratar dados de conta e metadados técnicos, como identificadores,
+            endereço IP, localização aproximada derivada do IP e informações de uso, para funcionamento,
+            segurança e análise do serviço. A ConectCampo não solicita acesso à caixa de entrada do Gmail,
+            ao Google Drive ou à agenda Google. Para o widget de clima, a Apple recebe a localização
+            da propriedade selecionada para fornecer a previsão. Consulte também as políticas de
+            privacidade do <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google</a> e
+            da <a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener noreferrer">Apple</a>.
           </p>
 
           <h2>6. Rastreamento e publicidade</h2>
@@ -95,6 +109,13 @@ export default function PrivacidadePage() {
             Utilizamos cookies essenciais para o funcionamento da plataforma, cookies de performance
             e armazenamento de preferências, como tema e sessão. Você pode gerenciar esses dados nas configurações
             do navegador ou do aparelho, mas isso pode afetar o funcionamento de alguns recursos.
+          </p>
+          <p>
+            O acesso Google pela web carrega o serviço de autenticação do Google; esse serviço pode utilizar
+            seus próprios cookies para o login. Preferências dos widgets ficam no aparelho. O resumo da
+            agenda deixa de ser exibido após 12 horas sem sincronização, mas isso não exclui os compromissos
+            mantidos na sua conta. Cotações e previsão indicam a referência disponível e não garantem
+            atualização em tempo real.
           </p>
 
           <h2>10. Segurança</h2>
