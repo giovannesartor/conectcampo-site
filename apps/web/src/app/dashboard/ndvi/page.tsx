@@ -110,7 +110,7 @@ export default function NdviPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="cc-workspace-heading">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <Satellite className="h-6 w-6 text-emerald-600" />
           Monitoramento por Satélite

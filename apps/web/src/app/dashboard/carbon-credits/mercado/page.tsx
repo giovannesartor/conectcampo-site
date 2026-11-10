@@ -92,7 +92,7 @@ export default function MercadoCarbonoPage() {
           <ChevronRight className="h-4 w-4" />
           <span>Mercado</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="cc-workspace-heading flex items-center gap-2">
           <Globe className="h-6 w-6 text-teal-600" />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mercado de Carbono</h1>
         </div>

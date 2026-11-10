@@ -56,7 +56,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/55 p-4 backdrop-blur-[2px]"
+      className="cc-internal-dialog fixed inset-0 z-50 flex items-center justify-center bg-gray-950/55 p-4 backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -64,7 +64,7 @@ export function Modal({
     >
       <div
         ref={dialogRef}
-        className={`w-full ${maxWidth} max-h-[90vh] overflow-y-auto rounded-2xl border border-white/60 bg-white p-5 shadow-2xl shadow-black/20 dark:border-gray-800 dark:bg-gray-900 sm:p-6`}
+        className={`cc-dialog-panel w-full ${maxWidth} max-h-[90dvh] overflow-y-auto rounded-2xl border border-white/60 bg-white p-5 shadow-2xl shadow-black/20 dark:border-gray-800 dark:bg-gray-900 sm:p-6`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between gap-4 border-b border-gray-100 pb-4 dark:border-gray-800">

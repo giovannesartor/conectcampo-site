@@ -27,7 +27,7 @@ export function PageHeader({
   addLabel?: string;
 }) {
   return (
-    <div className="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-gray-200/90 bg-white p-5 shadow-[var(--shadow-soft)] dark:border-gray-800 dark:bg-gray-900 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+    <div className="cc-workspace-heading relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-gray-200/90 bg-white p-5 shadow-[var(--shadow-soft)] dark:border-gray-800 dark:bg-gray-900 sm:flex-row sm:items-center sm:justify-between sm:p-6">
       <span className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-brand-500 to-brand-700" />
       <div className="min-w-0">
         <div className="flex items-center gap-3">
@@ -62,7 +62,7 @@ export function StatCard({
   accent?: boolean;
 }) {
   return (
-    <div className="card relative min-h-[126px] overflow-hidden">
+    <div className="card cc-stat relative min-h-[126px] overflow-hidden">
       <span className={`absolute inset-x-0 top-0 h-[3px] ${danger ? 'bg-red-500' : accent ? 'bg-brand-500' : 'bg-gray-200 dark:bg-gray-700'}`} />
       <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-gray-500 dark:text-gray-400">{label}</p>
       <p

@@ -159,7 +159,7 @@ interface ScoreResult {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="cc-workspace-heading flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Score & Rating</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">

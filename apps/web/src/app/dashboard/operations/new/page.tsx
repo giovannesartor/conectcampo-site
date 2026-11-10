@@ -114,7 +114,7 @@ export default function NewOperationWizard() {
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       {/* Header */}
-      <div>
+      <div className="cc-workspace-heading">
         <button
           onClick={() => router.back()}
           className="btn-ghost flex items-center gap-2 text-sm mb-4"

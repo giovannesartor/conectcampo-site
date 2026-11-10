@@ -730,7 +730,7 @@ export default function CprPage() {
     <div className="max-w-6xl mx-auto space-y-6 p-4 sm:p-6">
 
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 via-white to-amber-50/50 p-5 shadow-sm dark:border-emerald-900 dark:from-emerald-950/30 dark:via-gray-900 dark:to-amber-950/10 sm:flex-row sm:items-center sm:justify-between">
+      <div className="cc-workspace-heading flex flex-col gap-4 rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 via-white to-amber-50/50 p-5 shadow-sm dark:border-emerald-900 dark:from-emerald-950/30 dark:via-gray-900 dark:to-amber-950/10 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <ScrollText className="h-6 w-6 text-emerald-600" />

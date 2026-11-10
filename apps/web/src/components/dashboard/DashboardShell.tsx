@@ -1,7 +1,8 @@
 'use client';
 
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import './dashboard.css';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -312,6 +313,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const { previewRole, previewPlan } = usePreview();
   const pathname = usePathname();
   const router = useRouter();
+  const sidebarRef = useRef<HTMLElement>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [planKey, setPlanKey] = useState<string>('');
@@ -333,6 +335,38 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       }).catch(() => {});
     }
   }, [user]);
+
+  // Keep the mobile drawer keyboard-accessible without changing desktop navigation.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const closeOnDesktop = () => { if (desktop.matches) setMobileOpen(false); };
+    document.body.style.overflow = 'hidden';
+    const elements = () => Array.from(sidebarRef.current?.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), [tabindex="0"]',
+    ) ?? []).filter(el => el.getClientRects().length > 0);
+    const focusTimer = window.setTimeout(() => sidebarRef.current?.querySelector<HTMLElement>('button[aria-label="Fechar menu"]')?.focus(), 320);
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileOpen(false);
+      if (event.key !== 'Tab') return;
+      const items = elements();
+      const first = items[0], last = items[items.length - 1];
+      if (!sidebarRef.current?.contains(document.activeElement)) { event.preventDefault(); first?.focus(); }
+      else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    desktop.addEventListener('change', closeOnDesktop);
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKey);
+      desktop.removeEventListener('change', closeOnDesktop);
+      previousFocus?.focus();
+    };
+  }, [mobileOpen]);
 
   const isPreviewMode = user?.role === 'ADMIN' && !!previewRole;
   const effectiveRole = isPreviewMode ? previewRole! : (user?.role ?? '');
@@ -415,7 +449,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const sidebar = (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex min-h-[72px] items-center justify-between border-b border-gray-200/80 px-4 py-4 dark:border-dark-border">
+      <div className="cc-sidebar-brand flex min-h-[72px] items-center justify-between border-b border-gray-200/80 px-4 py-4 dark:border-dark-border">
         {!collapsed && <Logo size="sm" href="/dashboard" />}
         <button
           type="button"
@@ -531,12 +565,16 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   return (
     <ConfirmDialogProvider>
-    <div className="dashboard-shell flex min-h-screen w-full min-w-0 bg-[#f7faf8] dark:bg-dark-bg">
+    <div className="cc-dashboard dashboard-shell flex min-h-screen w-full min-w-0 bg-[#f7faf8] dark:bg-dark-bg">
       {mobileOpen && (
         <button type="button" className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Fechar menu" />
       )}
 
       <aside
+        ref={sidebarRef}
+        role={mobileOpen ? 'dialog' : undefined}
+        aria-modal={mobileOpen ? true : undefined}
+        aria-label="Menu da plataforma"
         id="dashboard-navigation"
         className={`fixed inset-y-0 left-0 z-50 border-r border-gray-200/80 bg-white/95 shadow-[4px_0_24px_-22px_rgba(0,40,24,0.45)] backdrop-blur-xl transition-all duration-300 dark:border-dark-border dark:bg-dark-card/95 lg:sticky lg:top-0 lg:z-0 lg:h-screen ${
           mobileOpen ? 'visible translate-x-0' : 'invisible -translate-x-full lg:visible lg:translate-x-0'
@@ -545,9 +583,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         {sidebar}
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0" inert={mobileOpen ? true : undefined}>
         {/* Top bar */}
-        <header className="sticky top-0 z-30 border-b border-gray-200/80 bg-white/[0.88] backdrop-blur-xl dark:border-dark-border dark:bg-dark-card/[0.88]">
+        <header className="cc-workspace-bar sticky top-0 z-30 border-b border-gray-200/80 bg-white/[0.88] backdrop-blur-xl dark:border-dark-border dark:bg-dark-card/[0.88]">
           <div className="flex min-h-16 items-center justify-between gap-2 px-3 py-2 sm:min-h-[72px] sm:px-6 lg:px-8">
             <div className="flex min-w-0 items-center gap-1 sm:gap-3">
               <button
@@ -622,6 +660,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
       <nav
         aria-label="Atalhos do aplicativo"
+        inert={mobileOpen ? true : undefined}
+        data-workspace-dock
         className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200/80 bg-white/[0.94] px-2 pt-1.5 shadow-[0_-12px_35px_-28px_rgba(0,40,24,0.6)] backdrop-blur-xl dark:border-dark-border dark:bg-dark-card/[0.94] lg:hidden"
         style={{ paddingBottom: 'max(0.45rem, env(safe-area-inset-bottom))' }}
       >

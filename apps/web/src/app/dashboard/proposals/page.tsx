@@ -129,7 +129,7 @@ export default function ProposalsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="cc-workspace-heading">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Propostas Recebidas</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Propostas de financiamento dos parceiros — compare lado a lado e escolha a melhor.

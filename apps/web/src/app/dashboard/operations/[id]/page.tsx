@@ -147,7 +147,7 @@ export default function OperationDetailPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="flex-1">
+        <div className="cc-workspace-heading flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {TYPE_LABELS[operation.type] || operation.type}

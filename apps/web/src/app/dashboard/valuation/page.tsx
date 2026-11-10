@@ -283,7 +283,7 @@ export default function ValuationPage() {
       <div className="space-y-6">
 
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="cc-workspace-heading flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <BarChart3 className="h-6 w-6 text-emerald-500" />

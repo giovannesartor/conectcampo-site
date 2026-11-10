@@ -77,7 +77,7 @@ export default function AdminLeadsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="cc-workspace-heading flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <UserPlus className="h-6 w-6 text-brand-600" /> Leads

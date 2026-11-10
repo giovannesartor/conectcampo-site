@@ -215,7 +215,7 @@ export default function CarbonProjectDetailPage() {
         </div>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-3">
+            <div className="cc-workspace-heading flex items-center gap-3">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{project.name}</h1>
               <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusCfg.color}`}>
                 {statusCfg.label}

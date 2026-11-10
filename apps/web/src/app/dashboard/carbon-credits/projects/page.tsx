@@ -95,7 +95,7 @@ export default function CarbonProjectsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="cc-workspace-heading flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
             <Link href="/dashboard/carbon-credits" className="hover:text-emerald-600">Carbono</Link>

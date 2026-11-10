@@ -32,7 +32,7 @@ const accentMap = {
 
 export function KPICard({ title, value, subtitle, icon, trend, color = 'brand' }: KPICardProps) {
   return (
-    <div className="card card-hover relative min-w-0 overflow-hidden">
+    <div className="card cc-kpi card-hover relative min-w-0 overflow-hidden">
       <span className={`absolute inset-x-0 top-0 h-[3px] ${accentMap[color]}`} />
       <div className="flex flex-col gap-3">
         <div aria-hidden="true" className={`flex h-8 w-8 items-center justify-center rounded-lg [&>svg]:h-4 [&>svg]:w-4 ${colorMap[color]}`}>

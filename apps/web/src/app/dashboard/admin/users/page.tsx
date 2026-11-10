@@ -100,7 +100,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="cc-workspace-heading">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestão de Usuários</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{total} usuários cadastrados</p>
       </div>

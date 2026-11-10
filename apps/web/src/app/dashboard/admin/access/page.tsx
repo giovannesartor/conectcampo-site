@@ -39,7 +39,7 @@ export default function AccessFlowsPage() {
     <div className="space-y-5">
       <Link href="/dashboard/admin" className="inline-flex min-h-11 items-center gap-2 text-sm text-brand-700 dark:text-brand-300"><ArrowLeft className="h-4 w-4" /> Administração</Link>
       <div className="dashboard-heading">
-        <div><h1 className="text-2xl font-bold">Acessos e e-mails</h1><p className="mt-2 text-sm leading-6 text-gray-500">Configuração e eventos dos últimos 7 dias. Credenciais, tokens e conteúdo de mensagens nunca aparecem aqui.</p></div>
+        <div className="cc-workspace-heading"><h1 className="text-2xl font-bold">Acessos e e-mails</h1><p className="mt-2 text-sm leading-6 text-gray-500">Configuração e eventos dos últimos 7 dias. Credenciais, tokens e conteúdo de mensagens nunca aparecem aqui.</p></div>
         <button type="button" onClick={load} disabled={loading} className="btn-secondary"><RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Atualizar</button>
       </div>
       {!data ? <p role="status">Carregando fluxos…</p> : <>

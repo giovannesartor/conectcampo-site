@@ -97,7 +97,7 @@ export default function AdminDashboardPage() {
       {/* Header */}
       <div className="dashboard-heading">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="cc-workspace-heading flex items-center gap-2">
             <ShieldCheck className="h-6 w-6 text-brand-600" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Painel Administrativo</h1>
           </div>

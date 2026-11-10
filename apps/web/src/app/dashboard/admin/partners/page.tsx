@@ -49,7 +49,7 @@ export default function AdminPartnersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="cc-workspace-heading">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Parceiros Financeiros</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{partners.length} parceiros ativos</p>
       </div>
