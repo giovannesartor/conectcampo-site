@@ -1,93 +1,125 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
-  ArrowRight,
-  BellRing,
+  ArrowUpRight,
   FileCheck2,
   Landmark,
-  Leaf,
+  Sprout,
   ShieldCheck,
-} from 'lucide-react';
-import { Logo } from '@/components/Logo';
-import { useAuth } from '@/lib/auth-context';
+  BarChart3,
+} from "lucide-react";
+import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { FieldVisual } from "@/components/experience/FieldVisual";
+import { useAuth } from "@/lib/auth-context";
+import "@/components/experience/experience.css";
 
 const capabilities = [
-  { icon: Landmark, label: 'Crédito e propostas' },
-  { icon: FileCheck2, label: 'CPR e documentos' },
-  { icon: Leaf, label: 'Produção e campo' },
-  { icon: BellRing, label: 'Alertas importantes' },
+  { icon: Landmark, label: "Crédito e propostas" },
+  { icon: FileCheck2, label: "CPR e documentos" },
+  { icon: Sprout, label: "Produção e campo" },
+  { icon: BarChart3, label: "Mercado e gestão" },
 ];
 
 export default function MobileAppPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
-
   useEffect(() => {
-    if (!isLoading && user) router.replace('/dashboard');
+    if (!isLoading && user) router.replace("/dashboard");
   }, [isLoading, router, user]);
 
-  if (isLoading || user) {
+  if (isLoading || user)
     return (
-      <main className="grid min-h-[100svh] place-items-center bg-brand-950 px-6 text-white">
-        <div className="flex flex-col items-center gap-4" role="status" aria-live="polite">
-          <Logo size="lg" variant="icon" href="" className="rounded-3xl shadow-2xl shadow-black/20" />
-          <span className="h-1.5 w-20 overflow-hidden rounded-full bg-white/15">
-            <span className="block h-full w-1/2 animate-pulse rounded-full bg-brand-300" />
-          </span>
-          <p className="text-sm text-brand-100">Preparando seu ConectCampo…</p>
+      <main className="cc-app-loading">
+        <div role="status" aria-live="polite">
+          <Logo size="lg" variant="icon" href="" />
+          <span className="cc-loading-line" />
+          <p>Preparando seu ConectCampo…</p>
         </div>
       </main>
     );
-  }
 
   return (
-    <main className="relative min-h-[100svh] overflow-hidden bg-[#f7faf8] text-gray-950 dark:bg-dark-bg dark:text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(0,160,60,0.20),transparent_46%),linear-gradient(145deg,#001410,#003c28_58%,#006830)]" />
-
-      <section className="relative mx-auto flex min-h-[100svh] w-full max-w-lg flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))]">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <Logo size="sm" href="" className="rounded-2xl bg-white/95 px-3 py-2 shadow-lg shadow-black/10" />
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur">
-            <ShieldCheck className="h-3.5 w-3.5" /> Ambiente seguro
-          </span>
+    <main className="cc-app-entry">
+      <section className="cc-app-brand-panel" aria-labelledby="app-title">
+        <Image
+          src="/images/campo-landscape.jpg"
+          alt=""
+          fill
+          priority
+          sizes="(max-width: 700px) 100vw, 50vw"
+          className="cc-landscape"
+        />
+        <div className="cc-art-shade" />
+        <FieldVisual compact />
+        <header>
+          <Logo variant="icon" size="md" href="" />
+          <span>ConectCampo</span>
         </header>
-
-        <div className="flex flex-1 flex-col justify-center py-8 text-white sm:py-12">
-          <span className="mb-5 w-fit rounded-full border border-brand-300/30 bg-brand-300/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-brand-200">
-            Gestão rural, onde você estiver
+        <div className="cc-app-editorial">
+          <span className="cc-eyebrow">
+            <span className="cc-dot" /> SEU CAMPO. SUA PRÓXIMA CONQUISTA.
           </span>
-          <h1 className="max-w-md text-4xl font-black leading-[1.03] tracking-[-0.045em] sm:text-5xl">
-            Seu campo conectado. Sua rotina mais simples.
+          <h1 id="app-title">
+            Raízes no campo.
+            <br />
+            <em>Olhar no futuro.</em>
           </h1>
-          <p className="mt-5 max-w-md text-base leading-7 text-brand-100/90">
-            Crédito, CPR, documentos, produção e mercado em uma plataforma feita para decisões mais rápidas e seguras.
+          <p>
+            Sua operação merece uma visão completa. Conecte crédito, produção e
+            oportunidades, onde você estiver.
           </p>
-
-          <div className="mt-8 grid grid-cols-2 gap-2.5">
+        </div>
+        <footer>CRÉDITO &nbsp; / &nbsp; GESTÃO &nbsp; / &nbsp; CONEXÃO</footer>
+      </section>
+      <section className="cc-app-entry-panel" aria-labelledby="welcome-title">
+        <div className="cc-app-entry-inner">
+          <div className="cc-app-entry-top">
+            <span>
+              <ShieldCheck size={15} /> Sua conta. Seu ambiente.
+            </span>
+            <ThemeToggle />
+          </div>
+          <span className="cc-eyebrow">BEM-VINDO AO CONECTCAMPO</span>
+          <h2 id="welcome-title">
+            O próximo passo
+            <br />
+            começa aqui.
+          </h2>
+          <p>
+            Entre para acompanhar sua operação ou crie sua conta para começar.
+          </p>
+          <div className="cc-app-capabilities">
             {capabilities.map(({ icon: Icon, label }) => (
-              <div key={label} className="flex min-h-16 items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.07] px-3.5 py-3 backdrop-blur-sm">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-brand-200">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span className="text-sm font-semibold leading-tight text-white/95">{label}</span>
+              <div key={label}>
+                <Icon />
+                <span>{label}</span>
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="rounded-[1.75rem] border border-gray-200/80 bg-white p-4 shadow-2xl shadow-brand-950/15 dark:border-dark-border dark:bg-dark-card">
-          <Link href="/login" className="btn-primary flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl text-base">
-            Entrar na minha conta <ArrowRight className="h-5 w-5" />
-          </Link>
-          <Link href="/register" className="mt-2.5 flex min-h-[52px] w-full items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 text-sm font-bold text-brand-800 transition-colors hover:bg-brand-50 dark:border-dark-border dark:bg-dark-bg dark:text-brand-300 dark:hover:bg-brand-950/30">
-            Criar minha conta
-          </Link>
-          <p className="mt-3 text-center text-[11px] leading-4 text-gray-500 dark:text-gray-400">
-            Conheça nossos <Link href="/legal/termos-de-uso" className="underline">Termos de Uso</Link> e a <Link href="/legal/privacidade" className="underline">Política de Privacidade</Link>.
+          <div className="cc-app-entry-actions">
+            <Link href="/login" className="cc-button">
+              Entrar na minha conta <ArrowUpRight size={20} />
+            </Link>
+            <Link href="/register" className="cc-button cc-button-outline">
+              Criar minha conta
+            </Link>
+          </div>
+          <p className="cc-app-legal">
+            Conheça os <Link href="/legal/termos-de-uso">Termos de Uso</Link> e
+            a <Link href="/legal/privacidade">Política de Privacidade</Link>.
+            <br />
+            Acesse com sua conta da plataforma. Requer internet.
           </p>
+          <div className="cc-app-support">
+            <Link href="/ajuda">Precisa de ajuda?</Link>
+            <span>·</span>
+            <Link href="/contato">Fale com a equipe</Link>
+          </div>
         </div>
       </section>
     </main>
