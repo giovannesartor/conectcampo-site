@@ -1,42 +1,44 @@
-'use client';
+"use client";
 
-import { useEffect, useState, Suspense } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { CheckCircle, XCircle, Loader2, Mail } from 'lucide-react';
-import { api } from '@/lib/api';
-import { Logo } from '@/components/Logo';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { useEffect, useState, Suspense } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { CheckCircle, XCircle, Loader2, Mail } from "lucide-react";
+import { api } from "@/lib/api";
+import { AuthShell } from "@/components/experience/AuthShell";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get('token') ?? '';
+  const token = searchParams.get("token") ?? "";
 
-  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'resent'>('loading');
-  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState<
+    "loading" | "success" | "error" | "resent"
+  >("loading");
+  const [message, setMessage] = useState("");
   const [resending, setResending] = useState(false);
 
   useEffect(() => {
     if (!token) {
-      setStatus('error');
-      setMessage('Token não encontrado. Verifique o link recebido por e-mail.');
+      setStatus("error");
+      setMessage("Token não encontrado. Verifique o link recebido por e-mail.");
       return;
     }
 
     // O token continua disponível neste componente, mas sai da barra de
     // endereço para não permanecer no histórico nem vazar por referrer.
-    window.history.replaceState(window.history.state, '', '/verify-email');
+    window.history.replaceState(window.history.state, "", "/verify-email");
 
     api
-      .get('/auth/verify-email', { params: { token } })
+      .get("/auth/verify-email", { params: { token } })
       .then((res) => {
-        setStatus('success');
-        setMessage(res.data?.message ?? 'E-mail confirmado com sucesso!');
+        setStatus("success");
+        setMessage(res.data?.message ?? "E-mail confirmado com sucesso!");
       })
       .catch((err) => {
-        setStatus('error');
+        setStatus("error");
         setMessage(
-          err.response?.data?.message ?? 'Token inválido ou expirado. Solicite um novo link.',
+          err.response?.data?.message ??
+            "Token inválido ou expirado. Solicite um novo link.",
         );
       });
   }, [token]);
@@ -45,26 +47,33 @@ function VerifyEmailContent() {
     if (!token || resending) return;
     setResending(true);
     try {
-      const { data } = await api.post('/auth/resend-verification-link', { token });
-      setMessage(data?.message ?? 'Enviamos um novo link para o seu e-mail.');
-      setStatus('resent');
+      const { data } = await api.post("/auth/resend-verification-link", {
+        token,
+      });
+      setMessage(data?.message ?? "Enviamos um novo link para o seu e-mail.");
+      setStatus("resent");
     } catch (err: any) {
-      setMessage(err.response?.data?.message ?? 'Não foi possível enviar um novo link agora.');
+      setMessage(
+        err.response?.data?.message ??
+          "Não foi possível enviar um novo link agora.",
+      );
     } finally {
       setResending(false);
     }
   }
 
-  if (status === 'loading') {
+  if (status === "loading") {
     return (
       <div className="text-center">
         <Loader2 className="h-14 w-14 text-brand-600 animate-spin mx-auto mb-4" />
-        <p className="text-gray-600 dark:text-gray-400">Verificando seu e-mail...</p>
+        <p className="text-gray-600 dark:text-gray-400">
+          Verificando seu e-mail...
+        </p>
       </div>
     );
   }
 
-  if (status === 'success') {
+  if (status === "success") {
     return (
       <div className="text-center">
         <CheckCircle className="h-16 w-16 text-brand-600 mx-auto mb-4" />
@@ -79,7 +88,7 @@ function VerifyEmailContent() {
     );
   }
 
-  if (status === 'resent') {
+  if (status === "resent") {
     return (
       <div className="text-center" role="status">
         <Mail className="h-16 w-16 text-brand-600 mx-auto mb-4" />
@@ -102,9 +111,18 @@ function VerifyEmailContent() {
       </h1>
       <p className="text-gray-600 dark:text-gray-400 mb-6">{message}</p>
       {token && (
-        <button type="button" onClick={handleResend} disabled={resending} className="btn-primary w-full">
-          {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-          {resending ? 'Enviando...' : 'Enviar novo link'}
+        <button
+          type="button"
+          onClick={handleResend}
+          disabled={resending}
+          className="btn-primary w-full"
+        >
+          {resending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Mail className="h-4 w-4" />
+          )}
+          {resending ? "Enviando..." : "Enviar novo link"}
         </button>
       )}
       <Link href="/login" className="btn-ghost mt-3 w-full">
@@ -116,30 +134,17 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <div className="auth-surface flex min-h-screen items-center justify-center p-5 sm:p-8">
-      <div className="hidden lg:block fixed top-4 right-4 z-50">
-        <ThemeToggle />
-      </div>
-
-      <div className="w-full max-w-md">
-        <div className="flex items-center justify-between mb-10 lg:justify-center">
-          <Logo size="sm" href="/" />
-          <div className="lg:hidden">
-            <ThemeToggle />
+    <AuthShell title="Confirme seu e-mail." accent="Conecte seu futuro.">
+      <Suspense
+        fallback={
+          <div className="text-center">
+            <Loader2 className="h-14 w-14 text-brand-600 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Carregando...</p>
           </div>
-        </div>
-
-        <div className="auth-form-card p-8">
-          <Suspense fallback={
-            <div className="text-center">
-              <Loader2 className="h-14 w-14 text-brand-600 animate-spin mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">Carregando...</p>
-            </div>
-          }>
-            <VerifyEmailContent />
-          </Suspense>
-        </div>
-      </div>
-    </div>
+        }
+      >
+        <VerifyEmailContent />
+      </Suspense>
+    </AuthShell>
   );
 }

@@ -7,8 +7,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   ArrowDown,
-  Menu,
-  X,
   Plus,
   Check,
   Landmark,
@@ -24,8 +22,8 @@ import {
   MapPin,
   ChevronRight,
 } from "lucide-react";
-import { Logo } from "@/components/Logo";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { SiteHeader } from "./SiteHeader";
+import { SiteFooter } from "./SiteFooter";
 import { PRODUCT_PLANS } from "@/lib/product-plans";
 import { FieldVisual } from "./FieldVisual";
 import { APP_STORE_URL, homeQuestions } from "./content";
@@ -139,79 +137,16 @@ function useReveals() {
 }
 
 export function HomeExperience() {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [activeModule, setActiveModule] = useState(0);
-  const menuButton = useRef<HTMLButtonElement>(null);
   const root = useReveals();
   const selected = modules[activeModule];
-  useEffect(() => {
-    if (!menuOpen) return;
-    const close = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setMenuOpen(false);
-        menuButton.current?.focus();
-      }
-    };
-    document.addEventListener("keydown", close);
-    return () => document.removeEventListener("keydown", close);
-  }, [menuOpen]);
 
   return (
     <div className="cc-home" ref={root}>
       <a className="cc-skip" href="#conteudo">
         Pular para o conteúdo
       </a>
-      <header className="cc-header">
-        <div className="cc-container cc-nav">
-          <Logo size="md" />
-          <nav className="cc-desktop-nav" aria-label="Navegação principal">
-            <a href="#plataforma">A plataforma</a>
-            <a href="#como-funciona">Como funciona</a>
-            <a href="#planos">Planos</a>
-            <a href="#aplicativo">Aplicativo</a>
-          </nav>
-          <div className="cc-nav-actions">
-            <ThemeToggle />
-            <Link href="/login" className="cc-login">
-              Entrar
-            </Link>
-            <Link href="/register" className="cc-button cc-button-small">
-              Começar agora <ArrowUpRight size={16} />
-            </Link>
-            <button
-              ref={menuButton}
-              className="cc-menu-button"
-              onClick={() => setMenuOpen(!menuOpen)}
-              aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
-              aria-expanded={menuOpen}
-              aria-controls="cc-mobile-menu"
-            >
-              {menuOpen ? <X /> : <Menu />}
-            </button>
-          </div>
-        </div>
-        {menuOpen && (
-          <nav
-            className="cc-mobile-menu cc-container"
-            id="cc-mobile-menu"
-            aria-label="Navegação móvel"
-          >
-            {[
-              ["A plataforma", "#plataforma"],
-              ["Como funciona", "#como-funciona"],
-              ["Planos", "#planos"],
-              ["Aplicativo", "#aplicativo"],
-              ["Entrar", "/login"],
-              ["Criar minha conta", "/register"],
-            ].map(([label, href]) => (
-              <Link key={href} href={href} onClick={() => setMenuOpen(false)}>
-                {label}
-                <ArrowUpRight size={16} />
-              </Link>
-            ))}
-          </nav>
-        )}
-      </header>
+      <SiteHeader />
 
       <main id="conteudo">
         <section className="cc-hero">
@@ -700,51 +635,7 @@ export function HomeExperience() {
           <FieldVisual />
         </section>
       </main>
-      <footer className="cc-footer">
-        <div className="cc-container">
-          <div className="cc-footer-grid">
-            <div>
-              <Logo size="md" />
-              <p>
-                Crédito, gestão e conexões.
-                <br />
-                Para o agro seguir em frente.
-              </p>
-            </div>
-            <div>
-              <h3>Plataforma</h3>
-              <Link href="/plataforma">Recursos</Link>
-              <Link href="/planos">Planos</Link>
-              <Link href="/parceiros">Parceiros</Link>
-              <Link href="/api-docs">API e integrações</Link>
-            </div>
-            <div>
-              <h3>ConectCampo</h3>
-              <Link href="/sobre">Sobre nós</Link>
-              <Link href="/blog">Conteúdos</Link>
-              <Link href="/contato">Contato</Link>
-              <Link href="/ajuda">Central de ajuda</Link>
-            </div>
-            <div>
-              <h3>Transparência</h3>
-              <Link href="/legal/privacidade">Privacidade</Link>
-              <Link href="/legal/termos-de-uso">Termos de uso</Link>
-              <Link href="/legal/lgpd">LGPD</Link>
-              <Link href="/legal/compliance">Compliance</Link>
-            </div>
-          </div>
-          <div className="cc-footer-bottom">
-            <span>© {new Date().getFullYear()} ConectCampo · AG Digital</span>
-            <span>
-              AG PARTICIPACOES SOCIETARIAS LTDA · CNPJ 54.079.299/0001-40
-            </span>
-          </div>
-          <p className="cc-legal">
-            A ConectCampo não é uma instituição financeira. Atuamos como
-            marketplace conectando oferta e demanda de crédito.
-          </p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

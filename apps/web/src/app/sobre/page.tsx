@@ -1,44 +1,92 @@
-import { PublicLayout } from '@/components/landing/PublicLayout';
-import { Target, Lightbulb, Users } from 'lucide-react';
-import Link from 'next/link';
-import type { Metadata } from 'next';
+import { PageHero } from "@/components/experience/PageHero";
+import { PublicLayout } from "@/components/landing/PublicLayout";
+import { Target, Lightbulb, Users } from "lucide-react";
+import Link from "next/link";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Sobre Nós',
-  description: 'Conheça a ConectCampo: nossa história, missão, equipe e como estamos transformando o crédito rural no Brasil com tecnologia e dados.',
+  title: "Sobre Nós",
+  description:
+    "Conheça a ConectCampo: nossa história, missão, equipe e como estamos transformando o crédito rural no Brasil com tecnologia e dados.",
   openGraph: {
-    title: 'Sobre a ConectCampo',
-    description: 'Conheça a ConectCampo: nossa história, missão, equipe e como estamos transformando o crédito rural no Brasil.',
+    title: "Sobre a ConectCampo",
+    description:
+      "Conheça a ConectCampo: nossa história, missão, equipe e como estamos transformando o crédito rural no Brasil.",
   },
 };
 
 const values = [
-  { icon: Target, title: 'Missão', description: 'Organizar o acesso ao crédito rural e aproximar produtores e empresas de fontes compatíveis com transparência e tecnologia.' },
-  { icon: Lightbulb, title: 'Visão', description: 'Ser uma referência em infraestrutura digital para operações de crédito do agronegócio brasileiro.' },
-  { icon: Users, title: 'Valores', description: 'Transparência, inovação, respeito ao produtor rural, conformidade regulatória e impacto positivo no desenvolvimento do campo brasileiro.' },
+  {
+    icon: Target,
+    title: "Missão",
+    description:
+      "Organizar o acesso ao crédito rural e aproximar produtores e empresas de fontes compatíveis com transparência e tecnologia.",
+  },
+  {
+    icon: Lightbulb,
+    title: "Visão",
+    description:
+      "Ser uma referência em infraestrutura digital para operações de crédito do agronegócio brasileiro.",
+  },
+  {
+    icon: Users,
+    title: "Valores",
+    description:
+      "Transparência, inovação, respeito ao produtor rural, conformidade regulatória e impacto positivo no desenvolvimento do campo brasileiro.",
+  },
 ];
 
 const timeline = [
-  { year: '2023', title: 'Fundação', description: 'ConectCampo é fundada com a missão de simplificar o crédito rural no Brasil.' },
-  { year: '2024 Q1', title: 'MVP da plataforma', description: 'Primeira versão do fluxo digital para organização e análise de operações rurais.' },
-  { year: '2024 Q3', title: 'Score ConectCampo', description: 'Lançamento do scoring proprietário com IA para avaliação de risco agro.' },
-  { year: '2025 Q1', title: 'Marketplace e CPR digital', description: 'Lançamento do marketplace de grãos com pagamento em custódia e emissão digital de CPR.' },
-  { year: '2025 Q3', title: 'Ampliação da rede de parceiros', description: 'Expansão da rede de instituições financeiras: bancos, cooperativas, FIDCs, securitizadoras e FIAGROs.' },
-  { year: '2026', title: 'Expansão nacional', description: 'Foco na expansão de cobertura pelo Brasil, com prioridade no Matopiba e no Centro-Oeste.' },
+  {
+    year: "2023",
+    title: "Fundação",
+    description:
+      "ConectCampo é fundada com a missão de simplificar o crédito rural no Brasil.",
+  },
+  {
+    year: "2024 Q1",
+    title: "MVP da plataforma",
+    description:
+      "Primeira versão do fluxo digital para organização e análise de operações rurais.",
+  },
+  {
+    year: "2024 Q3",
+    title: "Score ConectCampo",
+    description:
+      "Lançamento do scoring proprietário com IA para avaliação de risco agro.",
+  },
+  {
+    year: "2025 Q1",
+    title: "Marketplace e CPR digital",
+    description:
+      "Lançamento do marketplace de grãos com pagamento em custódia e emissão digital de CPR.",
+  },
+  {
+    year: "2025 Q3",
+    title: "Ampliação da rede de parceiros",
+    description:
+      "Expansão da rede de instituições financeiras: bancos, cooperativas, FIDCs, securitizadoras e FIAGROs.",
+  },
+  {
+    year: "2026",
+    title: "Expansão nacional",
+    description:
+      "Foco na expansão de cobertura pelo Brasil, com prioridade no Matopiba e no Centro-Oeste.",
+  },
 ];
 
 const numbers = [
-  { value: 'Online', label: 'Organização da operação e documentos' },
-  { value: 'Score', label: 'Apoio à análise de risco' },
-  { value: 'CPR', label: 'Emissão e assinatura digital' },
-  { value: 'Multi-perfil', label: 'Diferentes fontes de crédito' },
+  { value: "Online", label: "Organização da operação e documentos" },
+  { value: "Score", label: "Apoio à análise de risco" },
+  { value: "CPR", label: "Emissão e assinatura digital" },
+  { value: "Multi-perfil", label: "Diferentes fontes de crédito" },
 ];
 
 export default function SobrePage() {
   return (
     <PublicLayout>
       {/* Hero */}
-      <section className="bg-gradient-to-br from-brand-50 to-white dark:from-dark-card dark:to-dark-bg px-6 py-24 lg:px-8">
+      <PageHero>
         <div className="mx-auto max-w-3xl text-center">
           <span className="inline-block rounded-full bg-brand-100 dark:bg-brand-900/30 px-4 py-1.5 text-sm font-medium text-brand-700 dark:text-brand-400 mb-6">
             Sobre Nós
@@ -48,40 +96,51 @@ export default function SobrePage() {
             <span className="text-brand-600"> do crédito</span>
           </h1>
           <p className="mt-6 text-lg text-gray-600 dark:text-gray-400">
-            A ConectCampo nasceu para tornar a jornada de crédito rural mais organizada, transparente
-            e rastreável para produtores, empresas e instituições financeiras.
+            A ConectCampo nasceu para tornar a jornada de crédito rural mais
+            organizada, transparente e rastreável para produtores, empresas e
+            instituições financeiras.
           </p>
         </div>
-      </section>
+      </PageHero>
 
       {/* Story */}
       <section className="px-6 py-20 lg:px-8">
         <div className="mx-auto max-w-4xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Nossa história</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                Nossa história
+              </h2>
               <div className="space-y-4 text-gray-600 dark:text-gray-400">
                 <p>
-                  A ConectCampo foi fundada com a missão de resolver um problema crônico do agronegócio
-                  brasileiro: a dificuldade dos produtores rurais em acessar crédito competitivo,
-                  especialmente os pequenos e médios, que representam a grande maioria do campo brasileiro.
+                  A ConectCampo foi fundada com a missão de resolver um problema
+                  crônico do agronegócio brasileiro: a dificuldade dos
+                  produtores rurais em acessar crédito competitivo,
+                  especialmente os pequenos e médios, que representam a grande
+                  maioria do campo brasileiro.
                 </p>
                 <p>
-                  O crédito rural envolve documentos, dados produtivos, garantias e diferentes políticas
-                  de análise. A ConectCampo reúne essas informações em uma jornada digital para reduzir
+                  O crédito rural envolve documentos, dados produtivos,
+                  garantias e diferentes políticas de análise. A ConectCampo
+                  reúne essas informações em uma jornada digital para reduzir
                   retrabalho e dar mais clareza ao acompanhamento.
                 </p>
                 <p>
-                  Nossa plataforma organiza solicitações de produtores rurais e as apresenta a uma rede de
-                  bancos, cooperativas, FIDCs, securitizadoras e FIAGROs — facilitando a troca de
-                  informações durante a análise, sem substituir a decisão de cada instituição.
+                  Nossa plataforma organiza solicitações de produtores rurais e
+                  as apresenta a uma rede de bancos, cooperativas, FIDCs,
+                  securitizadoras e FIAGROs — facilitando a troca de informações
+                  durante a análise, sem substituir a decisão de cada
+                  instituição.
                 </p>
               </div>
             </div>
             <div className="rounded-2xl bg-gradient-to-br from-brand-100 to-brand-200 dark:from-dark-card dark:to-dark-border h-72 flex items-center justify-center">
               <div className="text-center px-8">
                 <p className="text-5xl font-black text-brand-600">1 fluxo</p>
-                <p className="text-sm text-brand-700 dark:text-brand-400 mt-2">dados, documentos, análise, propostas e acompanhamento conectados</p>
+                <p className="text-sm text-brand-700 dark:text-brand-400 mt-2">
+                  dados, documentos, análise, propostas e acompanhamento
+                  conectados
+                </p>
               </div>
             </div>
           </div>
@@ -100,8 +159,12 @@ export default function SobrePage() {
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-white mb-4">
                   <Icon className="h-7 w-7" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">{title}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{description}</p>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                  {title}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  {description}
+                </p>
               </div>
             ))}
           </div>
@@ -115,7 +178,9 @@ export default function SobrePage() {
             {numbers.map((n) => (
               <div key={n.label} className="text-center">
                 <p className="text-3xl font-black text-brand-600">{n.value}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{n.label}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  {n.label}
+                </p>
               </div>
             ))}
           </div>
@@ -134,17 +199,26 @@ export default function SobrePage() {
 
             <div className="space-y-10">
               {timeline.map((item, i) => (
-                <div key={item.year} className={`relative flex items-start gap-6 ${i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
+                <div
+                  key={item.year}
+                  className={`relative flex items-start gap-6 ${i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"}`}
+                >
                   {/* Dot */}
                   <div className="absolute left-4 md:left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-brand-600 border-4 border-brand-100 dark:border-dark-bg z-10" />
 
                   {/* Content */}
-                  <div className={`ml-10 md:ml-0 md:w-[calc(50%-2rem)] ${i % 2 === 0 ? 'md:pr-8 md:text-right' : 'md:pl-8'}`}>
+                  <div
+                    className={`ml-10 md:ml-0 md:w-[calc(50%-2rem)] ${i % 2 === 0 ? "md:pr-8 md:text-right" : "md:pl-8"}`}
+                  >
                     <span className="inline-block text-xs font-bold text-brand-600 bg-brand-100 dark:bg-brand-900/30 rounded-full px-3 py-1 mb-2">
                       {item.year}
                     </span>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">{item.title}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{item.description}</p>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      {item.description}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -155,13 +229,20 @@ export default function SobrePage() {
 
       {/* CTA */}
       <section className="px-6 py-20 lg:px-8 text-center">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Junte-se à ConectCampo</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          Junte-se à ConectCampo
+        </h2>
         <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-xl mx-auto">
-          Seja você produtor, empresa do agro ou instituição financeira — a ConectCampo tem um lugar para você.
+          Seja você produtor, empresa do agro ou instituição financeira — a
+          ConectCampo tem um lugar para você.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/register" className="btn-primary">Criar conta gratuita</Link>
-          <Link href="/carreiras" className="btn-ghost">Ver vagas em aberto</Link>
+          <Link href="/register" className="btn-primary">
+            Criar conta gratuita
+          </Link>
+          <Link href="/carreiras" className="btn-ghost">
+            Ver vagas em aberto
+          </Link>
         </div>
       </section>
     </PublicLayout>

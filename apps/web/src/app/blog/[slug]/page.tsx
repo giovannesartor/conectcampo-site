@@ -1,50 +1,67 @@
-import Link from 'next/link';
-import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
-import { Header } from '@/components/landing/Header';
-import { Footer } from '@/components/landing/Footer';
-import { BLOG_POSTS, getPost } from '@/lib/blog-posts';
+import { PublicLayout } from "@/components/landing/PublicLayout";
+import Link from "next/link";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { BLOG_POSTS, getPost } from "@/lib/blog-posts";
 
 export function generateStaticParams() {
   return BLOG_POSTS.map((p) => ({ slug: p.slug }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { slug } = await params;
   const post = getPost(slug);
-  if (!post) return { title: 'Artigo não encontrado' };
+  if (!post) return { title: "Artigo não encontrado" };
   const url = `https://conectcampo.digital/blog/${post.slug}`;
   return {
     title: post.title,
     description: post.excerpt,
     alternates: { canonical: url },
-    openGraph: { title: post.title, description: post.excerpt, url, type: 'article' },
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      url,
+      type: "article",
+    },
   };
 }
 
-export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function BlogPostPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
   const post = getPost(slug);
   if (!post) notFound();
 
   const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
     headline: post.title,
     description: post.excerpt,
     datePublished: post.date,
-    author: { '@type': 'Organization', name: 'ConectCampo' },
-    publisher: { '@type': 'Organization', name: 'ConectCampo' },
+    author: { "@type": "Organization", name: "ConectCampo" },
+    publisher: { "@type": "Organization", name: "ConectCampo" },
     mainEntityOfPage: `https://conectcampo.digital/blog/${post.slug}`,
   };
 
   return (
-    <main className="min-h-screen bg-white dark:bg-dark-bg">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <Header />
-      <article className="mx-auto max-w-2xl px-6 lg:px-8 pt-32 pb-20">
-        <Link href="/blog" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-brand-600">
+    <PublicLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <article className="mx-auto max-w-2xl px-6 lg:px-8 pt-16 pb-20">
+        <Link
+          href="/blog"
+          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-brand-600"
+        >
           <ArrowLeft className="h-4 w-4" /> Voltar ao blog
         </Link>
         <span className="mt-6 inline-flex w-fit items-center rounded-full bg-brand-50 dark:bg-brand-950/30 px-2.5 py-0.5 text-xs font-semibold text-brand-700 dark:text-brand-400">
@@ -54,7 +71,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           {post.title}
         </h1>
         <p className="mt-3 text-sm text-gray-400">
-          {new Date(post.date).toLocaleDateString('pt-BR')} · {post.readingMinutes} min de leitura
+          {new Date(post.date).toLocaleDateString("pt-BR")} ·{" "}
+          {post.readingMinutes} min de leitura
         </p>
         <div
           className="blog-content mt-8 text-gray-700 dark:text-gray-300 leading-relaxed"
@@ -62,12 +80,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         />
 
         <div className="mt-12 rounded-2xl bg-gradient-to-br from-brand-800 to-brand-950 p-8 text-center">
-          <h3 className="text-xl font-bold text-white">Pronto para conectar sua operação ao crédito certo?</h3>
-          <p className="mt-2 text-sm text-brand-200">Organize os dados da sua operação e acompanhe propostas em um só lugar.</p>
-          <Link href="/register" className="btn-primary mt-5 inline-flex">Simular meu crédito</Link>
+          <h3 className="text-xl font-bold text-white">
+            Pronto para conectar sua operação ao crédito certo?
+          </h3>
+          <p className="mt-2 text-sm text-brand-200">
+            Organize os dados da sua operação e acompanhe propostas em um só
+            lugar.
+          </p>
+          <Link href="/register" className="btn-primary mt-5 inline-flex">
+            Simular meu crédito
+          </Link>
         </div>
       </article>
-      <Footer />
-    </main>
+    </PublicLayout>
   );
 }

@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
-import Link from 'next/link';
+import { AuthShell } from "@/components/experience/AuthShell";
+import { useEffect } from "react";
+import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import Link from "next/link";
 
 export default function GlobalError({
   error,
@@ -12,11 +13,11 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Global error:', error);
+    console.error("Global error:", error);
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg px-6">
+    <AuthShell title="Vamos retomar" accent="sua jornada.">
       <div className="max-w-md text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 dark:bg-red-900/30 mb-6">
           <AlertTriangle className="h-8 w-8 text-red-500" />
@@ -40,12 +41,15 @@ export default function GlobalError({
             <RefreshCw className="h-4 w-4" />
             Tentar novamente
           </button>
-          <Link href="/" className="btn-ghost flex items-center justify-center gap-2">
+          <Link
+            href="/"
+            className="btn-ghost flex items-center justify-center gap-2"
+          >
             <Home className="h-4 w-4" />
             Voltar ao início
           </Link>
         </div>
       </div>
-    </div>
+    </AuthShell>
   );
 }

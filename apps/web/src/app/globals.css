@@ -198,52 +198,6 @@ html {
   letter-spacing: -0.012em;
 }
 
-/* Páginas institucionais compartilham o mesmo acabamento editorial da home. */
-.public-site > section {
-  position: relative;
-  isolation: isolate;
-}
-
-.public-site > section:first-child {
-  border-bottom: 1px solid var(--border-soft);
-  background:
-    radial-gradient(720px 320px at 50% -30%, rgba(0, 160, 60, 0.1), transparent 70%),
-    linear-gradient(135deg, #f7fbf8 0%, #ffffff 70%);
-}
-
-.dark .public-site > section:first-child {
-  background:
-    radial-gradient(720px 320px at 50% -30%, rgba(0, 160, 60, 0.1), transparent 70%),
-    linear-gradient(135deg, #101a13 0%, #0a0f0c 70%);
-}
-
-.public-site > section:first-child h1 {
-  color: #111827;
-  font-weight: 800;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
-}
-
-.dark .public-site > section:first-child h1 {
-  color: #ffffff;
-}
-
-.public-site > section:first-child p {
-  line-height: 1.75;
-  text-wrap: pretty;
-}
-
-.public-site section h2 {
-  letter-spacing: -0.02em;
-  text-wrap: balance;
-}
-
-.public-site .rounded-2xl.border.bg-white {
-  border-color: var(--border-soft);
-  box-shadow: var(--shadow-soft);
-}
-
-/* Auth segue o mesmo produto, sem parecer uma área separada da plataforma. */
 .auth-surface {
   background:
     radial-gradient(800px 500px at 85% 0%, rgba(0, 140, 60, 0.055), transparent 65%),

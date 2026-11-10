@@ -1,23 +1,31 @@
-'use client';
+"use client";
 
-import { useState, useEffect, Suspense } from 'react';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, Check, ArrowLeft, ArrowRight, Loader2, Smartphone } from 'lucide-react';
-import { useAuth } from '@/lib/auth-context';
-import { Logo } from '@/components/Logo';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import Cookies from 'js-cookie';
-import { api } from '@/lib/api';
-import { isIOSNativeApp } from '@/lib/native-platform';
-import { AppleSignInButton } from '@/components/AppleSignInButton';
-import { APPLE_REGISTRATION_KEY } from '@/lib/native-apple-auth';
-import { GOOGLE_REGISTRATION_KEY } from '@/lib/google-auth';
-import { GoogleSignInButton } from '@/components/GoogleSignInButton';
+import { AuthShell } from "@/components/experience/AuthShell";
+import { useState, useEffect, Suspense } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Eye,
+  EyeOff,
+  Check,
+  ArrowLeft,
+  ArrowRight,
+  Loader2,
+  Smartphone,
+} from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { PublicLayout } from "@/components/landing/PublicLayout";
+import Cookies from "js-cookie";
+import { api } from "@/lib/api";
+import { isIOSNativeApp } from "@/lib/native-platform";
+import { AppleSignInButton } from "@/components/AppleSignInButton";
+import { APPLE_REGISTRATION_KEY } from "@/lib/native-apple-auth";
+import { GOOGLE_REGISTRATION_KEY } from "@/lib/google-auth";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 
 // ─── Plan config ──────────────────────────────────────────────────────────────
 
-type PlanKey = 'START' | 'PRO' | 'COOPERATIVE' | 'CORPORATE';
+type PlanKey = "START" | "PRO" | "COOPERATIVE" | "CORPORATE";
 
 const PLANS: Array<{
   key: PlanKey;
@@ -25,47 +33,50 @@ const PLANS: Array<{
   price: string;
   period?: string;
   role: string;
-  docType: 'cpf' | 'cnpj';
+  docType: "cpf" | "cnpj";
   description: string;
   free: boolean;
 }> = [
   {
-    key: 'START',
-    name: 'Produtor Rural',
-    price: 'R$ 299',
-    period: '/mês',
-    role: 'PRODUCER',
-    docType: 'cpf',
-    description: 'Para o produtor rural que quer gerir a propriedade e acessar crédito com agilidade.',
+    key: "START",
+    name: "Produtor Rural",
+    price: "R$ 299",
+    period: "/mês",
+    role: "PRODUCER",
+    docType: "cpf",
+    description:
+      "Para o produtor rural que quer gerir a propriedade e acessar crédito com agilidade.",
     free: false,
   },
   {
-    key: 'PRO',
-    name: 'Empresa',
-    price: 'R$ 799',
-    period: '/mês',
-    role: 'COMPANY',
-    docType: 'cnpj',
-    description: 'Para empresas do agronegócio que precisam organizar crédito e documentos em escala.',
+    key: "PRO",
+    name: "Empresa",
+    price: "R$ 799",
+    period: "/mês",
+    role: "COMPANY",
+    docType: "cnpj",
+    description:
+      "Para empresas do agronegócio que precisam organizar crédito e documentos em escala.",
     free: false,
   },
   {
-    key: 'COOPERATIVE',
-    name: 'Cooperativa',
-    price: 'R$ 2.890',
-    period: '/mês',
-    role: 'COMPANY',
-    docType: 'cnpj',
-    description: 'Para cooperativas que querem oferecer crédito e gestão aos seus cooperados.',
+    key: "COOPERATIVE",
+    name: "Cooperativa",
+    price: "R$ 2.890",
+    period: "/mês",
+    role: "COMPANY",
+    docType: "cnpj",
+    description:
+      "Para cooperativas que querem oferecer crédito e gestão aos seus cooperados.",
     free: false,
   },
   {
-    key: 'CORPORATE',
-    name: 'Instituição Financeira',
-    price: 'Grátis',
-    role: 'FINANCIAL_INSTITUTION',
-    docType: 'cnpj',
-    description: 'Para bancos, FIDCs, securitizadoras e FIAGROs.',
+    key: "CORPORATE",
+    name: "Instituição Financeira",
+    price: "Grátis",
+    role: "FINANCIAL_INSTITUTION",
+    docType: "cnpj",
+    description: "Para bancos, FIDCs, securitizadoras e FIAGROs.",
     free: true,
   },
 ];
@@ -73,26 +84,27 @@ const PLANS: Array<{
 // ─── CPF / CNPJ masks ─────────────────────────────────────────────────────────
 
 function maskCPF(value: string): string {
-  const d = value.replace(/\D/g, '').slice(0, 11);
+  const d = value.replace(/\D/g, "").slice(0, 11);
   return d
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
 
 function maskCNPJ(value: string): string {
-  const d = value.replace(/\D/g, '').slice(0, 14);
+  const d = value.replace(/\D/g, "").slice(0, 14);
   return d
-    .replace(/(\d{2})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1/$2')
-    .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+    .replace(/(\d{2})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1/$2")
+    .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
 }
 
 function maskPhone(value: string): string {
-  const d = value.replace(/\D/g, '').slice(0, 11);
-  if (d.length <= 10) return d.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').trim();
-  return d.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').trim();
+  const d = value.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 10)
+    return d.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3").trim();
+  return d.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3").trim();
 }
 
 // ─── Inner component (uses useSearchParams) ───────────────────────────────────
@@ -102,55 +114,86 @@ function RegisterForm() {
   const searchParams = useSearchParams();
   const { setUserFromData } = useAuth();
 
-  const initialPlan = (searchParams.get('plan') as PlanKey | null) ?? null;
-  const [step, setStep] = useState<'plan' | 'form'>(initialPlan ? 'form' : 'plan');
+  const initialPlan = (searchParams.get("plan") as PlanKey | null) ?? null;
+  const [step, setStep] = useState<"plan" | "form">(
+    initialPlan ? "form" : "plan",
+  );
   const [selectedPlan, setSelectedPlan] = useState<PlanKey | null>(initialPlan);
 
   const planConfig = PLANS.find((p) => p.key === selectedPlan);
 
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-    phone: '',
-    document: '', // CPF or CNPJ displayed with mask
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+    document: "", // CPF or CNPJ displayed with mask
   });
   const [showPassword, setShowPassword] = useState(false);
   const [lgpd, setLgpd] = useState(false);
-  const [gateway, setGateway] = useState<'VALSA' | 'ASAAS'>('VALSA');
-  const [error, setError] = useState('');
+  const [gateway, setGateway] = useState<"VALSA" | "ASAAS">("VALSA");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [isNativeIOS, setIsNativeIOS] = useState(false);
-  const [appleRegistration, setAppleRegistration] = useState<{ token: string; email: string; expiresAt: number } | null>(null);
-  const [googleRegistration, setGoogleRegistration] = useState<{ token: string; email: string; expiresAt: number } | null>(null);
+  const [appleRegistration, setAppleRegistration] = useState<{
+    token: string;
+    email: string;
+    expiresAt: number;
+  } | null>(null);
+  const [googleRegistration, setGoogleRegistration] = useState<{
+    token: string;
+    email: string;
+    expiresAt: number;
+  } | null>(null);
   const socialRegistration = appleRegistration ?? googleRegistration;
 
   useEffect(() => {
     setIsNativeIOS(isIOSNativeApp());
     try {
-      const pending = JSON.parse(sessionStorage.getItem(APPLE_REGISTRATION_KEY) || 'null');
-      if (isIOSNativeApp() && pending?.token && pending?.email && pending.expiresAt > Date.now()) {
+      const pending = JSON.parse(
+        sessionStorage.getItem(APPLE_REGISTRATION_KEY) || "null",
+      );
+      if (
+        isIOSNativeApp() &&
+        pending?.token &&
+        pending?.email &&
+        pending.expiresAt > Date.now()
+      ) {
         setAppleRegistration(pending);
-        setForm(prev => ({ ...prev, email: pending.email, name: pending.name || prev.name }));
+        setForm((prev) => ({
+          ...prev,
+          email: pending.email,
+          name: pending.name || prev.name,
+        }));
       } else sessionStorage.removeItem(APPLE_REGISTRATION_KEY);
-    } catch { sessionStorage.removeItem(APPLE_REGISTRATION_KEY); }
+    } catch {
+      sessionStorage.removeItem(APPLE_REGISTRATION_KEY);
+    }
     try {
-      const pending = JSON.parse(sessionStorage.getItem(GOOGLE_REGISTRATION_KEY) || 'null');
+      const pending = JSON.parse(
+        sessionStorage.getItem(GOOGLE_REGISTRATION_KEY) || "null",
+      );
       if (pending?.token && pending?.email && pending.expiresAt > Date.now()) {
         setAppleRegistration(null);
         sessionStorage.removeItem(APPLE_REGISTRATION_KEY);
         setGoogleRegistration(pending);
-        setForm(prev => ({ ...prev, email: pending.email, name: pending.name || prev.name }));
+        setForm((prev) => ({
+          ...prev,
+          email: pending.email,
+          name: pending.name || prev.name,
+        }));
       } else sessionStorage.removeItem(GOOGLE_REGISTRATION_KEY);
-    } catch { sessionStorage.removeItem(GOOGLE_REGISTRATION_KEY); }
+    } catch {
+      sessionStorage.removeItem(GOOGLE_REGISTRATION_KEY);
+    }
   }, []);
 
   // Keep URL in sync when plan is selected
   useEffect(() => {
-    if (selectedPlan && step === 'form') {
+    if (selectedPlan && step === "form") {
       const url = new URL(window.location.href);
-      url.searchParams.set('plan', selectedPlan);
-      window.history.replaceState({}, '', url.toString());
+      url.searchParams.set("plan", selectedPlan);
+      window.history.replaceState({}, "", url.toString());
     }
   }, [selectedPlan, step]);
 
@@ -160,34 +203,39 @@ function RegisterForm() {
 
   function handleDocumentChange(raw: string) {
     if (!planConfig) return;
-    const masked =
-      planConfig.docType === 'cpf' ? maskCPF(raw) : maskCNPJ(raw);
-    updateField('document', masked);
+    const masked = planConfig.docType === "cpf" ? maskCPF(raw) : maskCNPJ(raw);
+    updateField("document", masked);
   }
 
   function choosePlan(key: PlanKey) {
     setSelectedPlan(key);
-    setStep('form');
+    setStep("form");
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!planConfig || !selectedPlan) return;
-    setError('');
+    setError("");
     setLoading(true);
 
-    const cleanDoc = form.document.replace(/\D/g, '');
+    const cleanDoc = form.document.replace(/\D/g, "");
 
     try {
-      if (appleRegistration && appleRegistration.expiresAt <= Date.now()) throw new Error('Confirmação Apple expirada. Entre com Apple novamente.');
-      if (googleRegistration && googleRegistration.expiresAt <= Date.now()) throw new Error('Confirmação Google expirada. Entre com Google novamente.');
+      if (appleRegistration && appleRegistration.expiresAt <= Date.now())
+        throw new Error(
+          "Confirmação Apple expirada. Entre com Apple novamente.",
+        );
+      if (googleRegistration && googleRegistration.expiresAt <= Date.now())
+        throw new Error(
+          "Confirmação Google expirada. Entre com Google novamente.",
+        );
       const payload: Record<string, string> = {
         name: form.name,
         email: form.email,
         password: form.password,
         role: planConfig.role,
         plan: selectedPlan,
-        phone: form.phone.replace(/\D/g, ''),
+        phone: form.phone.replace(/\D/g, ""),
       };
       if (appleRegistration) {
         delete payload.password;
@@ -197,46 +245,56 @@ function RegisterForm() {
         delete payload.password;
         payload.googleRegistrationToken = googleRegistration.token;
       }
-      if (!planConfig.free) payload.gateway = isNativeIOS ? 'APPLE' : gateway;
-      if (planConfig.docType === 'cpf') payload.cpf = cleanDoc;
+      if (!planConfig.free) payload.gateway = isNativeIOS ? "APPLE" : gateway;
+      if (planConfig.docType === "cpf") payload.cpf = cleanDoc;
       else payload.cnpj = cleanDoc;
 
-      const { data } = await api.post('/auth/register', payload);
+      const { data } = await api.post("/auth/register", payload);
       sessionStorage.removeItem(APPLE_REGISTRATION_KEY);
       sessionStorage.removeItem(GOOGLE_REGISTRATION_KEY);
 
       // Fluxo legado (pagamento imediato) — mantido como fallback.
       if (data.requiresPayment && data.invoiceUrl) {
-        sessionStorage.setItem('pendingInvoiceUrl', data.invoiceUrl);
-        sessionStorage.setItem('pendingPlanName', planConfig.name);
-        window.open(data.invoiceUrl, '_blank', 'noopener,noreferrer');
-        router.push(`/register/pending?userId=${data.user.id}&plan=${selectedPlan}`);
+        sessionStorage.setItem("pendingInvoiceUrl", data.invoiceUrl);
+        sessionStorage.setItem("pendingPlanName", planConfig.name);
+        window.open(data.invoiceUrl, "_blank", "noopener,noreferrer");
+        router.push(
+          `/register/pending?userId=${data.user.id}&plan=${selectedPlan}`,
+        );
         return;
       }
 
       // Plano grátis ou trial de 7 dias — acesso imediato ao dashboard.
       if (data.accessToken) {
-        localStorage.setItem('conectcampo.auth.provider', appleRegistration ? 'APPLE' : googleRegistration ? 'GOOGLE' : 'EMAIL');
-        Cookies.set('accessToken', data.accessToken, {
+        localStorage.setItem(
+          "conectcampo.auth.provider",
+          appleRegistration ? "APPLE" : googleRegistration ? "GOOGLE" : "EMAIL",
+        );
+        Cookies.set("accessToken", data.accessToken, {
           expires: 1,
-          sameSite: 'strict',
-          secure: window.location.protocol === 'https:',
+          sameSite: "strict",
+          secure: window.location.protocol === "https:",
         });
-        Cookies.set('refreshToken', data.refreshToken, {
+        Cookies.set("refreshToken", data.refreshToken, {
           expires: 7,
-          sameSite: 'strict',
-          secure: window.location.protocol === 'https:',
+          sameSite: "strict",
+          secure: window.location.protocol === "https:",
         });
         if (setUserFromData) setUserFromData(data.user);
-        router.push(isNativeIOS && !planConfig.free ? '/dashboard/subscription?from=registration' : '/dashboard');
+        router.push(
+          isNativeIOS && !planConfig.free
+            ? "/dashboard/subscription?from=registration"
+            : "/dashboard",
+        );
       }
     } catch (err: any) {
       const msg =
         err.response?.data?.message ??
         (Array.isArray(err.response?.data?.message)
-          ? err.response.data.message.join(', ')
-          : err.message ?? 'Erro ao criar conta. Verifique os dados e tente novamente.');
-      setError(Array.isArray(msg) ? msg.join(', ') : msg);
+          ? err.response.data.message.join(", ")
+          : (err.message ??
+            "Erro ao criar conta. Verifique os dados e tente novamente."));
+      setError(Array.isArray(msg) ? msg.join(", ") : msg);
     } finally {
       setLoading(false);
     }
@@ -244,432 +302,453 @@ function RegisterForm() {
 
   // ─── Step: Plan selection ────────────────────────────────────────────────────
 
-  if (step === 'plan') {
+  if (step === "plan") {
     return (
-      <div className="auth-surface flex min-h-screen flex-col items-center justify-center px-4 py-12">
-        <div className="fixed top-4 right-4 z-50">
-          <ThemeToggle />
-        </div>
+      <PublicLayout>
+        <section className="cc-plan-choice">
+          <div className="mb-8 text-center">
+            <span className="cc-eyebrow">01 / SEU PERFIL NO CAMPO</span>
+            <h1 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">
+              Escolha seu plano
+            </h1>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              Selecione o plano que melhor se encaixa no seu perfil
+            </p>
+            {socialRegistration ? (
+              <p className="mt-4 text-sm text-brand-700">
+                {appleRegistration ? "Apple confirmada" : "Google confirmado"}.
+                Complete seu perfil para finalizar o cadastro.
+              </p>
+            ) : (
+              <>
+                <AppleSignInButton />
+                <GoogleSignInButton />
+              </>
+            )}
+          </div>
 
-        <div className="mb-8 text-center">
-          <Logo size="md" href="/" />
-          <h1 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">
-            Escolha seu plano
-          </h1>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Selecione o plano que melhor se encaixa no seu perfil
-          </p>
-          {socialRegistration ? <p className="mt-4 text-sm text-brand-700">{appleRegistration ? 'Apple confirmada' : 'Google confirmado'}. Complete seu perfil para finalizar o cadastro.</p> : <><AppleSignInButton /><GoogleSignInButton /></>}
-        </div>
-
-        <div className="grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {PLANS.map((plan) => (
-            <button
-              key={plan.key}
-              onClick={() => choosePlan(plan.key)}
-              className="card card-hover group flex flex-col text-left focus:outline-none focus:ring-2 focus:ring-brand-500"
-            >
-              <div className="flex-1">
-                <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                  {plan.name}
-                </h3>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {plan.description}
-                </p>
-                <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-brand-600 dark:text-brand-400">
-                    {isNativeIOS && !plan.free ? 'Pela App Store' : plan.price}
-                  </span>
-                  {plan.period && !(isNativeIOS && !plan.free) && (
-                    <span className="text-xs text-gray-400">{plan.period}</span>
-                  )}
+          <div className="grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {PLANS.map((plan) => (
+              <button
+                key={plan.key}
+                onClick={() => choosePlan(plan.key)}
+                className="card card-hover group flex flex-col text-left focus:outline-none focus:ring-2 focus:ring-brand-500"
+              >
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                    {plan.name}
+                  </h3>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {plan.description}
+                  </p>
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <span className="text-2xl font-black text-brand-600 dark:text-brand-400">
+                      {isNativeIOS && !plan.free
+                        ? "Pela App Store"
+                        : plan.price}
+                    </span>
+                    {plan.period && !(isNativeIOS && !plan.free) && (
+                      <span className="text-xs text-gray-400">
+                        {plan.period}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4 flex items-center justify-end">
-                <span className="text-xs font-medium text-brand-600 dark:text-brand-400 group-hover:underline flex items-center gap-1">
-                  Selecionar <ArrowRight className="h-3 w-3" />
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
+                <div className="mt-4 flex items-center justify-end">
+                  <span className="text-xs font-medium text-brand-600 dark:text-brand-400 group-hover:underline flex items-center gap-1">
+                    Selecionar <ArrowRight className="h-3 w-3" />
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
 
-        <p className="mt-8 text-xs text-gray-400 dark:text-gray-500 text-center">
-          ConectCampo é um produto{' '}
-          <span className="font-semibold">AG Digital</span>
-          {' '}· CNPJ 54.079.299/0001-40
-          {!isNativeIOS && ' · Pagamentos via ValsaPay ou Asaas'}
-        </p>
+          <p className="mt-8 text-xs text-gray-400 dark:text-gray-500 text-center">
+            ConectCampo é um produto{" "}
+            <span className="font-semibold">AG Digital</span> · CNPJ
+            54.079.299/0001-40
+            {!isNativeIOS && " · Pagamentos via ValsaPay ou Asaas"}
+          </p>
 
-        <div className="mt-4 text-center">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-brand-600 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" /> Voltar ao início
-          </Link>
-        </div>
-      </div>
+          <div className="mt-4 text-center">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-brand-600 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" /> Voltar ao início
+            </Link>
+          </div>
+        </section>
+      </PublicLayout>
     );
   }
 
   // ─── Step: Registration form ─────────────────────────────────────────────────
 
   return (
-    <div className="auth-surface flex min-h-screen">
-      <div className="hidden lg:block fixed top-4 right-4 z-50">
-        <ThemeToggle />
-      </div>
-
-      {/* Left panel */}
-      <div className="auth-brand-panel hidden items-center justify-center p-12 lg:flex lg:w-1/2">
-        <div className="max-w-md text-center">
-          <Logo size="lg" showText={false} href="/" />
-          <div className="mt-8 text-3xl font-bold text-white">
-            Conect<span className="text-brand-300">Campo</span>
+    <AuthShell
+      title="Seu próximo passo."
+      accent="Começa aqui."
+      eyebrow="UMA CONTA. NOVAS POSSIBILIDADES."
+    >
+      {/* Mobile plan badge */}
+      {planConfig && (
+        <div className="mb-4 flex items-center justify-between rounded-xl bg-brand-50 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800 px-4 py-3">
+          <div>
+            <p className="text-xs text-brand-500 font-medium">
+              Plano selecionado
+            </p>
+            <p className="text-sm font-bold text-brand-700 dark:text-brand-400">
+              {planConfig.name} —{" "}
+              {isNativeIOS && !planConfig.free
+                ? "Pela App Store"
+                : `${planConfig.price}${planConfig.period ?? ""}`}
+            </p>
           </div>
-
-          {planConfig && (
-            <div className="mt-8 rounded-2xl bg-white/10 p-6 text-left">
-              <p className="text-brand-200 text-xs font-medium uppercase tracking-wide mb-2">
-                Plano selecionado
-              </p>
-              <h3 className="text-white text-xl font-bold">{planConfig.name}</h3>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-3xl font-black text-white">
-                  {isNativeIOS && !planConfig.free ? 'Pela App Store' : planConfig.price}
-                </span>
-                {planConfig.period && !(isNativeIOS && !planConfig.free) && (
-                  <span className="text-brand-200 text-sm">{planConfig.period}</span>
-                )}
-              </div>
-              <p className="mt-3 text-brand-100 text-sm">{planConfig.description}</p>
-              {!planConfig.free && !isNativeIOS && (
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center gap-2 text-xs text-brand-100">
-                    <Check className="h-3.5 w-3.5 text-brand-300" />
-                    7 dias grátis — acesso completo, sem pagar nada agora
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-brand-200">
-                    <Check className="h-3.5 w-3.5 text-brand-300" />
-                    Depois, {planConfig.price}{planConfig.period} · PIX, cartão ou boleto
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           <button
-            onClick={() => setStep('plan')}
-            className="mt-6 flex items-center gap-2 text-brand-200 text-sm hover:text-white transition-colors mx-auto"
+            onClick={() => setStep("plan")}
+            className="text-xs text-brand-600 hover:underline"
           >
-            <ArrowLeft className="h-4 w-4" /> Trocar plano
+            Trocar
           </button>
         </div>
-      </div>
+      )}
 
-      {/* Right panel */}
-      <div className="flex w-full items-center justify-center p-5 sm:p-8 lg:w-1/2">
-        <div className="auth-form-card max-w-md p-6 sm:p-8">
-          <div className="lg:hidden flex items-center justify-between mb-8">
-            <Logo size="sm" href="/" />
-            <ThemeToggle />
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        Criar Conta
+      </h1>
+      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        Já tem uma conta?{" "}
+        <Link
+          href="/login"
+          className="font-medium text-brand-600 hover:text-brand-500"
+        >
+          Entrar
+        </Link>
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        {appleRegistration && (
+          <p
+            role="status"
+            className="rounded-xl bg-brand-50 p-3 text-sm text-brand-800"
+          >
+            Seu e-mail foi confirmado pela Apple. Não é necessário criar outra
+            senha.
+          </p>
+        )}
+        {googleRegistration && (
+          <p
+            role="status"
+            className="rounded-xl bg-brand-50 p-3 text-sm text-brand-800"
+          >
+            Seu acesso Google foi confirmado. Complete os dados abaixo; não é
+            necessário criar outra senha.
+          </p>
+        )}
+        {error && (
+          <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 text-sm text-red-600 dark:text-red-400">
+            {error}
           </div>
+        )}
 
-          {/* Mobile plan badge */}
-          {planConfig && (
-            <div className="lg:hidden mb-4 flex items-center justify-between rounded-xl bg-brand-50 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800 px-4 py-3">
-              <div>
-                <p className="text-xs text-brand-500 font-medium">Plano selecionado</p>
-                <p className="text-sm font-bold text-brand-700 dark:text-brand-400">
-                  {planConfig.name} — {isNativeIOS && !planConfig.free
-                    ? 'Pela App Store'
-                    : `${planConfig.price}${planConfig.period ?? ''}`}
-                </p>
-              </div>
+        {/* Name */}
+        <div>
+          <label htmlFor="name" className="label">
+            Nome completo
+          </label>
+          <input
+            id="name"
+            type="text"
+            value={form.name}
+            onChange={(e) => updateField("name", e.target.value)}
+            className="input"
+            placeholder="Seu nome completo"
+            autoComplete="name"
+            required
+          />
+        </div>
+
+        {/* Email */}
+        <div>
+          <label htmlFor="email" className="label">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            readOnly={!!socialRegistration}
+            value={form.email}
+            onChange={(e) => updateField("email", e.target.value)}
+            className="input"
+            placeholder="seu@email.com"
+            autoComplete="email"
+            required
+          />
+        </div>
+
+        {/* Phone */}
+        <div>
+          <label htmlFor="phone" className="label">
+            Telefone
+          </label>
+          <input
+            id="phone"
+            type="tel"
+            value={form.phone}
+            onChange={(e) => updateField("phone", maskPhone(e.target.value))}
+            className="input"
+            placeholder="(11) 99999-9999"
+            autoComplete="tel"
+            required
+          />
+        </div>
+
+        {/* CPF or CNPJ */}
+        {planConfig && (
+          <div>
+            <label htmlFor="document" className="label">
+              {planConfig.docType === "cpf" ? "CPF" : "CNPJ"}{" "}
+              <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="document"
+              type="text"
+              value={form.document}
+              onChange={(e) => handleDocumentChange(e.target.value)}
+              className="input"
+              placeholder={
+                planConfig.docType === "cpf"
+                  ? "000.000.000-00"
+                  : "00.000.000/0000-00"
+              }
+              inputMode="numeric"
+              required
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              {planConfig.free
+                ? "Usado para identificar a instituição e proteger o cadastro."
+                : isNativeIOS
+                  ? "Usado para proteger o cadastro e vincular sua futura assinatura pela App Store."
+                  : "Necessário para processamento de pagamento (ValsaPay ou Asaas)."}
+            </p>
+          </div>
+        )}
+
+        {/* Password */}
+        {!socialRegistration && (
+          <div>
+            <label htmlFor="password" className="label">
+              Senha
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={(e) => updateField("password", e.target.value)}
+                className="input pr-12"
+                placeholder="Mínimo 8 caracteres"
+                autoComplete="new-password"
+                minLength={8}
+                required
+              />
               <button
-                onClick={() => setStep('plan')}
-                className="text-xs text-brand-600 hover:underline"
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                aria-pressed={showPassword}
               >
-                Trocar
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
               </button>
             </div>
-          )}
+            <p className="mt-1 text-xs text-gray-400">
+              Use ao menos 1 maiúscula, 1 minúscula, 1 número e 1 caractere
+              especial
+            </p>
+          </div>
+        )}
 
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Criar Conta
-          </h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Já tem uma conta?{' '}
-            <Link href="/login" className="font-medium text-brand-600 hover:text-brand-500">
-              Entrar
-            </Link>
-          </p>
-
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-            {appleRegistration && <p role="status" className="rounded-xl bg-brand-50 p-3 text-sm text-brand-800">Seu e-mail foi confirmado pela Apple. Não é necessário criar outra senha.</p>}
-            {googleRegistration && <p role="status" className="rounded-xl bg-brand-50 p-3 text-sm text-brand-800">Seu acesso Google foi confirmado. Complete os dados abaixo; não é necessário criar outra senha.</p>}
-            {error && (
-              <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 text-sm text-red-600 dark:text-red-400">
-                {error}
-              </div>
-            )}
-
-            {/* Name */}
-            <div>
-              <label htmlFor="name" className="label">Nome completo</label>
-              <input
-                id="name"
-                type="text"
-                value={form.name}
-                onChange={(e) => updateField('name', e.target.value)}
-                className="input"
-                placeholder="Seu nome completo"
-                autoComplete="name"
-                required
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="label">Email</label>
-              <input
-                id="email"
-                type="email"
-                readOnly={!!socialRegistration}
-                value={form.email}
-                onChange={(e) => updateField('email', e.target.value)}
-                className="input"
-                placeholder="seu@email.com"
-                autoComplete="email"
-                required
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label htmlFor="phone" className="label">Telefone</label>
-              <input
-                id="phone"
-                type="tel"
-                value={form.phone}
-                onChange={(e) => updateField('phone', maskPhone(e.target.value))}
-                className="input"
-                placeholder="(11) 99999-9999"
-                autoComplete="tel"
-                required
-              />
-            </div>
-
-            {/* CPF or CNPJ */}
-            {planConfig && (
+        {isNativeIOS && !planConfig?.free && (
+          <div className="rounded-2xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800 dark:border-brand-800 dark:bg-brand-950/20 dark:text-brand-200">
+            <div className="flex items-start gap-3">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-600 text-white">
+                <Smartphone className="h-5 w-5" />
+              </span>
               <div>
-                <label htmlFor="document" className="label">
-                  {planConfig.docType === 'cpf' ? 'CPF' : 'CNPJ'}{' '}
-                  <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="document"
-                  type="text"
-                  value={form.document}
-                  onChange={(e) => handleDocumentChange(e.target.value)}
-                  className="input"
-                  placeholder={
-                    planConfig.docType === 'cpf'
-                      ? '000.000.000-00'
-                      : '00.000.000/0000-00'
-                  }
-                  inputMode="numeric"
-                  required
-                />
-                <p className="mt-1 text-xs text-gray-400">
-                  {planConfig.free
-                    ? 'Usado para identificar a instituição e proteger o cadastro.'
-                    : isNativeIOS
-                      ? 'Usado para proteger o cadastro e vincular sua futura assinatura pela App Store.'
-                    : 'Necessário para processamento de pagamento (ValsaPay ou Asaas).'}
+                <p className="font-bold">Assinatura segura pela App Store</p>
+                <p className="mt-1 leading-5 text-brand-700 dark:text-brand-300">
+                  Sua conta será criada agora. Em seguida, você poderá confirmar
+                  este plano com o preço localizado e a proteção de pagamento da
+                  App Store.
                 </p>
               </div>
-            )}
+            </div>
+          </div>
+        )}
 
-            {/* Password */}
-            {!socialRegistration && <div>
-              <label htmlFor="password" className="label">Senha</label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={form.password}
-                  onChange={(e) => updateField('password', e.target.value)}
-                  className="input pr-12"
-                  placeholder="Mínimo 8 caracteres"
-                  autoComplete="new-password"
-                  minLength={8}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                  aria-pressed={showPassword}
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-              <p className="mt-1 text-xs text-gray-400">
-                Use ao menos 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial
-              </p>
-            </div>}
+        {/* Forma de pagamento — apenas planos pagos no site */}
+        {!planConfig?.free && !isNativeIOS && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Onde emitir a cobrança após o teste
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              {/* Valsa — recomendada */}
+              <button
+                type="button"
+                onClick={() => setGateway("VALSA")}
+                aria-pressed={gateway === "VALSA"}
+                className={`relative rounded-xl border-2 p-4 text-left transition-all ${
+                  gateway === "VALSA"
+                    ? "border-brand-600 bg-brand-50 dark:bg-brand-950/20"
+                    : "border-gray-200 dark:border-dark-border hover:border-brand-300"
+                }`}
+              >
+                <span className="absolute -top-2.5 right-3 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white shadow">
+                  Recomendada
+                </span>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  ValsaPay
+                </p>
+                <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  PIX instantâneo · checkout rápido
+                </p>
+                {gateway === "VALSA" && (
+                  <Check className="absolute bottom-3 right-3 h-4 w-4 text-brand-600" />
+                )}
+              </button>
 
-            {isNativeIOS && !planConfig?.free && (
-              <div className="rounded-2xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800 dark:border-brand-800 dark:bg-brand-950/20 dark:text-brand-200">
-                <div className="flex items-start gap-3">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-600 text-white">
-                    <Smartphone className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <p className="font-bold">Assinatura segura pela App Store</p>
-                    <p className="mt-1 leading-5 text-brand-700 dark:text-brand-300">
-                      Sua conta será criada agora. Em seguida, você poderá confirmar este plano com o preço localizado e a proteção de pagamento da App Store.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Forma de pagamento — apenas planos pagos no site */}
-            {!planConfig?.free && !isNativeIOS && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Onde emitir a cobrança após o teste
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Valsa — recomendada */}
-                  <button
-                    type="button"
-                    onClick={() => setGateway('VALSA')}
-                    aria-pressed={gateway === 'VALSA'}
-                    className={`relative rounded-xl border-2 p-4 text-left transition-all ${
-                      gateway === 'VALSA'
-                        ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/20'
-                        : 'border-gray-200 dark:border-dark-border hover:border-brand-300'
-                    }`}
-                  >
-                    <span className="absolute -top-2.5 right-3 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white shadow">
-                      Recomendada
-                    </span>
-                    <p className="font-semibold text-gray-900 dark:text-white">ValsaPay</p>
-                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                      PIX instantâneo · checkout rápido
-                    </p>
-                    {gateway === 'VALSA' && (
-                      <Check className="absolute bottom-3 right-3 h-4 w-4 text-brand-600" />
-                    )}
-                  </button>
-
-                  {/* Asaas */}
-                  <button
-                    type="button"
-                    onClick={() => setGateway('ASAAS')}
-                    aria-pressed={gateway === 'ASAAS'}
-                    className={`relative rounded-xl border-2 p-4 text-left transition-all ${
-                      gateway === 'ASAAS'
-                        ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/20'
-                        : 'border-gray-200 dark:border-dark-border hover:border-brand-300'
-                    }`}
-                  >
-                    <p className="font-semibold text-gray-900 dark:text-white">Asaas</p>
-                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                      PIX, cartão ou boleto
-                    </p>
-                    {gateway === 'ASAAS' && (
-                      <Check className="absolute bottom-3 right-3 h-4 w-4 text-brand-600" />
-                    )}
-                  </button>
-                </div>
-
-                {/* Aviso do trial de 7 dias */}
-                <div className="mt-2 rounded-xl border border-brand-200 dark:border-brand-800 bg-brand-50 dark:bg-brand-950/20 p-3 text-xs text-brand-700 dark:text-brand-300">
-                  <p className="font-semibold">Você tem 7 dias grátis</p>
-                  <p className="mt-1 text-brand-600 dark:text-brand-400">
-                    Acesso completo agora, sem cobrança. Ao fim dos 7 dias, a cobrança de{' '}
-                    <span className="font-medium">{planConfig?.price}{planConfig?.period}</span>{' '}
-                    é emitida no {gateway === 'VALSA' ? 'ValsaPay' : 'Asaas'} no {planConfig?.docType === 'cpf' ? 'CPF' : 'CNPJ'} informado.
-                    Você escolhe PIX, cartão ou boleto na hora de pagar e pode cancelar antes disso, sem custo.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* LGPD */}
-            <div className="flex items-start gap-2">
-              <input
-                id="lgpd"
-                type="checkbox"
-                checked={lgpd}
-                onChange={(e) => setLgpd(e.target.checked)}
-                required
-                className="mt-1 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
-              />
-              <label htmlFor="lgpd" className="text-xs text-gray-500 dark:text-gray-400">
-                Li e concordo com os{' '}
-                <Link href="/legal/termos-de-uso" className="text-brand-600 hover:underline">
-                  Termos de Uso
-                </Link>{' '}
-                e{' '}
-                <Link href="/legal/privacidade" className="text-brand-600 hover:underline">
-                  Política de Privacidade
-                </Link>
-                . Autorizo o tratamento dos meus dados conforme a LGPD.
-              </label>
+              {/* Asaas */}
+              <button
+                type="button"
+                onClick={() => setGateway("ASAAS")}
+                aria-pressed={gateway === "ASAAS"}
+                className={`relative rounded-xl border-2 p-4 text-left transition-all ${
+                  gateway === "ASAAS"
+                    ? "border-brand-600 bg-brand-50 dark:bg-brand-950/20"
+                    : "border-gray-200 dark:border-dark-border hover:border-brand-300"
+                }`}
+              >
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  Asaas
+                </p>
+                <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  PIX, cartão ou boleto
+                </p>
+                {gateway === "ASAAS" && (
+                  <Check className="absolute bottom-3 right-3 h-4 w-4 text-brand-600" />
+                )}
+              </button>
             </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading || !lgpd}
-              className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Processando...
-                </>
-              ) : isNativeIOS && !planConfig?.free ? (
-                <>Criar conta e continuar <ArrowRight className="h-4 w-4" /></>
-              ) : planConfig?.free ? (
-                'Criar conta gratuita'
-              ) : (
-                <>
-                  Começar 7 dias grátis <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </button>
-
-            {!planConfig?.free && !isNativeIOS && (
-              <p className="text-center text-xs text-gray-400">
-                Sem cobrança hoje. Após 7 dias, a cobrança do plano é emitida via{' '}
+            {/* Aviso do trial de 7 dias */}
+            <div className="mt-2 rounded-xl border border-brand-200 dark:border-brand-800 bg-brand-50 dark:bg-brand-950/20 p-3 text-xs text-brand-700 dark:text-brand-300">
+              <p className="font-semibold">Você tem 7 dias grátis</p>
+              <p className="mt-1 text-brand-600 dark:text-brand-400">
+                Acesso completo agora, sem cobrança. Ao fim dos 7 dias, a
+                cobrança de{" "}
                 <span className="font-medium">
-                  {gateway === 'VALSA' ? 'ValsaPay' : 'Asaas · AG Digital'}
-                </span>
-                {' '}— você escolhe PIX, cartão ou boleto. Cancele quando quiser antes disso.
+                  {planConfig?.price}
+                  {planConfig?.period}
+                </span>{" "}
+                é emitida no {gateway === "VALSA" ? "ValsaPay" : "Asaas"} no{" "}
+                {planConfig?.docType === "cpf" ? "CPF" : "CNPJ"} informado. Você
+                escolhe PIX, cartão ou boleto na hora de pagar e pode cancelar
+                antes disso, sem custo.
               </p>
-            )}
-          </form>
-          {!socialRegistration && <><AppleSignInButton /><GoogleSignInButton /></>}
-
-          <div className="mt-6 text-center">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" /> Voltar ao início
-            </Link>
+            </div>
           </div>
+        )}
+
+        {/* LGPD */}
+        <div className="flex items-start gap-2">
+          <input
+            id="lgpd"
+            type="checkbox"
+            checked={lgpd}
+            onChange={(e) => setLgpd(e.target.checked)}
+            required
+            className="mt-1 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+          />
+          <label
+            htmlFor="lgpd"
+            className="text-xs text-gray-500 dark:text-gray-400"
+          >
+            Li e concordo com os{" "}
+            <Link
+              href="/legal/termos-de-uso"
+              className="text-brand-600 hover:underline"
+            >
+              Termos de Uso
+            </Link>{" "}
+            e{" "}
+            <Link
+              href="/legal/privacidade"
+              className="text-brand-600 hover:underline"
+            >
+              Política de Privacidade
+            </Link>
+            . Autorizo o tratamento dos meus dados conforme a LGPD.
+          </label>
         </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={loading || !lgpd}
+          className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-60"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Processando...
+            </>
+          ) : isNativeIOS && !planConfig?.free ? (
+            <>
+              Criar conta e continuar <ArrowRight className="h-4 w-4" />
+            </>
+          ) : planConfig?.free ? (
+            "Criar conta gratuita"
+          ) : (
+            <>
+              Começar 7 dias grátis <ArrowRight className="h-4 w-4" />
+            </>
+          )}
+        </button>
+
+        {!planConfig?.free && !isNativeIOS && (
+          <p className="text-center text-xs text-gray-400">
+            Sem cobrança hoje. Após 7 dias, a cobrança do plano é emitida via{" "}
+            <span className="font-medium">
+              {gateway === "VALSA" ? "ValsaPay" : "Asaas · AG Digital"}
+            </span>{" "}
+            — você escolhe PIX, cartão ou boleto. Cancele quando quiser antes
+            disso.
+          </p>
+        )}
+      </form>
+      {!socialRegistration && (
+        <>
+          <AppleSignInButton />
+          <GoogleSignInButton />
+        </>
+      )}
+
+      <div className="mt-6 text-center">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" /> Voltar ao início
+        </Link>
       </div>
-    </div>
+    </AuthShell>
   );
 }
 
@@ -677,7 +756,13 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-brand-600" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
+        </div>
+      }
+    >
       <RegisterForm />
     </Suspense>
   );

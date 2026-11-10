@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useRef, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { PublicSurface } from "@/components/experience/PublicSurface";
+import { useEffect, useState, useRef, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Loader2,
   CheckCircle2,
@@ -11,18 +12,18 @@ import {
   RefreshCw,
   AlertCircle,
   Leaf,
-} from 'lucide-react';
-import { Logo } from '@/components/Logo';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { api } from '@/lib/api';
+} from "lucide-react";
+import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { api } from "@/lib/api";
 
 // ─── Plan labels ──────────────────────────────────────────────────────────────
 
 const PLAN_LABELS: Record<string, { name: string; price: string }> = {
-  START: { name: 'Produtor Rural', price: 'R$ 299/mês' },
-  PRO: { name: 'Empresa', price: 'R$ 799/mês' },
-  COOPERATIVE: { name: 'Cooperativa', price: 'R$ 2.890/mês' },
-  CORPORATE: { name: 'Instituição Financeira', price: 'Grátis' },
+  START: { name: "Produtor Rural", price: "R$ 299/mês" },
+  PRO: { name: "Empresa", price: "R$ 799/mês" },
+  COOPERATIVE: { name: "Cooperativa", price: "R$ 2.890/mês" },
+  CORPORATE: { name: "Instituição Financeira", price: "Grátis" },
 };
 
 // ─── Animated dots ────────────────────────────────────────────────────────────
@@ -33,7 +34,9 @@ function AnimatedDots() {
     const t = setInterval(() => setCount((c) => (c + 1) % 4), 500);
     return () => clearInterval(t);
   }, []);
-  return <span className="inline-block w-6 text-left">{'·'.repeat(count)}</span>;
+  return (
+    <span className="inline-block w-6 text-left">{"·".repeat(count)}</span>
+  );
 }
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
@@ -54,10 +57,10 @@ function Step({
       <div
         className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm transition-all duration-500 ${
           done
-            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
+            ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/30"
             : active
-            ? 'bg-brand-600 text-white shadow-md shadow-brand-500/30 ring-2 ring-brand-300 ring-offset-2 ring-offset-white dark:ring-offset-dark-card'
-            : 'bg-gray-100 dark:bg-dark-border text-gray-400'
+              ? "bg-brand-600 text-white shadow-md shadow-brand-500/30 ring-2 ring-brand-300 ring-offset-2 ring-offset-white dark:ring-offset-dark-card"
+              : "bg-gray-100 dark:bg-dark-border text-gray-400"
         }`}
       >
         {done ? <CheckCircle2 className="h-4 w-4" /> : icon}
@@ -65,10 +68,10 @@ function Step({
       <span
         className={`text-sm font-medium transition-colors ${
           done
-            ? 'text-emerald-600 dark:text-emerald-400'
+            ? "text-emerald-600 dark:text-emerald-400"
             : active
-            ? 'text-gray-900 dark:text-white'
-            : 'text-gray-400 dark:text-gray-500'
+              ? "text-gray-900 dark:text-white"
+              : "text-gray-400 dark:text-gray-500"
         }`}
       >
         {label}
@@ -84,12 +87,12 @@ function PendingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const userId = searchParams.get('userId') ?? '';
-  const planKey = searchParams.get('plan') ?? '';
+  const userId = searchParams.get("userId") ?? "";
+  const planKey = searchParams.get("plan") ?? "";
   const planInfo = PLAN_LABELS[planKey];
 
-  type Status = 'waiting' | 'confirmed' | 'error';
-  const [status, setStatus] = useState<Status>('waiting');
+  type Status = "waiting" | "confirmed" | "error";
+  const [status, setStatus] = useState<Status>("waiting");
   const [elapsed, setElapsed] = useState(0);
   const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
   const [planName, setPlanName] = useState<string | null>(null);
@@ -99,8 +102,8 @@ function PendingContent() {
 
   // Recover invoice URL from sessionStorage (set in the register form)
   useEffect(() => {
-    setInvoiceUrl(sessionStorage.getItem('pendingInvoiceUrl'));
-    setPlanName(sessionStorage.getItem('pendingPlanName'));
+    setInvoiceUrl(sessionStorage.getItem("pendingInvoiceUrl"));
+    setPlanName(sessionStorage.getItem("pendingPlanName"));
   }, []);
 
   // Polling
@@ -110,8 +113,8 @@ function PendingContent() {
     async function checkStatus() {
       try {
         const { data } = await api.get(`/auth/payment-status?userId=${userId}`);
-        if (data.isActive || data.paymentStatus === 'ACTIVE') {
-          setStatus('confirmed');
+        if (data.isActive || data.paymentStatus === "ACTIVE") {
+          setStatus("confirmed");
           stopPolling();
         }
       } catch {
@@ -133,13 +136,13 @@ function PendingContent() {
 
   function reopenPayment() {
     if (invoiceUrl) {
-      window.open(invoiceUrl, '_blank', 'noopener,noreferrer');
+      window.open(invoiceUrl, "_blank", "noopener,noreferrer");
     }
   }
 
   // ─── Confirmed screen ────────────────────────────────────────────────────────
 
-  if (status === 'confirmed') {
+  if (status === "confirmed") {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-dark-bg px-4 py-12">
         <div className="fixed top-4 right-4 z-50">
@@ -155,7 +158,8 @@ function PendingContent() {
             Pagamento confirmado!
           </h1>
           <p className="mt-3 text-gray-500 dark:text-gray-400">
-            Sua assinatura{planInfo ? ` do plano ${planInfo.name}` : ''} foi ativada com sucesso.
+            Sua assinatura{planInfo ? ` do plano ${planInfo.name}` : ""} foi
+            ativada com sucesso.
           </p>
 
           <div className="mt-8 rounded-2xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/20 p-6 text-left space-y-4">
@@ -168,7 +172,8 @@ function PendingContent() {
                   Assinatura ativa
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  {planInfo?.name ?? planName ?? 'Seu plano'} {planInfo ? `· ${planInfo.price}` : ''}
+                  {planInfo?.name ?? planName ?? "Seu plano"}{" "}
+                  {planInfo ? `· ${planInfo.price}` : ""}
                 </p>
               </div>
             </div>
@@ -182,7 +187,8 @@ function PendingContent() {
                   Verifique seu e-mail
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Enviamos um link de confirmação. Clique nele para liberar seu acesso completo.
+                  Enviamos um link de confirmação. Clique nele para liberar seu
+                  acesso completo.
                 </p>
               </div>
             </div>
@@ -196,7 +202,8 @@ function PendingContent() {
               Acessar o ConectCampo
             </Link>
             <p className="text-xs text-gray-400 dark:text-gray-500">
-              Não recebeu o e-mail? Verifique sua caixa de spam ou faça login e solicite o reenvio.
+              Não recebeu o e-mail? Verifique sua caixa de spam ou faça login e
+              solicite o reenvio.
             </p>
           </div>
 
@@ -215,7 +222,7 @@ function PendingContent() {
   const timeLabel =
     elapsed < 60
       ? `${elapsed}s`
-      : `${minutes}m ${String(seconds).padStart(2, '0')}s`;
+      : `${minutes}m ${String(seconds).padStart(2, "0")}s`;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-dark-bg px-4 py-12">
@@ -231,7 +238,6 @@ function PendingContent() {
 
         {/* Card */}
         <div className="rounded-2xl border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card shadow-xl shadow-gray-200/50 dark:shadow-black/20 p-8">
-
           {/* Spinner area */}
           <div className="flex flex-col items-center gap-4 pb-8 border-b border-gray-100 dark:border-dark-border">
             <div className="relative flex h-20 w-20 items-center justify-center">
@@ -314,7 +320,8 @@ function PendingContent() {
               </button>
             )}
             <p className="text-center text-xs text-gray-400 dark:text-gray-500">
-              Não feche esta aba — confirmamos automaticamente assim que o pagamento for processado.
+              Não feche esta aba — confirmamos automaticamente assim que o
+              pagamento for processado.
             </p>
           </div>
         </div>
@@ -322,7 +329,8 @@ function PendingContent() {
         {/* Bottom note */}
         <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-gray-400 dark:text-gray-600">
           <AlertCircle className="h-3.5 w-3.5" />
-          PIX e cartão são confirmados em segundos. Boleto pode levar até 3 dias úteis.
+          PIX e cartão são confirmados em segundos. Boleto pode levar até 3 dias
+          úteis.
         </div>
 
         <p className="mt-3 text-center text-xs text-gray-300 dark:text-gray-700">
@@ -337,14 +345,18 @@ function PendingContent() {
 
 export default function PendingPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-dark-bg">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
-        </div>
-      }
-    >
-      <PendingContent />
-    </Suspense>
+    <PublicSurface>
+      <div className="cc-checkout">
+        <Suspense
+          fallback={
+            <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-dark-bg">
+              <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
+            </div>
+          }
+        >
+          <PendingContent />
+        </Suspense>
+      </div>
+    </PublicSurface>
   );
 }

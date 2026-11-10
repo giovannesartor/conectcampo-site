@@ -1,23 +1,28 @@
-import { PublicLayout } from '@/components/landing/PublicLayout';
-import { Check, ArrowRight, Zap } from 'lucide-react';
-import Link from 'next/link';
-import { PRODUCT_PLANS } from '@/lib/product-plans';
+import { PageHero } from "@/components/experience/PageHero";
+import { PublicLayout } from "@/components/landing/PublicLayout";
+import { Check, ArrowRight, Zap } from "lucide-react";
+import Link from "next/link";
+import { PRODUCT_PLANS } from "@/lib/product-plans";
 
 export default function PlanosPage() {
   return (
     <PublicLayout>
       {/* Hero */}
-      <section className="bg-gradient-to-br from-brand-50 to-white dark:from-dark-card dark:to-dark-bg px-6 py-24 lg:px-8 text-center">
+      <PageHero>
         <span className="inline-block rounded-full bg-brand-100 dark:bg-brand-900/30 px-4 py-1.5 text-sm font-medium text-brand-700 dark:text-brand-400 mb-6">
           Planos e Preços
         </span>
         <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
-          O plano certo para cada <span className="text-brand-600">etapa do seu negócio</span>
+          O plano certo para cada{" "}
+          <span className="text-brand-600">etapa do seu negócio</span>
         </h1>
         <p className="mt-6 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Comece com <span className="font-semibold text-brand-600">7 dias grátis</span> em qualquer plano pago — acesso completo, sem pagar nada agora. Instituições financeiras entram grátis na plataforma.
+          Comece com{" "}
+          <span className="font-semibold text-brand-600">7 dias grátis</span> em
+          qualquer plano pago — acesso completo, sem pagar nada agora.
+          Instituições financeiras entram grátis na plataforma.
         </p>
-      </section>
+      </PageHero>
 
       {/* Plans grid */}
       <section className="px-6 py-20 lg:px-8">
@@ -27,8 +32,8 @@ export default function PlanosPage() {
               key={plan.name}
               className={`card card-hover relative flex flex-col ${
                 plan.highlighted
-                  ? 'border-brand-400 ring-1 ring-brand-500 shadow-xl shadow-brand-500/10'
-                  : ''
+                  ? "border-brand-400 ring-1 ring-brand-500 shadow-xl shadow-brand-500/10"
+                  : ""
               }`}
             >
               {plan.highlighted && (
@@ -67,14 +72,16 @@ export default function PlanosPage() {
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3 text-sm">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
-                    <span className="text-gray-600 dark:text-gray-400">{feature}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {feature}
+                    </span>
                   </li>
                 ))}
               </ul>
 
               <Link
                 href={plan.href}
-                className={`mt-8 ${plan.highlighted ? 'btn-primary' : 'btn-secondary'}`}
+                className={`mt-8 ${plan.highlighted ? "btn-primary" : "btn-secondary"}`}
               >
                 {plan.cta} <ArrowRight className="h-4 w-4" />
               </Link>
@@ -85,7 +92,9 @@ export default function PlanosPage() {
         {/* Opções de pagamento */}
         <div className="mx-auto mt-12 max-w-3xl text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            7 dias grátis em todos os planos pagos. Ao fim do teste, a cobrança é emitida no gateway escolhido, no CPF/CNPJ informado — escolha entre dois checkouts seguros:
+            7 dias grátis em todos os planos pagos. Ao fim do teste, a cobrança
+            é emitida no gateway escolhido, no CPF/CNPJ informado — escolha
+            entre dois checkouts seguros:
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
             <span className="inline-flex items-center gap-2 rounded-full border-2 border-brand-500 bg-brand-50 dark:bg-brand-950/20 px-4 py-1.5 text-sm font-semibold text-brand-700 dark:text-brand-300">
@@ -106,8 +115,11 @@ export default function PlanosPage() {
       <section className="px-6 pb-20 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-gray-500 dark:text-gray-400">
-            Dúvidas sobre qual plano escolher?{' '}
-            <Link href="/contato" className="text-brand-600 font-medium hover:underline">
+            Dúvidas sobre qual plano escolher?{" "}
+            <Link
+              href="/contato"
+              className="text-brand-600 font-medium hover:underline"
+            >
               Fale com nosso time
             </Link>
           </p>
